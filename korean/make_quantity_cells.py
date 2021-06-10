@@ -1,9 +1,10 @@
 import stanza
+import re
 from nltk.tokenize import word_tokenize
 from pororo import Pororo
 
 nlp_stanza_eng = stanza.Pipeline(lang='en', processors='tokenize, pos, lemma, depparse')
-nlp_stanza_kor = stanza.Pipeline(lang='kr', processors='tokenize, pos, lemma, depparse')
+# nlp_stanza_kor = stanza.Pipeline(lang='ko', processors='tokenize, pos, lemma, depparse')
 
 def add_group_nums_eng(sent):
     sent = re.sub(r"-", r"", sent)
