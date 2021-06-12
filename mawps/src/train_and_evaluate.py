@@ -9,8 +9,8 @@ import torch.nn.functional as f
 import time
 import random
 
-MAX_OUTPUT_LENGTH = 200
-MAX_INPUT_LENGTH = 120
+MAX_OUTPUT_LENGTH = 500
+MAX_INPUT_LENGTH = 500
 USE_CUDA = torch.cuda.is_available()
 
 
