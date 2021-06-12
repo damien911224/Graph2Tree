@@ -89,13 +89,14 @@ class OutputLang:
         self.word2count = {}
         self.index2word = {}
         self.n_words = 0  # Count word tokens
-        self.num_start = 0
         self.word2index_json_path = "data/reverse_label_dict.json"
         with open(self.word2index_json_path, "r") as fp:
             self.word2index = json.load(fp)
 
         for key, value in self.word2index.items():
-            self.index2word["value"] = key
+            self.index2word[value] = key
+
+        self.n_words = len(self.word2index)
 
     # def add_sen_to_vocab(self, sentence):  # add words of sentence to vocab
     #     for word in sentence:

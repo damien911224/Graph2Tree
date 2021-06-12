@@ -675,11 +675,11 @@ class Tree():
         r_list = []
         for i in range(self.num_children):
             if isinstance(self.children[i], type(self)):
-                r_list.append(output_lang.word2index["("])
+                # r_list.append(output_lang.word2index["("])
                 cl = self.children[i].to_list(output_lang)
                 for k in range(len(cl)):
                     r_list.append(cl[k])
-                r_list.append(output_lang.word2index[")"])
+                # r_list.append(output_lang.word2index[")"])
             else:
                 r_list.append(self.children[i])
         return r_list
@@ -791,8 +791,8 @@ def recursive_solve(encoder_outputs, bigru_outputs,
     graph_hidden_state = graph_embedding
 
     encoder_outputs = encoder_outputs.transpose(0, 1)
-    # bigru_outputs = bigru_outputs.transpose(0, 1)
-    structural_info = encoder_outputs
+    bigru_outputs = bigru_outputs.transpose(0, 1)
+    structural_info = bigru_outputs
 
     while (cur_index <= max_index):
         for j in range(1, 3):
@@ -1006,12 +1006,12 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, attention_decoder,
                   output_lang, num_pos, batch_graph, beam_size=5, english=False, max_length=MAX_OUTPUT_LENGTH):
 
-    seq_mask = torch.ByteTensor(1, input_length).fill_(0)
+    # seq_mask = torch.ByteTensor(1, input_length).fill_(0)
     # Turn padded arrays into (batch_size x max_len) tensors, transpose into (max_len x batch_size)
     input_var = torch.LongTensor(input_batch).unsqueeze(1)
     batch_graph = torch.LongTensor(batch_graph)
 
-    num_mask = torch.ByteTensor(1, len(num_pos) + len(generate_nums)).fill_(0)
+    # num_mask = torch.ByteTensor(1, len(num_pos) + len(generate_nums)).fill_(0)
 
     # Set to not-training mode to disable dropout
     encoder.eval()
@@ -1024,20 +1024,20 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
 
     if USE_CUDA:
         input_var = input_var.cuda()
-        seq_mask = seq_mask.cuda()
+        # seq_mask = seq_mask.cuda()
         # padding_hidden = padding_hidden.cuda()
-        num_mask = num_mask.cuda()
+        # num_mask = num_mask.cuda()
         batch_graph = batch_graph.cuda()
     # Run words through encoder
 
     encoder_outputs, problem_output, bigru_outputs = encoder(input_var, [input_length], batch_graph)
 
     # Prepare input and output variables
-    node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
+    # node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
 
-    num_size = len(num_pos)
-    all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, [num_pos], batch_size, num_size,
-                                                              encoder.hidden_size)
+    # num_size = len(num_pos)
+    # all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, [num_pos], batch_size, num_size,
+    #                                                           encoder.hidden_size)
     # num_start = output_lang.num_start
     # # B x P x N
     # embeddings_stacks = [[] for _ in range(batch_size)]
@@ -1129,6 +1129,8 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
     #         break
 
     graph_embedding, _ = torch.max(encoder_outputs, 0)
+    encoder_outputs = encoder_outputs.transpose(0, 1)
+    bigru_outputs = bigru_outputs.transpose(0, 1)
     structural_info = bigru_outputs
     prev_c = graph_embedding
     prev_h = graph_embedding
@@ -1141,7 +1143,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
         parent_h = s[1]
         t = queue_decode[head - 1]["t"]
 
-        sibling_state = torch.zeros((1, encoder.hidden_layer_dim), dtype=torch.float, requires_grad=False)
+        sibling_state = torch.zeros((1, encoder.hidden_size), dtype=torch.float, requires_grad=False)
 
         if USE_CUDA:
             sibling_state = sibling_state.cuda()

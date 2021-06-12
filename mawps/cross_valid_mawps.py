@@ -66,7 +66,7 @@ def change_num(num):
 def convert_to_string(idx_list, output_lang):
     w_list = []
     for i in range(len(idx_list)):
-        w_list.append(output_lang.word2index[int(idx_list[i])])
+        w_list.append(output_lang.index2word[int(idx_list[i])])
     return " ".join(w_list)
 
 
@@ -87,8 +87,8 @@ def is_all_same(c1, c2, output_lang):
 
 
 def is_solution_same(i1, i2, output_lang):
-    c1 = " ".join([output_lang.word2index[x] for x in i1])
-    c2 = " ".join([output_lang.word2index[x] for x in i2])
+    c1 = " ".join([output_lang.index2word[x] for x in i1])
+    c2 = " ".join([output_lang.index2word[x] for x in i2])
     if ('=' not in c1) or ('=' not in c2):
         return False
     elif ('<U>' in c1) or ('<U>' in c2):
@@ -145,6 +145,16 @@ def compute_tree_accuracy(candidate_list_, reference_list_, output_lang):
         reference_list.append(reference_list_[i])
     return compute_accuracy(candidate_list, reference_list, output_lang)
 
+def ref_flatten(ref):
+    flattened_ref = list()
+    for x in ref:
+        if type(x) == type(list()):
+            flattened_ref += ref_flatten(x)
+        else:
+            flattened_ref.append(x)
+
+    return flattened_ref
+
 data = load_mawps_data("data/mawps_combine.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
@@ -195,8 +205,8 @@ for fold in range(5):
     #                         embedding_size=embedding_size)
     # merge = Merge(hidden_size=hidden_size, embedding_size=embedding_size)
 
-    decoder = DecoderRNN(opt, input_lang.n_words)
-    attention_decoder = AttnUnit(opt, input_lang.n_words)
+    decoder = DecoderRNN(opt, output_lang.n_words)
+    attention_decoder = AttnUnit(opt, output_lang.n_words)
     # the embedding layer is  only for generated number embeddings, operators, and paddings
 
     encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=learning_rate, weight_decay=weight_decay)
@@ -204,6 +214,8 @@ for fold in range(5):
     attention_decoder_optimizer = torch.optim.Adam(attention_decoder.parameters(), lr=opt["learningRate"])
 
     encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
+    decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
+    attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
 
     # Move models to GPU
     if USE_CUDA:
@@ -247,28 +259,34 @@ for fold in range(5):
                 batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
                 test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
                                          output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+                reference = test_batch[2]
                 # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
                 # if val_ac:
                 #     value_ac += 1
                 # if equ_ac:
                 #     equation_ac += 1
                 # eval_total += 1
-                candidate = [int(c) for c in candidate]
+                candidate = [int(c) for c in test_res]
 
-                num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
-                num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
-                diff = num_left_paren - num_right_paren
+                # num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
+                # num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
+                # diff = num_left_paren - num_right_paren
+                #
+                # if diff > 0:
+                #     for i in range(diff):
+                #         candidate.append(output_lang.index2word[")"])
+                # elif diff < 0:
+                #     candidate = candidate[:diff]
 
-                if diff > 0:
-                    for i in range(diff):
-                        candidate.append(output_lang.index2word[")"])
-                elif diff < 0:
-                    candidate = candidate[:diff]
+                reference = ref_flatten(reference)
+
                 ref_str = convert_to_string(reference, output_lang)
                 cand_str = convert_to_string(candidate, output_lang)
 
                 reference_list.append(reference)
                 candidate_list.append(candidate)
+
+                break
             # print(equation_ac, value_ac, eval_total)
             # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
             # print("testing time", time_since(time.time() - start))
