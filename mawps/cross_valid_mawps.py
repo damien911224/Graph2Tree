@@ -242,7 +242,7 @@ for fold in range(5):
                 num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
                 encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
                 output_lang, num_pos_batches[idx], graph_batches[idx])
-            loss_total += loss
+            loss_total += loss.detach().cpu().numpy()
 
         print("loss:", loss_total / len(input_lengths))
         print("training time", time_since(time.time() - start))
