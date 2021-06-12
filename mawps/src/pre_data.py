@@ -3,6 +3,7 @@ import json
 import copy
 import re
 import numpy as np
+import os
 
 PAD_token = 0
 
@@ -79,6 +80,83 @@ class Lang:
         for i, j in enumerate(self.index2word):
             self.word2index[j] = i
 
+class OutputLang:
+    """
+    class to save the vocab and two dict: the word->index and index->word
+    """
+    def __init__(self):
+        # self.word2index = {}
+        self.word2count = {}
+        self.index2word = {}
+        self.n_words = 0  # Count word tokens
+        self.num_start = 0
+        self.word2index_json_path = "data/reverse_label_dict.json"
+        with open(self.word2index_json_path, "r") as fp:
+            self.word2index = json.load(fp)
+
+        for key, value in self.word2index.items():
+            self.index2word["value"] = key
+
+    # def add_sen_to_vocab(self, sentence):  # add words of sentence to vocab
+    #     for word in sentence:
+    #         # if re.search("N\d+|NUM|\d+", word):
+    #         #     continue
+    #         if word not in self.index2word:
+    #             self.word2index[word] = self.n_words
+    #             self.word2count[word] = 1
+    #             self.index2word.append(word)
+    #             self.n_words += 1
+    #         else:
+    #             self.word2count[word] += 1
+
+    # def trim(self, min_count):  # trim words below a certain count threshold
+    #     keep_words = []
+    #
+    #     for k, v in self.word2count.items():
+    #         if v >= min_count:
+    #             keep_words.append(k)
+    #
+    #     print('keep_words %s / %s = %.4f' % (
+    #         len(keep_words), len(self.index2word), len(keep_words) / len(self.index2word)
+    #     ))
+    #
+    #     # Reinitialize dictionaries
+    #     self.word2index = {}
+    #     self.word2count = {}
+    #     self.index2word = []
+    #     self.n_words = 0  # Count default tokens
+    #
+    #     for word in keep_words:
+    #         self.word2index[word] = self.n_words
+    #         self.index2word.append(word)
+    #         self.n_words += 1
+    #
+    # def build_input_lang(self, trim_min_count):  # build the input lang vocab and dict
+    #     if trim_min_count > 0:
+    #         self.trim(trim_min_count)
+    #         self.index2word = ["PAD", "NUM", "UNK"] + self.index2word
+    #     else:
+    #         self.index2word = ["PAD", "NUM"] + self.index2word
+    #     self.word2index = {}
+    #     self.n_words = len(self.index2word)
+    #     for i, j in enumerate(self.index2word):
+    #         self.word2index[j] = i
+    #
+    # def build_output_lang(self, generate_num, copy_nums):  # build the output lang vocab and dict
+    #     self.index2word = ["PAD", "EOS"] + self.index2word + generate_num + ["N" + str(i) for i in range(copy_nums)] +\
+    #                       ["SOS", "UNK"]
+    #     self.n_words = len(self.index2word)
+    #     for i, j in enumerate(self.index2word):
+    #         self.word2index[j] = i
+    #
+    # def build_output_lang_for_tree(self, generate_num, copy_nums):  # build the output lang vocab and dict
+    #     self.num_start = len(self.index2word)
+    #
+    #     self.index2word = self.index2word + generate_num + ["N" + str(i) for i in range(copy_nums)] + ["UNK"]
+    #     self.n_words = len(self.index2word)
+    #
+    #     for i, j in enumerate(self.index2word):
+    #         self.word2index[j] = i
 
 def load_raw_data(filename):  # load the json data to list(dict()) for MATH 23K
     print("Reading lines...")
@@ -439,6 +517,52 @@ def transfer_english_num(data):  # transfer num into "NUM"
             else:
                 eq_segs.append(temp_eq)
 
+        eq_segs = ['Module', ['For', ['IndentedBlock', ['If', ['IndentedBlock', ['SimpleStatementLine',
+                                                                                 ['AugAssign', ['AddAssign'],
+                                                                                  ['Name', ['var0']],
+                                                                                  ['BinaryOperation', ['Call', ['Arg',
+                                                                                                                ['Name',
+                                                                                                                 [
+                                                                                                                     'const1']]],
+                                                                                                       ['Attribute',
+                                                                                                        ['Name',
+                                                                                                         ['acos']],
+                                                                                                        ['Name',
+                                                                                                         ['math']]]],
+                                                                                   ['Add'],
+                                                                                   ['Call', ['Arg', ['Name', ['var2']]],
+                                                                                    ['Attribute', ['Name', ['atan']],
+                                                                                     ['Name', ['math']]]]]]]],
+                                                        ['Comparison', ['ComparisonTarget', ['Subscript',
+                                                                                             ['SubscriptElement',
+                                                                                              ['Index',
+                                                                                               ['Integer', ['2']]]],
+                                                                                             ['Name', ['QL']]],
+                                                                        ['GreaterThan']], ['Name', ['var1']]]]],
+                              ['Call', ['Arg', ['List', ['Element', ['Subscript', ['SubscriptElement',
+                                                                                   ['Index', ['Integer', ['0']]]],
+                                                                     ['Name', ['QL']]], 'Element', ['Subscript',
+                                                                                                    ['SubscriptElement',
+                                                                                                     ['Index',
+                                                                                                      ['Integer',
+                                                                                                       ['1']]]],
+                                                                                                    ['Name', ['QL']]],
+                                                         'Element', ['Subscript', ['SubscriptElement',
+                                                                                   ['Index', ['Integer', ['2']]]],
+                                                                     ['Name', ['QL']]], 'Element', ['Subscript',
+                                                                                                    ['SubscriptElement',
+                                                                                                     ['Index',
+                                                                                                      ['Integer',
+                                                                                                       ['3']]]],
+                                                                                                    ['Name', ['QL']]],
+                                                         'Element', ['Subscript', ['SubscriptElement',
+                                                                                   ['Index', ['Integer', ['4']]]],
+                                                                     ['Name', ['QL']]]]], 'Arg', ['Name', ['const2']]],
+                               ['Attribute', ['Name', ['combinations']], ['Name', ['itertools']]]],
+                              ['Tuple', ['Element', ['Name', ['var1']], 'Element', ['Name', ['var2']]]],
+                              'SimpleStatementLine',
+                              ['Assign', ['AssignTarget', ['Name', ['result']]], ['Name', ['var0']]]]]
+
         # def seg_and_tag(st):  # seg the equation and tag the num
         #     res = []
         #     pos_st = re.search(pattern, st)
@@ -617,7 +741,9 @@ def indexes_from_sentence(lang, sentence, tree=False):
     for word in sentence:
         if len(word) == 0:
             continue
-        if word in lang.word2index:
+        if type(word) == type(list()):
+            res.append(indexes_from_sentence(lang, word, tree))
+        elif word in lang.word2index:
             res.append(lang.word2index[word])
         else:
             res.append(lang.word2index["UNK"])
@@ -625,10 +751,9 @@ def indexes_from_sentence(lang, sentence, tree=False):
         res.append(lang.word2index["EOS"])
     return res
 
-
 def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, copy_nums, tree=False):
     input_lang = Lang()
-    output_lang = Lang()
+    output_lang = OutputLang()
     train_pairs = []
     test_pairs = []
 
@@ -636,64 +761,67 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     for pair in pairs_trained:
         if not tree:
             input_lang.add_sen_to_vocab(pair[0])
-            output_lang.add_sen_to_vocab(pair[1])
+            # output_lang.add_sen_to_vocab(pair[1])
         elif pair[-1]:
             input_lang.add_sen_to_vocab(pair[0])
-            output_lang.add_sen_to_vocab(pair[1])
+            # output_lang.add_sen_to_vocab(pair[1])
     input_lang.build_input_lang(trim_min_count)
-    if tree:
-        output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
-    else:
-        output_lang.build_output_lang(generate_nums, copy_nums)
+    # if tree:
+    #     output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
+    # else:
+    #     output_lang.build_output_lang(generate_nums, copy_nums)
 
     for pair in pairs_trained:
         num_stack = []
-        for word in pair[1]:
-            temp_num = []
-            flag_not = True
-            if word not in output_lang.index2word:
-                flag_not = False
-                for i, j in enumerate(pair[2]):
-                    if j == word:
-                        temp_num.append(i)
-
-            if not flag_not and len(temp_num) != 0:
-                num_stack.append(temp_num)
-            if not flag_not and len(temp_num) == 0:
-                num_stack.append([_ for _ in range(len(pair[2]))])
-
-        num_stack.reverse()
+        # for word in pair[1]:
+        #     temp_num = []
+        #     flag_not = True
+        #     if word not in output_lang.index2word:
+        #         flag_not = False
+        #         for i, j in enumerate(pair[2]):
+        #             if j == word:
+        #                 temp_num.append(i)
+        #
+        #     if not flag_not and len(temp_num) != 0:
+        #         num_stack.append(temp_num)
+        #     if not flag_not and len(temp_num) == 0:
+        #         num_stack.append([_ for _ in range(len(pair[2]))])
+        #
+        # num_stack.reverse()
         input_cell = indexes_from_sentence(input_lang, pair[0])
         output_cell = indexes_from_sentence(output_lang, pair[1], tree)
+        # output_cell = list_to_tree(output_cell, initial=True)
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
                             pair[2], pair[3], num_stack, pair[4]))
+
     print('Indexed %d words in input language, %d words in output' % (input_lang.n_words, output_lang.n_words))
     print('Number of training data %d' % (len(train_pairs)))
     for pair in pairs_tested:
         num_stack = []
-        for word in pair[1]:
-            temp_num = []
-            flag_not = True
-            if word not in output_lang.index2word:
-                flag_not = False
-                for i, j in enumerate(pair[2]):
-                    if j == word:
-                        temp_num.append(i)
-
-            if not flag_not and len(temp_num) != 0:
-                num_stack.append(temp_num)
-            if not flag_not and len(temp_num) == 0:
-                num_stack.append([_ for _ in range(len(pair[2]))])
-
-        num_stack.reverse()
+        # for word in pair[1]:
+        #     temp_num = []
+        #     flag_not = True
+        #     if word not in output_lang.index2word:
+        #         flag_not = False
+        #         for i, j in enumerate(pair[2]):
+        #             if j == word:
+        #                 temp_num.append(i)
+        #
+        #     if not flag_not and len(temp_num) != 0:
+        #         num_stack.append(temp_num)
+        #     if not flag_not and len(temp_num) == 0:
+        #         num_stack.append([_ for _ in range(len(pair[2]))])
+        #
+        # num_stack.reverse()
         input_cell = indexes_from_sentence(input_lang, pair[0])
         output_cell = indexes_from_sentence(output_lang, pair[1], tree)
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         test_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
                            pair[2], pair[3], num_stack,pair[4]))
+
     print('Number of testind data %d' % (len(test_pairs)))
     return input_lang, output_lang, train_pairs, test_pairs
 

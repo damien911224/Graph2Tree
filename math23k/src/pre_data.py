@@ -628,7 +628,7 @@ def indexes_from_sentence(lang, sentence, tree=False):
 
 def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, copy_nums, tree=False):
     input_lang = Lang()
-    output_lang = Lang()
+    output_lang = OutputLang()
     train_pairs = []
     test_pairs = []
 

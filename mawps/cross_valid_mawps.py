@@ -5,6 +5,8 @@ import time
 import torch.optim
 from src.expressions_transfer import *
 import json
+import sympy
+from sympy.parsing.sympy_parser import parse_expr
 
 def read_json(path):
     with open(path,'r') as f:
@@ -12,7 +14,7 @@ def read_json(path):
     return file
 
 
-batch_size = 64
+batch_size = 2
 embedding_size = 128
 hidden_size = 512
 n_epochs = 80
@@ -22,6 +24,18 @@ beam_size = 5
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
+
+opt = {
+    "rnn_size": hidden_size,
+    "num_layers": 1,
+    "dropout_de_in": 0.1,
+    "dropout_de_out": 0.3,
+    "dropout_for_predict": 0.1,
+    "dropoutagg": 0,
+    "learningRate": 1.0e-3,
+    "init_weight": 0.08,
+    "grad_clip": 5
+}
 
 def get_new_fold(data,pairs,group):
     new_fold = []
@@ -49,16 +63,97 @@ def change_num(num):
             new_num.append(float(item))
     return new_num
 
+def convert_to_string(idx_list, output_lang):
+    w_list = []
+    for i in range(len(idx_list)):
+        w_list.append(output_lang.word2index[int(idx_list[i])])
+    return " ".join(w_list)
+
+
+def is_all_same(c1, c2, output_lang):
+    all_same = False
+    if len(c1) == len(c2):
+        all_same = True
+        for j in range(len(c1)):
+            if c1[j] != c2[j]:
+                all_same = False
+                break
+    if all_same == False:
+        if is_solution_same(c1, c2, output_lang):
+            return True
+        return False
+    else:
+        return True
+
+
+def is_solution_same(i1, i2, output_lang):
+    c1 = " ".join([output_lang.word2index[x] for x in i1])
+    c2 = " ".join([output_lang.word2index[x] for x in i2])
+    if ('=' not in c1) or ('=' not in c2):
+        return False
+    elif ('<U>' in c1) or ('<U>' in c2):
+        return False
+    else:
+        try:
+            s1 = c1.split('=')
+            s2 = c2.split('=')
+            eq1 = []
+            eq2 = []
+            x = sympy.Symbol('x')
+            eq1.append(parse_expr(s1[0]))
+            eq1.append(parse_expr(s1[1]))
+            eq2.append(parse_expr(s2[0]))
+            eq2.append(parse_expr(s2[1]))
+            res1 = sympy.solve(sympy.Eq(eq1[0], eq1[1]), x)
+            res2 = sympy.solve(sympy.Eq(eq2[0], eq2[1]), x)
+
+            if not res1 or not res2:
+                return False
+
+            return res1[0] == res2[0]
+
+        except BaseException:
+            print(c1)
+            print(c2)
+            return False
+
+def compute_accuracy(candidate_list, reference_list, output_lang):
+    if len(candidate_list) != len(reference_list):
+        print("candidate list has length {}, reference list has length {}\n".format(len(candidate_list),
+                                                                                    len(reference_list)))
+
+    len_min = min(len(candidate_list), len(reference_list))
+    c = 0
+    for i in range(len_min):
+        # print "length:", len_min
+
+        if is_all_same(candidate_list[i], reference_list[i], output_lang):
+            # print "{}->True".format(i)
+            c = c + 1
+        else:
+            # print "{}->False".format(i)
+            pass
+    return c / float(len_min)
+
+def compute_tree_accuracy(candidate_list_, reference_list_, output_lang):
+    candidate_list = []
+
+    for i in range(len(candidate_list_)):
+        candidate_list.append(candidate_list_[i])
+    reference_list = []
+    for i in range(len(reference_list_)):
+        reference_list.append(reference_list_[i])
+    return compute_accuracy(candidate_list, reference_list, output_lang)
 
 data = load_mawps_data("data/mawps_combine.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
 
-temp_pairs = []
-for p in pairs:
-    temp_pairs.append((p[0], from_infix_to_prefix(p[1]), p[2], p[3]))
-pairs = temp_pairs
+# temp_pairs = []
+# for p in pairs:
+#     temp_pairs.append((p[0], from_infix_to_prefix(p[1]), p[2], p[3]))
+# pairs = temp_pairs
 
 #train_fold, test_fold, valid_fold = get_train_test_fold(ori_path,prefix,data,pairs,group_data)
 new_fold = get_new_fold(data,pairs,group_data)
@@ -76,7 +171,6 @@ random.shuffle(whole_fold)
 
 best_acc_fold = []
 
-
 for fold in range(5):
     pairs_tested = []
     pairs_trained = []
@@ -87,7 +181,7 @@ for fold in range(5):
             pairs_trained += fold_pairs[fold_t]
 
     input_lang, output_lang, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums,
-                                                                    copy_nums, tree=True)
+                                                                    copy_nums, tree=False)
 
     #print('train_pairs[0]')
     #print(train_pairs[0])
@@ -95,50 +189,47 @@ for fold in range(5):
     # Initialize models
     encoder = EncoderSeq(input_size=input_lang.n_words, embedding_size=embedding_size, hidden_size=hidden_size,
                          n_layers=n_layers)
-    predict = Prediction(hidden_size=hidden_size, op_nums=output_lang.n_words - copy_nums - 1 - len(generate_nums),
-                         input_size=len(generate_nums))
-    generate = GenerateNode(hidden_size=hidden_size, op_nums=output_lang.n_words - copy_nums - 1 - len(generate_nums),
-                            embedding_size=embedding_size)
-    merge = Merge(hidden_size=hidden_size, embedding_size=embedding_size)
+    # predict = Prediction(hidden_size=hidden_size, op_nums=output_lang.n_words - copy_nums - 1 - len(generate_nums),
+    #                      input_size=len(generate_nums))
+    # generate = GenerateNode(hidden_size=hidden_size, op_nums=output_lang.n_words - copy_nums - 1 - len(generate_nums),
+    #                         embedding_size=embedding_size)
+    # merge = Merge(hidden_size=hidden_size, embedding_size=embedding_size)
+
+    decoder = DecoderRNN(opt, input_lang.n_words)
+    attention_decoder = AttnUnit(opt, input_lang.n_words)
     # the embedding layer is  only for generated number embeddings, operators, and paddings
 
     encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    predict_optimizer = torch.optim.Adam(predict.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    generate_optimizer = torch.optim.Adam(generate.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    merge_optimizer = torch.optim.Adam(merge.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=opt["learningRate"])
+    attention_decoder_optimizer = torch.optim.Adam(attention_decoder.parameters(), lr=opt["learningRate"])
 
     encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
-    predict_scheduler = torch.optim.lr_scheduler.StepLR(predict_optimizer, step_size=20, gamma=0.5)
-    generate_scheduler = torch.optim.lr_scheduler.StepLR(generate_optimizer, step_size=20, gamma=0.5)
-    merge_scheduler = torch.optim.lr_scheduler.StepLR(merge_optimizer, step_size=20, gamma=0.5)
 
     # Move models to GPU
     if USE_CUDA:
         encoder.cuda()
-        predict.cuda()
-        generate.cuda()
-        merge.cuda()
+        decoder.cuda()
+        attention_decoder.cuda()
 
     generate_num_ids = []
-    for num in generate_nums:
-        generate_num_ids.append(output_lang.word2index[num])
+    # for num in generate_nums:
+    #     generate_num_ids.append(output_lang.word2index[num])
 
     for epoch in range(n_epochs):
         encoder_scheduler.step()
-        predict_scheduler.step()
-        generate_scheduler.step()
-        merge_scheduler.step()
         loss_total = 0
         input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-       num_stack_batches, num_pos_batches, num_size_batches, num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
+        num_stack_batches, num_pos_batches, num_size_batches, \
+        num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
         print("fold:", fold + 1)
         print("epoch:", epoch + 1)
         start = time.time()
         for idx in range(len(input_lengths)):
             loss = train_tree(
                 input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, predict, generate, merge,
-                encoder_optimizer, predict_optimizer, generate_optimizer, merge_optimizer, output_lang, num_pos_batches[idx], graph_batches[idx])
+                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+                encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+                output_lang, num_pos_batches[idx], graph_batches[idx])
             loss_total += loss
 
         print("loss:", loss_total / len(input_lengths))
@@ -149,32 +240,48 @@ for fold in range(5):
             equation_ac = 0
             eval_total = 0
             start = time.time()
+            reference_list = []
+            candidate_list = []
             for test_batch in test_pairs:
                 #print(test_batch)
                 batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
-                test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, predict, generate,
-                                         merge, output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-                val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
-                if val_ac:
-                    value_ac += 1
-                if equ_ac:
-                    equation_ac += 1
-                eval_total += 1
-            print(equation_ac, value_ac, eval_total)
-            print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
-            print("testing time", time_since(time.time() - start))
-            print("------------------------------------------------------")
-            torch.save(encoder.state_dict(), "model_traintest/encoder")
-            torch.save(predict.state_dict(), "model_traintest/predict")
-            torch.save(generate.state_dict(), "model_traintest/generate")
-            torch.save(merge.state_dict(), "model_traintest/merge")
-            if epoch == n_epochs - 1:
-                best_acc_fold.append((equation_ac, value_ac, eval_total))
+                test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
+                                         output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+                # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
+                # if val_ac:
+                #     value_ac += 1
+                # if equ_ac:
+                #     equation_ac += 1
+                # eval_total += 1
+                candidate = [int(c) for c in candidate]
 
-a, b, c = 0, 0, 0
+                num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
+                num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
+                diff = num_left_paren - num_right_paren
+
+                if diff > 0:
+                    for i in range(diff):
+                        candidate.append(output_lang.index2word[")"])
+                elif diff < 0:
+                    candidate = candidate[:diff]
+                ref_str = convert_to_string(reference, output_lang)
+                cand_str = convert_to_string(candidate, output_lang)
+
+                reference_list.append(reference)
+                candidate_list.append(candidate)
+            # print(equation_ac, value_ac, eval_total)
+            # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
+            # print("testing time", time_since(time.time() - start))
+            # print("------------------------------------------------------")
+            accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+            torch.save(encoder.state_dict(), "model_traintest/encoder")
+            torch.save(decoder.state_dict(), "model_traintest/decoder")
+            torch.save(attention_decoder.state_dict(), "model_traintest/attention_decoder")
+            if epoch == n_epochs - 1:
+                best_acc_fold.append(accuracy)
+
+a = 0
 for bl in range(len(best_acc_fold)):
-    a += best_acc_fold[bl][0]
-    b += best_acc_fold[bl][1]
-    c += best_acc_fold[bl][2]
+    a += best_acc_fold[bl]
     print(best_acc_fold[bl])
-print(a / float(c), b / float(c))
+print(a)
