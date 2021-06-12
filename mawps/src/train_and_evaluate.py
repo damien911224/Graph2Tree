@@ -833,7 +833,6 @@ def recursive_solve(encoder_outputs, bigru_outputs,
                     sibling_state[i - 1, :] = dec_s[sibling_index][dec_batch[sibling_index].size(1) - 1][2][i - 1, :]
 
         parent_h = dec_s[cur_index][0][2]
-        parent_h.mean().backward()
         for i in range(dec_batch[cur_index].size(1) - 1):
             teacher_force = random.random() < teacher_force_ratio
             if teacher_force != True and i > 0:
