@@ -1030,9 +1030,9 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     # padding_hidden = torch.FloatTensor([0.0 for _ in range(predict.hidden_size)]).unsqueeze(0)
     batch_size = len(input_length)
 
-    encoder.train()
-    decoder.train()
-    attention_decoder.train()
+    encoder.eval()
+    decoder.eval()
+    attention_decoder.eval()
 
     if USE_CUDA:
         input_var = input_var.cuda()
@@ -1042,9 +1042,9 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
         batch_graph = batch_graph.cuda()
 
     # Zero gradients of both optimizers
-    encoder_optimizer.zero_grad()
-    decoder_optimizer.zero_grad()
-    attention_decoder_optimizer.zero_grad()
+    # encoder_optimizer.zero_grad()
+    # decoder_optimizer.zero_grad()
+    # attention_decoder_optimizer.zero_grad()
 
     # Run words through encoder
     encoder_outputs, problem_output, bigru_outputs = encoder(input_var, input_length, batch_graph)
