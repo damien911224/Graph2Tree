@@ -174,7 +174,7 @@ def ref_flatten(ref, output_lang):
     for x in ref:
         if type(x) == type(list()):
             flattened_ref.append(output_lang.word2index["("])
-            flattened_ref += ref_flatten(x)
+            flattened_ref += ref_flatten(x, output_lang)
             flattened_ref.append(output_lang.word2index[")"])
         else:
             flattened_ref.append(x)
