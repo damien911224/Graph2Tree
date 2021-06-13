@@ -26,13 +26,13 @@ ori_path = './data/'
 prefix = '23k_processed.json'
 
 opt = {
-    "rnn_size": hidden_size,
-    "num_layers": 1,
+    "rnn_size": hidden_size, # RNN hidden size (default 300)
+    "num_layers": 2, # RNN # of layer (default 1)
     "dropout_de_in": 0.1,
     "dropout_de_out": 0.3,
     "dropout_for_predict": 0.1,
     "dropoutagg": 0,
-    "learningRate": 1.0e-3,
+    "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5
 }
@@ -209,9 +209,10 @@ for fold in range(5):
     attention_decoder = AttnUnit(opt, output_lang.n_words)
     # the embedding layer is  only for generated number embeddings, operators, and paddings
 
-    encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=opt["learningRate"])
-    attention_decoder_optimizer = torch.optim.Adam(attention_decoder.parameters(), lr=opt["learningRate"])
+    encoder_optimizer = torch.optim.AdamW(encoder.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    decoder_optimizer = torch.optim.AdamW(decoder.parameters(), lr=opt["learningRate"], weight_decay=weight_decay)
+    attention_decoder_optimizer = torch.optim.AdamW(attention_decoder.parameters(), lr=opt["learningRate"],
+                                                    weight_decay=weight_decay)
 
     encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
     decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
