@@ -173,9 +173,9 @@ def ref_flatten(ref, output_lang):
     flattened_ref = list()
     for x in ref:
         if type(x) == type(list()):
-            flattened_ref.append(output_lang.word2index["("])
+            flattened_ref.append(output_lang.word2index["<IS>"])
             flattened_ref += ref_flatten(x, output_lang)
-            flattened_ref.append(output_lang.word2index[")"])
+            flattened_ref.append(output_lang.word2index["<IE>"])
         else:
             flattened_ref.append(x)
 
@@ -339,10 +339,6 @@ for fold in range(num_folds):
 
             ref_str = convert_to_string(reference, output_lang)
             cand_str = convert_to_string(candidate, output_lang)
-
-            print(ref_str)
-            print(cand_str)
-            print("---")
 
             reference_list.append(reference)
             candidate_list.append(candidate)
