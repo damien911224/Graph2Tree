@@ -41,7 +41,7 @@ opt = {
     "separate_attention": False
 }
 
-log_path = "logs/{}".format("SepAtt")
+log_path = "logs/{}".format("NoSepAtt")
 num_folds = 5
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
