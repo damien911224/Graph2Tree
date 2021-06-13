@@ -46,6 +46,7 @@ opt = {
 log_path = "logs/{}".format("SepAtt")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+optimizer_patience = 10
 random_seed = 777
 
 random.seed(random_seed)
@@ -249,10 +250,12 @@ for fold in range(num_folds):
     # decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
     # attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
 
-    encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer, 'min', patience=5)
-    decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(decoder_optimizer, 'min', patience=5)
+    encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer,
+                                                                   'min', patience=optimizer_patience)
+    decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(decoder_optimizer,
+                                                                   'min', patience=optimizer_patience)
     attention_decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(attention_decoder_optimizer,
-                                                                             'min', patience=5)
+                                                                             'min', patience=optimizer_patience)
 
     # Move models to GPU
     if USE_CUDA:
