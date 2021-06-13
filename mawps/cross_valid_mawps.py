@@ -8,7 +8,8 @@ import json
 import sympy
 import os
 from sympy.parsing.sympy_parser import parse_expr
-from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
+from sklearn.model_selection import KFold
 
 def read_json(path):
     with open(path,'r') as f:
@@ -39,12 +40,14 @@ opt = {
     "grad_clip": 5
 }
 
+log_path = "logs/{}".format("SepAtt")
+num_folds = 5
+
 if not os.path.exists("logs"):
     try:
         os.mkdir("logs")
     except OSError:
         pass
-log_path = "logs/{}".format("SepAtt")
 
 def get_new_fold(data,pairs,group):
     new_fold = []
@@ -175,10 +178,10 @@ pairs, generate_nums, copy_nums = transfer_english_num(data)
 # pairs = temp_pairs
 
 #train_fold, test_fold, valid_fold = get_train_test_fold(ori_path,prefix,data,pairs,group_data)
-new_fold = get_new_fold(data,pairs,group_data)
+new_fold = get_new_fold(data, pairs, group_data)
 pairs = new_fold
 
-fold_size = int(len(pairs) * 0.2)
+fold_size = int(len(pairs) * (1.0 / num_folds))
 fold_pairs = []
 for split_fold in range(4):
     fold_start = fold_size * split_fold
@@ -190,7 +193,7 @@ random.shuffle(whole_fold)
 
 best_acc_fold = []
 
-for fold in range(5):
+for fold in range(num_folds):
     fold_log_folder = os.path.join(log_path, "Fold_{:02d}".format(fold + 1))
     fold_weight_folder = os.path.join(fold_log_folder, "weights")
     try:
