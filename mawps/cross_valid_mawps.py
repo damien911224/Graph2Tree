@@ -27,7 +27,7 @@ prefix = '23k_processed.json'
 
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
-    "num_layers": 2, # RNN # of layer (default 1)
+    # "num_layers": 2, # RNN # of layer (default 1)
     "dropout_de_in": 0.1,
     "dropout_de_out": 0.3,
     "dropout_for_predict": 0.1,
