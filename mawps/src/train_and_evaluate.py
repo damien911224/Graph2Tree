@@ -679,7 +679,7 @@ class Tree():
                 cl = self.children[i].flatten(output_lang)
                 for k in range(len(cl)):
                     r_list.append(cl[k])
-                r_list.append(output_lang.word2index["<N>"])
+                r_list.append(output_lang.word2index[")"])
             else:
                 r_list.append(self.children[i])
         return r_list
