@@ -10,6 +10,7 @@ import os
 from sympy.parsing.sympy_parser import parse_expr
 from tensorboardX import SummaryWriter
 from sklearn.model_selection import KFold
+from nltk.translate.bleu_score import corpus_bleu
 
 def read_json(path):
     with open(path,'r') as f:
@@ -290,8 +291,9 @@ for fold in range(num_folds):
         # equation_ac = 0
         # eval_total = 0
         # start = time.time()
-        reference_list = []
-        candidate_list = []
+        reference_list = list()
+        blue_reference_list = list()
+        candidate_list = list()
         for test_batch in test_pairs:
             #print(test_batch)
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
@@ -322,12 +324,14 @@ for fold in range(num_folds):
             cand_str = convert_to_string(candidate, output_lang)
 
             reference_list.append(reference)
+            blue_reference_list.append([reference])
             candidate_list.append(candidate)
         # print(equation_ac, value_ac, eval_total)
         # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
         # print("testing time", time_since(time.time() - start))
         # print("------------------------------------------------------")
         accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+        blue_score = corpus_bleu(blue_reference_list, candidate_list)
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
         torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
         torch.save(attention_decoder.state_dict(),
@@ -338,10 +342,12 @@ for fold in range(num_folds):
         writer.add_scalars("Loss", {"train": train_loss_total}, epoch + 1)
         writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
         writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
+        writer.add_scalars("Blue Score", {"val": blue_score}, epoch + 1)
 
         print("train_loss:", train_loss_total)
         print("validation_loss:", val_loss_total)
         print("validation_accuracy:", accuracy)
+        print("validation_blue_score:", blue_score)
         print("training time", time_since(time.time() - start))
         print("--------------------------------")
 
