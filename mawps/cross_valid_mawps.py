@@ -19,7 +19,7 @@ def read_json(path):
     return file
 
 
-batch_size = 64
+batch_size = 2
 embedding_size = 128
 hidden_size = 512
 n_epochs = 80
@@ -169,11 +169,13 @@ def compute_tree_accuracy(candidate_list_, reference_list_, output_lang):
         reference_list.append(reference_list_[i])
     return compute_accuracy(candidate_list, reference_list, output_lang)
 
-def ref_flatten(ref):
+def ref_flatten(ref, output_lang):
     flattened_ref = list()
     for x in ref:
         if type(x) == type(list()):
+            flattened_ref += output_lang.word2index("(")
             flattened_ref += ref_flatten(x)
+            flattened_ref += output_lang.word2index(")")
         else:
             flattened_ref.append(x)
 
@@ -333,7 +335,7 @@ for fold in range(num_folds):
             # elif diff < 0:
             #     candidate = candidate[:diff]
 
-            reference = ref_flatten(reference)
+            reference = ref_flatten(reference, output_lang)
 
             ref_str = convert_to_string(reference, output_lang)
             cand_str = convert_to_string(candidate, output_lang)
