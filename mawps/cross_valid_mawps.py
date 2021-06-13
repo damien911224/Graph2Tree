@@ -39,10 +39,10 @@ opt = {
     "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5,
-    "separate_attention": False
+    "separate_attention": True
 }
 
-log_path = "logs/{}".format("NoSepAtt")
+log_path = "logs/{}".format("SepAtt")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
