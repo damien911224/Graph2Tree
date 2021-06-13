@@ -206,7 +206,7 @@ for fold in range(num_folds):
 
     pairs_tested = []
     pairs_trained = []
-    for fold_t in range(5):
+    for fold_t in range(num_folds):
         if fold_t == fold:
             pairs_tested += fold_pairs[fold_t]
         else:
