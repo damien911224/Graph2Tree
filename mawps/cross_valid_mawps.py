@@ -7,6 +7,7 @@ from src.expressions_transfer import *
 import json
 import sympy
 import os
+import numpy as np
 from sympy.parsing.sympy_parser import parse_expr
 from tensorboardX import SummaryWriter
 from sklearn.model_selection import KFold
@@ -237,9 +238,13 @@ for fold in range(num_folds):
     attention_decoder_optimizer = torch.optim.AdamW(attention_decoder.parameters(), lr=opt["learningRate"],
                                                     weight_decay=weight_decay)
 
-    encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
-    decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
-    attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
+    # encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
+    # decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
+    # attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
+
+    encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer, 'min')
+    decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(decoder_optimizer, 'min')
+    attention_decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(attention_decoder_optimizer, 'min')
 
     # Move models to GPU
     if USE_CUDA:
@@ -256,9 +261,6 @@ for fold in range(num_folds):
         print("epoch:", epoch + 1)
 
         start = time.time()
-        encoder_scheduler.step()
-        decoder_scheduler.step()
-        attention_decoder_scheduler.step()
 
         train_loss_total = 0
         input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
@@ -333,15 +335,18 @@ for fold in range(num_folds):
         # print("testing time", time_since(time.time() - start))
         # print("------------------------------------------------------")
         accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-        blue_score = corpus_bleu(blue_reference_list, candidate_list)
+        bleu_scores = np.mean(bleu_scores)
+
+        encoder_scheduler.step(val_loss_total)
+        decoder_scheduler.step(val_loss_total)
+        attention_decoder_scheduler.step(val_loss_total)
+
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
         torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
         torch.save(attention_decoder.state_dict(),
                    os.path.join(fold_weight_folder, "attention_decoder-{}.pth".format(epoch + 1)))
         # if epoch == n_epochs - 1:
         #     best_acc_fold.append(accuracy)
-
-        bleu_scores = np.mean(bleu_scores)
 
         writer.add_scalars("Loss", {"train": train_loss_total}, epoch + 1)
         writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
