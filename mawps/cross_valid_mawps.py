@@ -357,7 +357,7 @@ for fold in range(num_folds):
         print("train_loss:", train_loss_total)
         print("validation_loss:", val_loss_total)
         print("validation_accuracy:", accuracy)
-        print("validation_blue_score:", bleu_scores)
+        print("validation_bleu_score:", bleu_scores)
         print("training time", time_since(time.time() - start))
         print("--------------------------------")
 
