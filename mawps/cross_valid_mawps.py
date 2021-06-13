@@ -369,7 +369,7 @@ for fold in range(num_folds):
         writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
         writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
         writer.add_scalars("BLEU Score", {"val": bleu_scores}, epoch + 1)
-        writer.add_scalar("Learng Rate", current_lr, epoch + 1)
+        writer.add_scalar("Learning Rate", current_lr, epoch + 1)
 
         print("train_loss:", train_loss_total)
         print("validation_loss:", val_loss_total)
