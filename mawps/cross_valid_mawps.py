@@ -43,7 +43,7 @@ opt = {
 
 log_path = "logs/{}".format("SepAtt")
 num_folds = 5
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 if not os.path.exists("logs"):
     try:
