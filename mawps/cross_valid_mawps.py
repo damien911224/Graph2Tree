@@ -341,6 +341,7 @@ for fold in range(num_folds):
             cand_str = convert_to_string(candidate, output_lang)
             print(ref_str)
             print(cand_str)
+            print("--")
 
             reference_list.append(reference)
             candidate_list.append(candidate)
