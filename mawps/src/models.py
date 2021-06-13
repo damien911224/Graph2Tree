@@ -605,7 +605,7 @@ class AttnUnit(nn.Module):
         super(AttnUnit, self).__init__()
         self.opt = opt
         self.hidden_size = opt["rnn_size"]
-        self.separate_attention = self.opt.separate_attention
+        self.separate_attention = self.opt["separate_attention"]
         if self.separate_attention:
             self.linear_att = nn.Linear(3*self.hidden_size, self.hidden_size)
         else:
