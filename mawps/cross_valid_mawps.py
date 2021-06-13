@@ -6,7 +6,9 @@ import torch.optim
 from src.expressions_transfer import *
 import json
 import sympy
+import os
 from sympy.parsing.sympy_parser import parse_expr
+from torch.utils.tensorboard import SummaryWriter
 
 def read_json(path):
     with open(path,'r') as f:
@@ -36,6 +38,13 @@ opt = {
     "init_weight": 0.08,
     "grad_clip": 5
 }
+
+if not os.path.exists("logs"):
+    try:
+        os.mkdir("logs")
+    except OSError:
+        pass
+log_path = "logs/{}".format("SepAtt")
 
 def get_new_fold(data,pairs,group):
     new_fold = []
@@ -182,6 +191,14 @@ random.shuffle(whole_fold)
 best_acc_fold = []
 
 for fold in range(5):
+    fold_log_folder = os.path.join(log_path, "Fold_{:02d}".format(fold + 1))
+    fold_weight_folder = os.path.join(fold_log_folder, "weights")
+    try:
+        os.makedirs(fold_weight_folder)
+    except OSError:
+        pass
+    writer = SummaryWriter(fold_log_folder)
+
     pairs_tested = []
     pairs_trained = []
     for fold_t in range(5):
@@ -229,78 +246,104 @@ for fold in range(5):
     #     generate_num_ids.append(output_lang.word2index[num])
 
     for epoch in range(n_epochs):
+        print("fold:", fold + 1)
+        print("epoch:", epoch + 1)
+
+        start = time.time()
         encoder_scheduler.step()
-        loss_total = 0
+        decoder_scheduler.step()
+        attention_decoder_scheduler.step()
+
+        train_loss_total = 0
         input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
         num_stack_batches, num_pos_batches, num_size_batches, \
         num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
-        print("fold:", fold + 1)
-        print("epoch:", epoch + 1)
-        start = time.time()
         for idx in range(len(input_lengths)):
-            loss = train_tree(
+            train_loss = train_tree(
                 input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
                 num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
                 encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
                 output_lang, num_pos_batches[idx], graph_batches[idx])
-            loss_total += loss.detach().cpu().numpy()
+            train_loss_total += train_loss.detach().cpu().numpy()
+        train_loss_total = train_loss_total / len(input_lengths)
 
-        print("loss:", loss_total / len(input_lengths))
+        val_loss_total = 0
+        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        num_stack_batches, num_pos_batches, num_size_batches, \
+        num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
+        for idx in range(len(input_lengths)):
+            val_loss = val_tree(
+                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+                encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+                output_lang, num_pos_batches[idx], graph_batches[idx])
+            val_loss_total += val_loss.detach().cpu().numpy()
+        val_loss_total = val_loss_total / len(input_lengths)
+
+        # if epoch % 2 == 0 or epoch > n_epochs - 5:
+        # value_ac = 0
+        # equation_ac = 0
+        # eval_total = 0
+        # start = time.time()
+        reference_list = []
+        candidate_list = []
+        for test_batch in test_pairs:
+            #print(test_batch)
+            batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
+            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
+                                     output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+            reference = test_batch[2]
+            # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
+            # if val_ac:
+            #     value_ac += 1
+            # if equ_ac:
+            #     equation_ac += 1
+            # eval_total += 1
+            candidate = [int(c) for c in test_res]
+
+            # num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
+            # num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
+            # diff = num_left_paren - num_right_paren
+            #
+            # if diff > 0:
+            #     for i in range(diff):
+            #         candidate.append(output_lang.index2word[")"])
+            # elif diff < 0:
+            #     candidate = candidate[:diff]
+
+            reference = ref_flatten(reference)
+
+            ref_str = convert_to_string(reference, output_lang)
+            cand_str = convert_to_string(candidate, output_lang)
+
+            reference_list.append(reference)
+            candidate_list.append(candidate)
+
+            break
+        # print(equation_ac, value_ac, eval_total)
+        # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
+        # print("testing time", time_since(time.time() - start))
+        # print("------------------------------------------------------")
+        accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+        torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
+        torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
+        torch.save(attention_decoder.state_dict(),
+                   os.path.join(fold_weight_folder, "attention_decoder-{}.pth".format(epoch + 1)))
+        if epoch == n_epochs - 1:
+            best_acc_fold.append(accuracy)
+
+        writer.add_scalar("Loss", {"train": train_loss_total}, epoch + 1)
+        writer.add_scalar("Loss", {"val": val_loss_total}, epoch + 1)
+        writer.add_scalar("Accuracy", {"val": accuracy}, epoch + 1)
+
+        print("train_loss:", train_loss_total)
+        print("validation_loss:", val_loss_total)
+        print("validation_accuracy:", accuracy)
         print("training time", time_since(time.time() - start))
         print("--------------------------------")
-        if epoch % 2 == 0 or epoch > n_epochs - 5:
-            value_ac = 0
-            equation_ac = 0
-            eval_total = 0
-            start = time.time()
-            reference_list = []
-            candidate_list = []
-            for test_batch in test_pairs:
-                #print(test_batch)
-                batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
-                test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
-                                         output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-                reference = test_batch[2]
-                # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
-                # if val_ac:
-                #     value_ac += 1
-                # if equ_ac:
-                #     equation_ac += 1
-                # eval_total += 1
-                candidate = [int(c) for c in test_res]
 
-                # num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
-                # num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
-                # diff = num_left_paren - num_right_paren
-                #
-                # if diff > 0:
-                #     for i in range(diff):
-                #         candidate.append(output_lang.index2word[")"])
-                # elif diff < 0:
-                #     candidate = candidate[:diff]
-
-                reference = ref_flatten(reference)
-
-                ref_str = convert_to_string(reference, output_lang)
-                cand_str = convert_to_string(candidate, output_lang)
-
-                reference_list.append(reference)
-                candidate_list.append(candidate)
-
-                break
-            # print(equation_ac, value_ac, eval_total)
-            # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
-            # print("testing time", time_since(time.time() - start))
-            # print("------------------------------------------------------")
-            accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-            torch.save(encoder.state_dict(), "model_traintest/encoder")
-            torch.save(decoder.state_dict(), "model_traintest/decoder")
-            torch.save(attention_decoder.state_dict(), "model_traintest/attention_decoder")
-            if epoch == n_epochs - 1:
-                best_acc_fold.append(accuracy)
-
-a = 0
-for bl in range(len(best_acc_fold)):
-    a += best_acc_fold[bl]
-    print(best_acc_fold[bl])
-print(a)
+# a = 0
+# for bl in range(len(best_acc_fold)):
+#     a += best_acc_fold[bl]
+#     print(best_acc_fold[bl])
+# print(a)
