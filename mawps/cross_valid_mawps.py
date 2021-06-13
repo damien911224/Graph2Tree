@@ -43,7 +43,7 @@ opt = {
     "separate_attention": True
 }
 
-log_path = "logs/{}".format("SepAtt")
+log_path = "logs/{}".format("NoSepAtt")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 random_seed = 777
@@ -364,16 +364,18 @@ for fold in range(num_folds):
         if bleu_scores >= fold_best_bleu:
             fold_best_bleu = bleu_scores
 
+        current_lr = encoder_optimizer.param_groups[0]['lr']
         writer.add_scalars("Loss", {"train": train_loss_total}, epoch + 1)
         writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
         writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
         writer.add_scalars("BLEU Score", {"val": bleu_scores}, epoch + 1)
-        writer.add_scalar("Learng Rate", encoder_optimizer.param_groups[0]['lr'], epoch + 1)
+        writer.add_scalar("Learng Rate", current_lr, epoch + 1)
 
         print("train_loss:", train_loss_total)
         print("validation_loss:", val_loss_total)
         print("validation_accuracy:", accuracy)
         print("validation_bleu_score:", bleu_scores)
+        print("current_learning_rate", current_lr)
         print("training time", time_since(time.time() - start))
         print("--------------------------------")
     best_accuracies.append(fold_best_accuracy)
