@@ -85,30 +85,38 @@ class OutputLang:
     class to save the vocab and two dict: the word->index and index->word
     """
     def __init__(self):
-        # self.word2index = {}
+        self.word2index = {}
         self.word2count = {}
         self.index2word = {}
         self.n_words = 0  # Count word tokens
-        self.word2index_json_path = "data/reverse_label_dict.json"
-        with open(self.word2index_json_path, "r") as fp:
-            self.word2index = json.load(fp)
+        # self.word2index_json_path = "data/reverse_label_dict.json"
+        # with open(self.word2index_json_path, "r") as fp:
+        #     self.word2index = json.load(fp)
+
+        self.word2index["<S>"] = 0
+        self.word2index["<E>"] = 1
+        self.word2index["("] = 2
+        self.word2index["<N>"] = 3
 
         for key, value in self.word2index.items():
             self.index2word[value] = key
 
+        for key, value in self.word2index.items():
+            self.word2count[key] = 1
+
         self.n_words = len(self.word2index)
 
-    # def add_sen_to_vocab(self, sentence):  # add words of sentence to vocab
-    #     for word in sentence:
-    #         # if re.search("N\d+|NUM|\d+", word):
-    #         #     continue
-    #         if word not in self.index2word:
-    #             self.word2index[word] = self.n_words
-    #             self.word2count[word] = 1
-    #             self.index2word.append(word)
-    #             self.n_words += 1
-    #         else:
-    #             self.word2count[word] += 1
+    def add_sen_to_vocab(self, sentence):  # add words of sentence to vocab
+        for word in sentence:
+            # if re.search("N\d+|NUM|\d+", word):
+            #     continue
+            if word not in self.word2index:
+                self.word2index[word] = self.n_words
+                self.index2word[self.n_words] = word
+                self.word2count[word] = 1
+                self.n_words += 1
+            else:
+                self.word2count[word] += 1
 
     # def trim(self, min_count):  # trim words below a certain count threshold
     #     keep_words = []
@@ -518,51 +526,53 @@ def transfer_english_num(data):  # transfer num into "NUM"
             else:
                 eq_segs.append(temp_eq)
 
-        eq_segs = ['Module', ['For', ['IndentedBlock', ['If', ['IndentedBlock', ['SimpleStatementLine',
-                                                                                 ['AugAssign', ['AddAssign'],
-                                                                                  ['Name', ['var0']],
-                                                                                  ['BinaryOperation', ['Call', ['Arg',
-                                                                                                                ['Name',
-                                                                                                                 [
-                                                                                                                     'const1']]],
-                                                                                                       ['Attribute',
-                                                                                                        ['Name',
-                                                                                                         ['acos']],
-                                                                                                        ['Name',
-                                                                                                         ['math']]]],
-                                                                                   ['Add'],
-                                                                                   ['Call', ['Arg', ['Name', ['var2']]],
-                                                                                    ['Attribute', ['Name', ['atan']],
-                                                                                     ['Name', ['math']]]]]]]],
-                                                        ['Comparison', ['ComparisonTarget', ['Subscript',
-                                                                                             ['SubscriptElement',
-                                                                                              ['Index',
-                                                                                               ['Integer', ['2']]]],
-                                                                                             ['Name', ['QL']]],
-                                                                        ['GreaterThan']], ['Name', ['var1']]]]],
-                              ['Call', ['Arg', ['List', ['Element', ['Subscript', ['SubscriptElement',
-                                                                                   ['Index', ['Integer', ['0']]]],
-                                                                     ['Name', ['QL']]], 'Element', ['Subscript',
-                                                                                                    ['SubscriptElement',
-                                                                                                     ['Index',
-                                                                                                      ['Integer',
-                                                                                                       ['1']]]],
-                                                                                                    ['Name', ['QL']]],
-                                                         'Element', ['Subscript', ['SubscriptElement',
-                                                                                   ['Index', ['Integer', ['2']]]],
-                                                                     ['Name', ['QL']]], 'Element', ['Subscript',
-                                                                                                    ['SubscriptElement',
-                                                                                                     ['Index',
-                                                                                                      ['Integer',
-                                                                                                       ['3']]]],
-                                                                                                    ['Name', ['QL']]],
-                                                         'Element', ['Subscript', ['SubscriptElement',
-                                                                                   ['Index', ['Integer', ['4']]]],
-                                                                     ['Name', ['QL']]]]], 'Arg', ['Name', ['const2']]],
-                               ['Attribute', ['Name', ['combinations']], ['Name', ['itertools']]]],
-                              ['Tuple', ['Element', ['Name', ['var1']], 'Element', ['Name', ['var2']]]],
-                              'SimpleStatementLine',
-                              ['Assign', ['AssignTarget', ['Name', ['result']]], ['Name', ['var0']]]]]
+        dummy_equation_below = None
+        # eq_segs = ['Module', ['For', ['IndentedBlock', ['If', ['IndentedBlock', ['SimpleStatementLine',
+        #                                                                          ['AugAssign', ['AddAssign'],
+        #                                                                           ['Name', ['var0']],
+        #                                                                           ['BinaryOperation', ['Call', ['Arg',
+        #                                                                                                         ['Name',
+        #                                                                                                          [
+        #                                                                                                              'const1']]],
+        #                                                                                                ['Attribute',
+        #                                                                                                 ['Name',
+        #                                                                                                  ['acos']],
+        #                                                                                                 ['Name',
+        #                                                                                                  ['math']]]],
+        #                                                                            ['Add'],
+        #                                                                            ['Call', ['Arg', ['Name', ['var2']]],
+        #                                                                             ['Attribute', ['Name', ['atan']],
+        #                                                                              ['Name', ['math']]]]]]]],
+        #                                                 ['Comparison', ['ComparisonTarget', ['Subscript',
+        #                                                                                      ['SubscriptElement',
+        #                                                                                       ['Index',
+        #                                                                                        ['Integer', ['2']]]],
+        #                                                                                      ['Name', ['QL']]],
+        #                                                                 ['GreaterThan']], ['Name', ['var1']]]]],
+        #                       ['Call', ['Arg', ['List', ['Element', ['Subscript', ['SubscriptElement',
+        #                                                                            ['Index', ['Integer', ['0']]]],
+        #                                                              ['Name', ['QL']]], 'Element', ['Subscript',
+        #                                                                                             ['SubscriptElement',
+        #                                                                                              ['Index',
+        #                                                                                               ['Integer',
+        #                                                                                                ['1']]]],
+        #                                                                                             ['Name', ['QL']]],
+        #                                                  'Element', ['Subscript', ['SubscriptElement',
+        #                                                                            ['Index', ['Integer', ['2']]]],
+        #                                                              ['Name', ['QL']]], 'Element', ['Subscript',
+        #                                                                                             ['SubscriptElement',
+        #                                                                                              ['Index',
+        #                                                                                               ['Integer',
+        #                                                                                                ['3']]]],
+        #                                                                                             ['Name', ['QL']]],
+        #                                                  'Element', ['Subscript', ['SubscriptElement',
+        #                                                                            ['Index', ['Integer', ['4']]]],
+        #                                                              ['Name', ['QL']]]]], 'Arg', ['Name', ['const2']]],
+        #                        ['Attribute', ['Name', ['combinations']], ['Name', ['itertools']]]],
+        #                       ['Tuple', ['Element', ['Name', ['var1']], 'Element', ['Name', ['var2']]]],
+        #                       'SimpleStatementLine',
+        #                       ['Assign', ['AssignTarget', ['Name', ['result']]], ['Name', ['var0']]]]]
+        dummy_equation_above = None
 
         # def seg_and_tag(st):  # seg the equation and tag the num
         #     res = []
@@ -759,13 +769,13 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     test_pairs = []
 
     print("Indexing words...")
-    for pair in pairs_trained:
+    for pair in pairs_trained + pairs_tested:
         if not tree:
             input_lang.add_sen_to_vocab(pair[0])
-            # output_lang.add_sen_to_vocab(pair[1])
+            output_lang.add_sen_to_vocab(pair[1])
         elif pair[-1]:
             input_lang.add_sen_to_vocab(pair[0])
-            # output_lang.add_sen_to_vocab(pair[1])
+            output_lang.add_sen_to_vocab(pair[1])
     input_lang.build_input_lang(trim_min_count)
     # if tree:
     #     output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
@@ -791,7 +801,9 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         # num_stack.reverse()
         input_cell = indexes_from_sentence(input_lang, pair[0])
         output_cell = indexes_from_sentence(output_lang, pair[1], tree)
-        # output_cell = list_to_tree(output_cell, initial=True)
+        # the below code should be removed for the new dataset!!
+        output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
+
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
@@ -818,6 +830,9 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         # num_stack.reverse()
         input_cell = indexes_from_sentence(input_lang, pair[0])
         output_cell = indexes_from_sentence(output_lang, pair[1], tree)
+        # the below code should be removed for the new dataset!!
+        output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
+
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         test_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
@@ -1545,3 +1560,23 @@ def allocation(ex_copy, rate):
     return ex
 
 
+def convert_to_tree(r_list, i_left, i_right, output_lang):
+    t = list()
+    level = 0
+    left = -1
+    for i in range(i_left, i_right):
+        if r_list[i] == output_lang.word2index['(']:
+            if level == 0:
+                left = i
+            level = level + 1
+        elif r_list[i] == output_lang.word2index[')']:
+            level = level -1
+            if level == 0:
+                if i == left+1:
+                    c = r_list[i]
+                else:
+                    c = convert_to_tree(r_list, left + 1, i, output_lang)
+                t.append(c)
+        elif level == 0:
+            t.append(r_list[i])
+    return t

@@ -671,15 +671,15 @@ class Tree():
                 r_list.append(str(self.children[i]))
         return "".join(r_list)
 
-    def to_list(self, output_lang):
+    def flatten(self, output_lang):
         r_list = []
         for i in range(self.num_children):
             if isinstance(self.children[i], type(self)):
-                # r_list.append(output_lang.word2index["("])
-                cl = self.children[i].to_list(output_lang)
+                r_list.append(output_lang.word2index["("])
+                cl = self.children[i].flatten(output_lang)
                 for k in range(len(cl)):
                     r_list.append(cl[k])
-                # r_list.append(output_lang.word2index[")"])
+                r_list.append(output_lang.word2index["<N>"])
             else:
                 r_list.append(self.children[i])
         return r_list
@@ -1186,7 +1186,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
         cur = queue_decode[i]
         queue_decode[cur["parent"] - 1]["t"].children[cur["child_index"] - 1] = cur["t"]
 
-    return queue_decode[0]["t"].to_list(output_lang)
+    return queue_decode[0]["t"].flatten(output_lang)
 
 
 def topdown_train_tree(input_batch, input_length, target_batch, target_length, nums_stack_batch, num_size_batch,
