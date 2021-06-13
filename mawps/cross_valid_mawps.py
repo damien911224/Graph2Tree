@@ -321,8 +321,6 @@ for fold in range(num_folds):
 
             reference_list.append(reference)
             candidate_list.append(candidate)
-
-            break
         # print(equation_ac, value_ac, eval_total)
         # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
         # print("testing time", time_since(time.time() - start))
