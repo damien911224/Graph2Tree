@@ -43,7 +43,7 @@ opt = {
     "separate_attention": True
 }
 
-log_path = "logs/{}".format("NoSepAtt")
+log_path = "logs/{}".format("SepAtt")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 random_seed = 777
