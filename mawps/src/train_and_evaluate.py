@@ -675,11 +675,11 @@ class Tree():
         r_list = []
         for i in range(self.num_children):
             if isinstance(self.children[i], type(self)):
-                r_list.append(output_lang.word2index["IS"])
+                r_list.append(output_lang.word2index["<IS>"])
                 cl = self.children[i].flatten(output_lang)
                 for k in range(len(cl)):
                     r_list.append(cl[k])
-                r_list.append(output_lang.word2index["IE"])
+                r_list.append(output_lang.word2index["<IE>"])
             else:
                 r_list.append(self.children[i])
         return r_list
