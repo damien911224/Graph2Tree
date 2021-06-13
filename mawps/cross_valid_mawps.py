@@ -40,10 +40,10 @@ opt = {
     "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5,
-    "separate_attention": False
+    "separate_attention": True
 }
 
-log_path = "logs/{}".format("NoSepAtt")
+log_path = "logs/{}".format("SepAtt")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -193,10 +193,10 @@ for split_fold in range(4):
     fold_pairs.append(pairs[fold_start:fold_end])
 fold_pairs.append(pairs[(fold_size * 4):])
 whole_fold = fold_pairs
-random.shuffle(whole_fold)
+# random.shuffle(whole_fold)
 
-best_acc_fold = []
-
+best_accuracies = list()
+best_bleu_scores = list()
 for fold in range(num_folds):
     fold_log_folder = os.path.join(log_path, "Fold_{:02d}".format(fold + 1))
     fold_weight_folder = os.path.join(fold_log_folder, "weights")
@@ -257,6 +257,8 @@ for fold in range(num_folds):
     # for num in generate_nums:
     #     generate_num_ids.append(output_lang.word2index[num])
 
+    fold_best_accuracy = -1
+    fold_best_bleu = -1
     for epoch in range(n_epochs):
         print("fold:", fold + 1)
         print("epoch:", epoch + 1)
@@ -349,6 +351,12 @@ for fold in range(num_folds):
         # if epoch == n_epochs - 1:
         #     best_acc_fold.append(accuracy)
 
+        if accuracy >= fold_best_accuracy:
+            fold_best_accuracy = accuracy
+
+        if bleu_scores >= fold_best_bleu:
+            fold_best_bleu = bleu_scores
+
         writer.add_scalars("Loss", {"train": train_loss_total}, epoch + 1)
         writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
         writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
@@ -360,9 +368,14 @@ for fold in range(num_folds):
         print("validation_bleu_score:", bleu_scores)
         print("training time", time_since(time.time() - start))
         print("--------------------------------")
+    best_accuracies.append(fold_best_accuracy)
+    best_bleu_scores.append(fold_best_bleu)
 
-# a = 0
-# for bl in range(len(best_acc_fold)):
-#     a += best_acc_fold[bl]
-#     print(best_acc_fold[bl])
-# print(a)
+for fold_i in range(num_folds):
+    print("-" * 50)
+    print("Fold_{:01d} Best Accuracy: {:.5f}".format(fold_i + 1, best_accuracies[fold_i]))
+    print("Fold_{:01d} Best BLEU Score: {:.5f}".format(fold_i + 1, best_bleu_scores[fold_i]))
+print("-" * 50)
+print("Average Best Accuracy: {:.5f}".format(np.mean(best_accuracies)))
+print("Average Best BLEU Score: {:.5f}".format(np.mean(best_bleu_scores)))
+print("-" * 50)
