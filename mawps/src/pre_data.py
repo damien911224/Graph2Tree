@@ -95,8 +95,8 @@ class OutputLang:
 
         self.word2index["<S>"] = 0
         self.word2index["<E>"] = 1
-        self.word2index["("] = 2
-        self.word2index["<N>"] = 3
+        self.word2index["<IS>"] = 2
+        self.word2index["<IE>"] = 3
 
         for key, value in self.word2index.items():
             self.index2word[value] = key
@@ -781,6 +781,7 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     #     output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
     # else:
     #     output_lang.build_output_lang(generate_nums, copy_nums)
+
 
     for pair in pairs_trained:
         num_stack = []

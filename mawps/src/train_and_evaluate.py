@@ -675,11 +675,11 @@ class Tree():
         r_list = []
         for i in range(self.num_children):
             if isinstance(self.children[i], type(self)):
-                r_list.append(output_lang.word2index["("])
+                r_list.append(output_lang.word2index["IS"])
                 cl = self.children[i].flatten(output_lang)
                 for k in range(len(cl)):
                     r_list.append(cl[k])
-                r_list.append(output_lang.word2index[")"])
+                r_list.append(output_lang.word2index["IE"])
             else:
                 r_list.append(self.children[i])
         return r_list
@@ -706,7 +706,7 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
                 for ic in range(t.num_children):
                     if isinstance(t.children[ic], Tree):
                         # 4가 n?
-                        w_list.append(output_lang.word2index['<N>'])
+                        w_list.append(output_lang.word2index['<IE>'])
                         queue_tree[i].append({"tree": t.children[ic],
                                               "parent": cur_index,
                                               "child_index": ic + 1})
@@ -728,7 +728,7 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
                 if cur_index == 1:
                     dec_batch[cur_index][i][0] = output_lang.word2index['<S>']
                 else:
-                    dec_batch[cur_index][i][0] = output_lang.word2index['(']
+                    dec_batch[cur_index][i][0] = output_lang.word2index['<IS>']
                 dec_batch[cur_index][i][len(w_list) + 1] = output_lang.word2index['<E>']
 
         if using_gpu:
@@ -1311,7 +1311,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
         if head == 1:
             prev_word = torch.tensor([output_lang.word2index['<S>']], dtype=torch.long)
         else:
-            prev_word = torch.tensor([output_lang.word2index['(']], dtype=torch.long)
+            prev_word = torch.tensor([output_lang.word2index['<IS>']], dtype=torch.long)
         if USE_CUDA:
             prev_word = prev_word.cuda()
         i_child = 1
@@ -1326,7 +1326,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
             if int(prev_word[0]) == output_lang.word2index['<E>'] or \
                     t.num_children >= max_length:
                 break
-            elif int(prev_word[0]) == output_lang.word2index['<N>']:
+            elif int(prev_word[0]) == output_lang.word2index['<IE>']:
                 queue_decode.append(
                     {"s": (s[0].clone(), s[1].clone()), "parent": head, "child_index": i_child, "t": Tree()})
                 t.add_child(int(prev_word[0]))
