@@ -175,7 +175,7 @@ class EncoderSeq(nn.Module):
 
         self.embedding = nn.Embedding(input_size, embedding_size, padding_idx=0)
         self.em_dropout = nn.Dropout(dropout)
-        self.graph_embedding = nn.Linear(hidden_size, hidden_size)
+        self.graph_embedding = nn.Linear(hidden_size * 2, hidden_size)
         self.gru_pade = nn.GRU(embedding_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
         self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
 
