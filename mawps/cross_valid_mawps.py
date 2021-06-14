@@ -43,7 +43,7 @@ opt = {
     "separate_attention": False
 }
 
-log_path = "logs/{}".format("NoSepAtt_FC_Max")
+log_path = "logs/{}".format("NoSepAtt_AvgMax")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
