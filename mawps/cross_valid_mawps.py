@@ -40,10 +40,10 @@ opt = {
     "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5,
-    "separate_attention": True
+    "separate_attention": False
 }
 
-log_path = "logs/{}".format("NoSepAtt_AvgMax_SeqAtt")
+log_path = "logs/{}".format("NoSepAtt_Avg")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
