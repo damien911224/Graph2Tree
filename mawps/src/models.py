@@ -208,9 +208,9 @@ class EncoderSeq(nn.Module):
 
         graph_embedding = max_pooled
 
-        graph_01 = self.linear_01(self.norm_01(attention_inputs[0]))
-        graph_02 = self.linear_02(self.norm_02(attention_inputs[1]))
-        # graph_01, graph_02 = pade_outputs.transpose(0, 1), pade_outputs.transpose(0, 1)
+        # graph_01 = self.linear_01(self.norm_01(attention_inputs[0]))
+        # graph_02 = self.linear_02(self.norm_02(attention_inputs[1]))
+        graph_01, graph_02 = pade_outputs.transpose(0, 1), pade_outputs.transpose(0, 1)
 
         return pade_outputs, problem_output, graph_embedding, (graph_01, graph_02)
 
