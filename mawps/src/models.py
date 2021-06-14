@@ -607,6 +607,8 @@ class AttnUnit(nn.Module):
         self.hidden_size = opt["rnn_size"]
         self.separate_attention = self.opt["separate_attention"]
         if self.separate_attention:
+            self.linear_in_01 = nn.Linear(self.hidden_size // 2, self.hidden_size)
+            self.linear_in_02 = nn.Linear(self.hidden_size // 2, self.hidden_size)
             self.linear_att = nn.Linear(3*self.hidden_size, self.hidden_size)
         else:
             self.linear_att = nn.Linear(2*self.hidden_size, self.hidden_size)
@@ -621,11 +623,14 @@ class AttnUnit(nn.Module):
     def forward(self, enc_s_top, dec_s_top, enc_2):
         # L, N, C
         # N, L, C
+        if self.separate_attention:
+            enc_s_top = self.linear_in_01(enc_s_top)
         dot = torch.bmm(enc_s_top, dec_s_top.unsqueeze(2))
         attention = self.softmax(dot.squeeze(2)).unsqueeze(2)
         enc_attention = torch.bmm(enc_s_top.permute(0,2,1), attention)
 
         if self.separate_attention:
+            enc_2 = self.linear_in_02(enc_2)
             dot_2 = torch.bmm(enc_2, dec_s_top.unsqueeze(2))
             attention_2 = self.softmax(dot_2.squeeze(2)).unsqueeze(2)
             enc_attention_2 = torch.bmm(enc_2.permute(0,2,1), attention_2)

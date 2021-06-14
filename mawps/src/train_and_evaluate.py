@@ -791,9 +791,10 @@ def recursive_solve(encoder_outputs, bigru_outputs,
     graph_hidden_state = graph_embedding
 
     encoder_outputs = encoder_outputs.transpose(0, 1)
-    encoder_splits = torch.split(encoder_outputs, 2, dim=-1)
+    N, L, C = encoder_outputs.shape
+    encoder_splits = torch.split(encoder_outputs, C // 2, dim=-1)
     # bigru_outputs = bigru_outputs.transpose(0, 1)
-    structural_info = encoder_splits[0]
+    structural_info = encoder_splits[1]
 
     while (cur_index <= max_index):
         for j in range(1, 3):
