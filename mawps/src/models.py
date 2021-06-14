@@ -179,6 +179,11 @@ class EncoderSeq(nn.Module):
         self.gru_pade = nn.GRU(embedding_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
         self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
 
+        self.norm_01 = LayerNorm(hidden_size // 2)
+        self.norm_02 = LayerNorm(hidden_size // 2)
+        self.linear_01 = nn.Linear(hidden_size // 2, hidden_size)
+        self.linear_02 = nn.Linear(hidden_size // 2, hidden_size)
+
     def forward(self, input_seqs, input_lengths, batch_graph, hidden=None):
         # Note: we run this all at once (over multiple batches of multiple sequences)
         embedded = self.embedding(input_seqs)  # S x B x E
@@ -194,12 +199,18 @@ class EncoderSeq(nn.Module):
         # max_len, N, C
         pade_outputs = pade_outputs[:, :, :self.hidden_size] + pade_outputs[:, :, self.hidden_size:]  # S x B x H
         # BiGRU_outputs = pade_outputs
-        _, pade_outputs, graph_01, graph_02 = self.gcn(pade_outputs, batch_graph)
+        _, pade_outputs, attention_inputs = self.gcn(pade_outputs, batch_graph)
         pade_outputs = pade_outputs.transpose(0, 1)
 
-        max_pooled, _ = torch.max(pade_outputs, dim=0)
+        # max_pooled, _ = torch.max(pade_outputs, dim=0)
         avg_pooled = torch.mean(pade_outputs, dim=0)
-        graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
+        # graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
+
+        graph_embedding = avg_pooled
+
+        # graph_01 = self.linear_01(self.norm_01(attention_inputs[0]))
+        # graph_02 = self.linear_02(self.norm_02(attention_inputs[1]))
+        graph_01, graph_02 = pade_outputs, pade_outputs
 
         return pade_outputs, problem_output, graph_embedding, (graph_01, graph_02)
 
@@ -405,10 +416,6 @@ class Graph_Module(nn.Module):
         
         self.feed_foward = PositionwiseFeedForward(indim, hiddim, outdim, dropout)
         self.norm = LayerNorm(outdim)
-        self.norm_01 = LayerNorm(outdim // 2)
-        self.norm_02 = LayerNorm(outdim // 2)
-        self.linear_01 = nn.Linear(outdim // 2, outdim)
-        self.linear_02 = nn.Linear(outdim // 2, outdim)
 
     def get_adj(self, graph_nodes):
         '''
@@ -490,15 +497,15 @@ class Graph_Module(nn.Module):
         #print('g_feature')
         #print(type(g_feature))
 
-        graph_01 = self.linear_01(self.norm_01(torch.cat(g_feature[:2], 2)))
-        graph_02 = self.linear_02(self.norm_02(torch.cat(g_feature[2:], 2)))
+        graph_01 = torch.cat(g_feature[:2], 2)
+        graph_02 = torch.cat(g_feature[2:], 2)
         g_feature = self.norm(torch.cat(g_feature,2)) + graph_nodes
         #print('g_feature')
         #print(g_feature.shape)
 
         graph_encode_features = self.feed_foward(g_feature) + g_feature
         
-        return adj, graph_encode_features, graph_01, graph_02
+        return adj, graph_encode_features, (graph_01, graph_02)
 
 # GCN
 class GCN(nn.Module):
