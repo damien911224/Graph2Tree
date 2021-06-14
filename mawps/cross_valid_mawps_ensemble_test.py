@@ -195,7 +195,7 @@ pairs, generate_nums, copy_nums = transfer_english_num(data)
 new_fold = get_new_fold(data, pairs, group_data)
 pairs = new_fold
 
-fold_size = int(len(pairs) * (1.0 / num_folds + 1))
+fold_size = int(len(pairs) * (1.0 / (num_folds + 1)))
 fold_pairs = []
 for split_fold in range(num_folds + 1):
     fold_start = fold_size * split_fold
