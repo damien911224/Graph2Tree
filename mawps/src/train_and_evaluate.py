@@ -1301,7 +1301,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
     # graph_embedding = torch.mean(encoder_outputs, 0)
     # graph_embedding = torch.mean(encoder_outputs, 0)
     encoder_outputs = encoder_outputs.transpose(0, 1)
-    structural_info = bigru_outputs
+    structural_info = encoder_outputs
     prev_c = graph_embedding
     prev_h = graph_embedding
 
