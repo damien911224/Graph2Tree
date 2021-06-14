@@ -175,6 +175,7 @@ class EncoderSeq(nn.Module):
 
         self.embedding = nn.Embedding(input_size, embedding_size, padding_idx=0)
         self.em_dropout = nn.Dropout(dropout)
+        self.graph_embedding = nn.Linear(hidden_size, hidden_size)
         self.gru_pade = nn.GRU(embedding_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
         self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
 
@@ -192,10 +193,15 @@ class EncoderSeq(nn.Module):
         problem_output = pade_outputs[-1, :, :self.hidden_size] + pade_outputs[0, :, self.hidden_size:]
         # max_len, N, C
         pade_outputs = pade_outputs[:, :, :self.hidden_size] + pade_outputs[:, :, self.hidden_size:]  # S x B x H
-        BiGRU_outputs = pade_outputs
+        # BiGRU_outputs = pade_outputs
         _, pade_outputs = self.gcn(pade_outputs, batch_graph)
         pade_outputs = pade_outputs.transpose(0, 1)
-        return pade_outputs, problem_output, BiGRU_outputs
+
+        max_pooled, _ = torch.max(pade_outputs, dim=0)
+        avg_pooled = torch.mean(pade_outputs, dim=0)
+        graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
+
+        return pade_outputs, problem_output, graph_embedding
 
 
 class Prediction(nn.Module):

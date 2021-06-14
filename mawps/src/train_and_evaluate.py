@@ -762,7 +762,7 @@ def list_to_tree(r_list, initial=False, depth=0):
        return t
 
 
-def recursive_solve(encoder_outputs, bigru_outputs,
+def recursive_solve(encoder_outputs, graph_embedding,
                     dec_batch, queue_tree, max_index,
                     dec_seq_length, using_gpu, batch_size, rnn_size,
                     decoder, attention_decoder):
@@ -788,13 +788,13 @@ def recursive_solve(encoder_outputs, bigru_outputs,
 
     # graph_embedding, _ = torch.min(encoder_outputs, 0)
     # graph_embedding, _ = torch.max(encoder_outputs, 0)
-    graph_embedding = torch.mean(encoder_outputs, 0)
+    # graph_embedding = torch.mean(encoder_outputs, 0)
     graph_cell_state = graph_embedding
     graph_hidden_state = graph_embedding
 
     encoder_outputs = encoder_outputs.transpose(0, 1)
-    bigru_outputs = bigru_outputs.transpose(0, 1)
-    structural_info = bigru_outputs
+    # bigru_outputs = bigru_outputs.transpose(0, 1)
+    structural_info = encoder_outputs
 
     while (cur_index <= max_index):
         for j in range(1, 3):
@@ -899,7 +899,7 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     attention_decoder_optimizer.zero_grad()
 
     # Run words through encoder
-    encoder_outputs, problem_output, bigru_outputs = encoder(input_var, input_length, batch_graph)
+    encoder_outputs, problem_output, graph_embedding = encoder(input_var, input_length, batch_graph)
     # Prepare input and output variables
     node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
 
@@ -993,7 +993,7 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     dec_batch, queue_tree, max_index = get_dec_batch(target_batch, batch_size, USE_CUDA, output_lang)
 
     loss = \
-        recursive_solve(encoder_outputs, bigru_outputs,
+        recursive_solve(encoder_outputs, graph_embedding,
                         dec_batch, queue_tree, max_index,
                         MAX_OUTPUT_LENGTH, USE_CUDA, batch_size, encoder.hidden_size,
                         decoder, attention_decoder)
@@ -1055,7 +1055,7 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     # attention_decoder_optimizer.zero_grad()
 
     # Run words through encoder
-    encoder_outputs, problem_output, bigru_outputs = encoder(input_var, input_length, batch_graph)
+    encoder_outputs, problem_output, graph_embedding = encoder(input_var, input_length, batch_graph)
     # Prepare input and output variables
     node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
 
@@ -1149,7 +1149,7 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     dec_batch, queue_tree, max_index = get_dec_batch(target_batch, batch_size, USE_CUDA, output_lang)
 
     loss = \
-        recursive_solve(encoder_outputs, bigru_outputs,
+        recursive_solve(encoder_outputs, graph_embedding,
                         dec_batch, queue_tree, max_index,
                         MAX_OUTPUT_LENGTH, USE_CUDA, batch_size, encoder.hidden_size,
                         decoder, attention_decoder)
@@ -1193,7 +1193,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
         batch_graph = batch_graph.cuda()
     # Run words through encoder
 
-    encoder_outputs, problem_output, bigru_outputs = encoder(input_var, [input_length], batch_graph)
+    encoder_outputs, problem_output, graph_embedding = encoder(input_var, [input_length], batch_graph)
 
     # Prepare input and output variables
     node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
@@ -1298,9 +1298,9 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
 
     # graph_embedding, _ = torch.min(encoder_outputs, 0)
     # graph_embedding, _ = torch.max(encoder_outputs, 0)
-    graph_embedding = torch.mean(encoder_outputs, 0)
+    # graph_embedding = torch.mean(encoder_outputs, 0)
+    # graph_embedding = torch.mean(encoder_outputs, 0)
     encoder_outputs = encoder_outputs.transpose(0, 1)
-    bigru_outputs = bigru_outputs.transpose(0, 1)
     structural_info = bigru_outputs
     prev_c = graph_embedding
     prev_h = graph_embedding
