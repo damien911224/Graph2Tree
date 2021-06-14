@@ -788,7 +788,7 @@ def recursive_solve(encoder_outputs, bigru_outputs,
 
     # graph_embedding, _ = torch.min(encoder_outputs, 0)
     # graph_embedding, _ = torch.max(encoder_outputs, 0)
-    graph_embedding, _ = torch.mean(encoder_outputs, 0)
+    graph_embedding = torch.mean(encoder_outputs, 0)
     graph_cell_state = graph_embedding
     graph_hidden_state = graph_embedding
 
@@ -1298,7 +1298,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
 
     # graph_embedding, _ = torch.min(encoder_outputs, 0)
     # graph_embedding, _ = torch.max(encoder_outputs, 0)
-    graph_embedding, _ = torch.mean(encoder_outputs, 0)
+    graph_embedding = torch.mean(encoder_outputs, 0)
     encoder_outputs = encoder_outputs.transpose(0, 1)
     bigru_outputs = bigru_outputs.transpose(0, 1)
     structural_info = bigru_outputs
