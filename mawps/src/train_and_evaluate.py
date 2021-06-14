@@ -786,8 +786,8 @@ def recursive_solve(encoder_outputs, bigru_outputs,
     #     graph_cell_state = graph_cell_state.cuda()
     #     graph_hidden_state = graph_hidden_state.cuda()
 
-    graph_embedding, _ = torch.min(encoder_outputs, 0)
-    # graph_embedding, _ = torch.max(encoder_outputs, 0)
+    # graph_embedding, _ = torch.min(encoder_outputs, 0)
+    graph_embedding, _ = torch.max(encoder_outputs, 0)
     graph_cell_state = graph_embedding
     graph_hidden_state = graph_embedding
 
@@ -985,7 +985,7 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
     split = 0
     # encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
-    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
+    encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
 
     target_batch = [list_to_tree(l) for l in target_batch]
 
@@ -1141,7 +1141,7 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
 
     split = 0
     # encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
-    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
+    encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
 
     target_batch = [list_to_tree(l) for l in target_batch]
 
@@ -1293,10 +1293,10 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
 
     split = 0
     # encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
-    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
+    encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
 
-    graph_embedding, _ = torch.min(encoder_outputs, 0)
-    # graph_embedding, _ = torch.max(encoder_outputs, 0)
+    # graph_embedding, _ = torch.min(encoder_outputs, 0)
+    graph_embedding, _ = torch.max(encoder_outputs, 0)
     encoder_outputs = encoder_outputs.transpose(0, 1)
     bigru_outputs = bigru_outputs.transpose(0, 1)
     structural_info = bigru_outputs
