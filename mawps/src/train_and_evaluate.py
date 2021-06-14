@@ -1308,7 +1308,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
     queue_decode = []
     queue_decode.append({"s": (prev_c, prev_h), "parent": 0, "child_index": 1, "t": Tree()})
     head = 1
-    while head <= len(queue_decode) and head <= 100:
+    while head <= len(queue_decode) and head <= max_length:
         s = queue_decode[head - 1]["s"]
         parent_h = s[1]
         t = queue_decode[head - 1]["t"]
@@ -1342,8 +1342,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
             _, _prev_word = prediction.max(1)
             prev_word = _prev_word
 
-            if int(prev_word[0]) == output_lang.word2index['<E>'] or \
-                    t.num_children >= max_length:
+            if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
                 break
             elif int(prev_word[0]) == output_lang.word2index['<IE>']:
                 queue_decode.append(
