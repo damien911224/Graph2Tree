@@ -856,18 +856,18 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
                encoder, decoder, attention_decoder, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
                output_lang, num_pos, batch_graph, english=False):
     # sequence mask for attention
-    # seq_mask = []
+    seq_mask = []
     max_len = max(input_length)
-    # for i in input_length:
-    #     seq_mask.append([0 for _ in range(i)] + [1 for _ in range(i, max_len)])
-    # seq_mask = torch.ByteTensor(seq_mask)
+    for i in input_length:
+        seq_mask.append([0 for _ in range(i)] + [1 for _ in range(i, max_len)])
+    seq_mask = torch.ByteTensor(seq_mask)
 
-    # num_mask = []
-    # max_num_size = max(num_size_batch) + len(generate_nums)
-    # for i in num_size_batch:
-    #     d = i + len(generate_nums)
-    #     num_mask.append([0] * d + [1] * (max_num_size - d))
-    # num_mask = torch.ByteTensor(num_mask)
+    num_mask = []
+    max_num_size = max(num_size_batch) + len(generate_nums)
+    for i in num_size_batch:
+        d = i + len(generate_nums)
+        num_mask.append([0] * d + [1] * (max_num_size - d))
+    num_mask = torch.ByteTensor(num_mask)
 
     # unk = output_lang.word2index["UNK"]
 
@@ -886,9 +886,9 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
     if USE_CUDA:
         input_var = input_var.cuda()
-        # seq_mask = seq_mask.cuda()
+        seq_mask = seq_mask.cuda()
         # padding_hidden = padding_hidden.cuda()
-        # num_mask = num_mask.cuda()
+        num_mask = num_mask.cuda()
         batch_graph = batch_graph.cuda()
 
     # Zero gradients of both optimizers
@@ -899,17 +899,17 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     # Run words through encoder
     encoder_outputs, problem_output, bigru_outputs = encoder(input_var, input_length, batch_graph)
     # Prepare input and output variables
-    # node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
-    #
-    # max_target_length = max(target_length)
-    #
-    # all_node_outputs = []
-    # all_leafs = []
-    #
-    # copy_num_len = [len(_) for _ in num_pos]
-    # num_size = max(copy_num_len)
-    # all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, num_pos, batch_size, num_size,
-    #                                                           encoder.hidden_size)
+    node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
+
+    max_target_length = max(target_length)
+
+    all_node_outputs = []
+    all_leafs = []
+
+    copy_num_len = [len(_) for _ in num_pos]
+    num_size = max(copy_num_len)
+    all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, num_pos, batch_size, num_size,
+                                                              encoder.hidden_size)
 
     # num_start = output_lang.num_start
     # embeddings_stacks = [[] for _ in range(batch_size)]
@@ -981,6 +981,9 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     # predict_optimizer.step()
     # generate_optimizer.step()
     # merge_optimizer.step()
+
+    encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
+    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
 
     target_batch = [list_to_tree(l) for l in target_batch]
 
@@ -1008,18 +1011,18 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
              encoder, decoder, attention_decoder, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
              output_lang, num_pos, batch_graph, english=False):
     # sequence mask for attention
-    # seq_mask = []
+    seq_mask = []
     max_len = max(input_length)
-    # for i in input_length:
-    #     seq_mask.append([0 for _ in range(i)] + [1 for _ in range(i, max_len)])
-    # seq_mask = torch.ByteTensor(seq_mask)
+    for i in input_length:
+        seq_mask.append([0 for _ in range(i)] + [1 for _ in range(i, max_len)])
+    seq_mask = torch.ByteTensor(seq_mask)
 
-    # num_mask = []
-    # max_num_size = max(num_size_batch) + len(generate_nums)
-    # for i in num_size_batch:
-    #     d = i + len(generate_nums)
-    #     num_mask.append([0] * d + [1] * (max_num_size - d))
-    # num_mask = torch.ByteTensor(num_mask)
+    num_mask = []
+    max_num_size = max(num_size_batch) + len(generate_nums)
+    for i in num_size_batch:
+        d = i + len(generate_nums)
+        num_mask.append([0] * d + [1] * (max_num_size - d))
+    num_mask = torch.ByteTensor(num_mask)
 
     # unk = output_lang.word2index["UNK"]
 
@@ -1038,9 +1041,9 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
 
     if USE_CUDA:
         input_var = input_var.cuda()
-        # seq_mask = seq_mask.cuda()
-        # padding_hidden = padding_hidden.cuda()
-        # num_mask = num_mask.cuda()
+        seq_mask = seq_mask.cuda()
+        padding_hidden = padding_hidden.cuda()
+        num_mask = num_mask.cuda()
         batch_graph = batch_graph.cuda()
 
     # Zero gradients of both optimizers
@@ -1051,17 +1054,17 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     # Run words through encoder
     encoder_outputs, problem_output, bigru_outputs = encoder(input_var, input_length, batch_graph)
     # Prepare input and output variables
-    # node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
-    #
-    # max_target_length = max(target_length)
-    #
-    # all_node_outputs = []
-    # all_leafs = []
-    #
-    # copy_num_len = [len(_) for _ in num_pos]
-    # num_size = max(copy_num_len)
-    # all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, num_pos, batch_size, num_size,
-    #                                                           encoder.hidden_size)
+    node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
+
+    max_target_length = max(target_length)
+
+    all_node_outputs = []
+    all_leafs = []
+
+    copy_num_len = [len(_) for _ in num_pos]
+    num_size = max(copy_num_len)
+    all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, num_pos, batch_size, num_size,
+                                                              encoder.hidden_size)
 
     # num_start = output_lang.num_start
     # embeddings_stacks = [[] for _ in range(batch_size)]
@@ -1134,6 +1137,9 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     # generate_optimizer.step()
     # merge_optimizer.step()
 
+    encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
+    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
+
     target_batch = [list_to_tree(l) for l in target_batch]
 
     dec_batch, queue_tree, max_index = get_dec_batch(target_batch, batch_size, USE_CUDA, output_lang)
@@ -1159,12 +1165,12 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
 def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, attention_decoder,
                   output_lang, num_pos, batch_graph, beam_size=5, english=False, max_length=MAX_OUTPUT_LENGTH):
 
-    # seq_mask = torch.ByteTensor(1, input_length).fill_(0)
+    seq_mask = torch.ByteTensor(1, input_length).fill_(0)
     # Turn padded arrays into (batch_size x max_len) tensors, transpose into (max_len x batch_size)
     input_var = torch.LongTensor(input_batch).unsqueeze(1)
     batch_graph = torch.LongTensor(batch_graph)
 
-    # num_mask = torch.ByteTensor(1, len(num_pos) + len(generate_nums)).fill_(0)
+    num_mask = torch.ByteTensor(1, len(num_pos) + len(generate_nums)).fill_(0)
 
     # Set to not-training mode to disable dropout
     encoder.eval()
@@ -1177,20 +1183,21 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
 
     if USE_CUDA:
         input_var = input_var.cuda()
-        # seq_mask = seq_mask.cuda()
+        seq_mask = seq_mask.cuda()
         # padding_hidden = padding_hidden.cuda()
-        # num_mask = num_mask.cuda()
+        num_mask = num_mask.cuda()
         batch_graph = batch_graph.cuda()
     # Run words through encoder
 
     encoder_outputs, problem_output, bigru_outputs = encoder(input_var, [input_length], batch_graph)
 
     # Prepare input and output variables
-    # node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
+    node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
 
-    # num_size = len(num_pos)
-    # all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, [num_pos], batch_size, num_size,
-    #                                                           encoder.hidden_size)
+    num_size = len(num_pos)
+    all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, [num_pos], batch_size, num_size,
+                                                              encoder.hidden_size)
+
     # num_start = output_lang.num_start
     # # B x P x N
     # embeddings_stacks = [[] for _ in range(batch_size)]
@@ -1280,6 +1287,9 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
     #             flag = False
     #     if flag:
     #         break
+
+    encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
+    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
 
     graph_embedding, _ = torch.max(encoder_outputs, 0)
     encoder_outputs = encoder_outputs.transpose(0, 1)
