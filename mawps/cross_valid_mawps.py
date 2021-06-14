@@ -43,7 +43,7 @@ opt = {
     "separate_attention": True
 }
 
-log_path = "logs/{}".format("SepAtt_EncoderSplit_MinPooling")
+log_path = "logs/{}".format("SepAtt_EncoderSplit_NumEncode")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
