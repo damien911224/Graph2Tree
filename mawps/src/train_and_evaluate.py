@@ -791,8 +791,9 @@ def recursive_solve(encoder_outputs, bigru_outputs,
     graph_hidden_state = graph_embedding
 
     encoder_outputs = encoder_outputs.transpose(0, 1)
-    bigru_outputs = bigru_outputs.transpose(0, 1)
-    structural_info = bigru_outputs
+    encoder_splits = torch.split(encoder_outputs, 2, dim=-1)
+    # bigru_outputs = bigru_outputs.transpose(0, 1)
+    structural_info = encoder_splits[0]
 
     while (cur_index <= max_index):
         for j in range(1, 3):
@@ -844,7 +845,7 @@ def recursive_solve(encoder_outputs, bigru_outputs,
                                                                              dec_s[cur_index][i][2], parent_h,
                                                                              sibling_state)
             # structural_info -> Bi-LSTM
-            pred = attention_decoder(encoder_outputs, dec_s[cur_index][i + 1][2], structural_info)
+            pred = attention_decoder(encoder_splits[0], dec_s[cur_index][i + 1][2], structural_info)
             loss += criterion(pred, dec_batch[cur_index][:, i + 1])
         cur_index = cur_index + 1
 
