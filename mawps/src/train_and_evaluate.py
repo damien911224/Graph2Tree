@@ -982,8 +982,9 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     # generate_optimizer.step()
     # merge_optimizer.step()
 
-    encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
-    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
+    split = 0
+    # encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
+    encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
 
     target_batch = [list_to_tree(l) for l in target_batch]
 
@@ -1137,8 +1138,9 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     # generate_optimizer.step()
     # merge_optimizer.step()
 
-    encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
-    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
+    split = 0
+    # encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
+    encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
 
     target_batch = [list_to_tree(l) for l in target_batch]
 
@@ -1288,8 +1290,9 @@ def evaluate_tree(input_batch, input_length, generate_nums, encoder, decoder, at
     #     if flag:
     #         break
 
-    encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
-    # encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
+    split = 0
+    # encoder_outputs.masked_fill_(seq_mask.transpose(0, 1).unsqueeze(-1), 0.0)
+    encoder_outputs = torch.cat((encoder_outputs, all_nums_encoder_outputs.transpose(0, 1)), dim=0)
 
     graph_embedding, _ = torch.max(encoder_outputs, 0)
     encoder_outputs = encoder_outputs.transpose(0, 1)
