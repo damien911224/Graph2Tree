@@ -206,6 +206,8 @@ test_fold = fold_pairs[-1]
 fold_pairs = fold_pairs[:-1]
 # random.shuffle(whole_fold)
 
+input_lang, output_lang, _, _ = prepare_data(pairs, pairs, 5, generate_nums, copy_nums, tree=False)
+
 encoders = list()
 decoders = list()
 attention_decoders = list()
@@ -228,7 +230,7 @@ for fold in range(num_folds):
         else:
             pairs_trained += fold_pairs[fold_t]
 
-    input_lang, output_lang, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums,
+    _, _, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums,
                                                                     copy_nums, tree=False)
 
     #print('train_pairs[0]')
@@ -405,8 +407,7 @@ print("-" * 50)
 
 pairs_tested = test_fold
 pairs_trained = test_fold
-input_lang, output_lang, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums,
-                                                                    copy_nums, tree=False)
+_, _, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums, copy_nums, tree=False)
 
 reference_list = list()
 candidate_list = list()
