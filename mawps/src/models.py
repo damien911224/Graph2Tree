@@ -621,9 +621,10 @@ class AttnUnit(nn.Module):
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
     def forward(self, enc_s_top, dec_s_top, enc_2):
-        # L, N, C
-        # N, L, C
-        print(enc_s_top.shape)
+        N, L, C = enc_s_top.shape
+        encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
+        enc_s_top = encoder_splits[0]
+        enc_2 = encoder_splits[2]
         if self.separate_attention:
             enc_s_top = self.linear_in_01(enc_s_top)
         dot = torch.bmm(enc_s_top, dec_s_top.unsqueeze(2))
