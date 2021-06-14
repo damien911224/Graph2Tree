@@ -454,4 +454,9 @@ for test_batch in test_pairs:
 accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
 bleu_scores = np.mean(bleu_scores)
 
+print("-" * 50)
+print("Ensembled Accuracy: {:.5f}".format(accuracy))
+print("Ensembled Blue Score: {:.5f}".format(bleu_scores))
+print("-" * 50)
+
 
