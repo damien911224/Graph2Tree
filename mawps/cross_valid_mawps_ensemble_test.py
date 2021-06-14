@@ -181,7 +181,7 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/mawps_dummy.json")
+data = load_mawps_data("data/mawps_combine.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
@@ -195,16 +195,20 @@ pairs, generate_nums, copy_nums = transfer_english_num(data)
 new_fold = get_new_fold(data, pairs, group_data)
 pairs = new_fold
 
-fold_size = int(len(pairs) * (1.0 / num_folds))
+fold_size = int(len(pairs) * (1.0 / num_folds + 1))
 fold_pairs = []
-for split_fold in range(num_folds):
+for split_fold in range(num_folds + 1):
     fold_start = fold_size * split_fold
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
-fold_pairs.append(pairs[(fold_size * num_folds):])
-whole_fold = fold_pairs
+fold_pairs.append(pairs[(fold_size * num_folds + 1):])
+test_fold = fold_pairs[-1]
+fold_pairs = fold_pairs[:-1]
 # random.shuffle(whole_fold)
 
+encoders = list()
+decoders = list()
+attention_decoders = list()
 best_accuracies = list()
 best_bleu_scores = list()
 for fold in range(num_folds):
@@ -277,48 +281,45 @@ for fold in range(num_folds):
 
         start = time.time()
 
-        # train_loss_total = 0
-        # input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-        # num_stack_batches, num_pos_batches, num_size_batches, \
-        # num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
-        # for idx in range(len(input_lengths)):
-        #     train_loss = train_tree(
-        #         input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-        #         num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
-        #         encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-        #         output_lang, num_pos_batches[idx], graph_batches[idx])
-        #     train_loss_total += train_loss.detach().cpu().numpy()
-        # train_loss_total = train_loss_total / len(input_lengths)
-        #
-        # val_loss_total = 0
-        # input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-        # num_stack_batches, num_pos_batches, num_size_batches, \
-        # num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
-        # for idx in range(len(input_lengths)):
-        #     val_loss = val_tree(
-        #         input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-        #         num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
-        #         encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-        #         output_lang, num_pos_batches[idx], graph_batches[idx])
-        #     val_loss_total += val_loss.detach().cpu().numpy()
-        # val_loss_total = val_loss_total / len(input_lengths)
+        train_loss_total = 0
+        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        num_stack_batches, num_pos_batches, num_size_batches, \
+        num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
+        for idx in range(len(input_lengths)):
+            train_loss = train_tree(
+                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+                encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+                output_lang, num_pos_batches[idx], graph_batches[idx])
+            train_loss_total += train_loss.detach().cpu().numpy()
+        train_loss_total = train_loss_total / len(input_lengths)
 
+        val_loss_total = 0
+        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        num_stack_batches, num_pos_batches, num_size_batches, \
+        num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
+        for idx in range(len(input_lengths)):
+            val_loss = val_tree(
+                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+                encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+                output_lang, num_pos_batches[idx], graph_batches[idx])
+            val_loss_total += val_loss.detach().cpu().numpy()
+        val_loss_total = val_loss_total / len(input_lengths)
+
+        # if epoch % 2 == 0 or epoch > n_epochs - 5:
+        # value_ac = 0
+        # equation_ac = 0
+        # eval_total = 0
+        # start = time.time()
         reference_list = list()
         candidate_list = list()
         bleu_scores = list()
         for test_batch in test_pairs:
             #print(test_batch)
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
-            # test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
-            #                          output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-            test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
-                                              [encoder for _ in range(3)],
-                                              [decoder for _ in range(3)],
-                                              [attention_decoder for _ in range(3)],
-                                              output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-            # test_res = evaluate_beam_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder,
-            #                               attention_decoder,
-            #                               output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
+                                     output_lang, test_batch[5], batch_graph, beam_size=beam_size)
             reference = test_batch[2]
             # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
             # if val_ac:
@@ -389,6 +390,10 @@ for fold in range(num_folds):
     best_accuracies.append(fold_best_accuracy)
     best_bleu_scores.append(fold_best_bleu)
 
+    encoders.append(encoder)
+    decoders.append(decoder)
+    attention_decoders.append(attention_decoder)
+
 for fold_i in range(num_folds):
     print("-" * 50)
     print("Fold_{:01d} Best Accuracy: {:.5f}".format(fold_i + 1, best_accuracies[fold_i]))
@@ -397,3 +402,55 @@ print("-" * 50)
 print("Average Best Accuracy: {:.5f}".format(np.mean(best_accuracies)))
 print("Average Best BLEU Score: {:.5f}".format(np.mean(best_bleu_scores)))
 print("-" * 50)
+
+pairs_tested = test_fold
+pairs_trained = test_fold
+input_lang, output_lang, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums,
+                                                                    copy_nums, tree=False)
+
+reference_list = list()
+candidate_list = list()
+bleu_scores = list()
+for test_batch in test_pairs:
+    #print(test_batch)
+    batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
+    test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
+                                      encoders, decoders, attention_decoders,
+                                      output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+    reference = test_batch[2]
+    # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
+    # if val_ac:
+    #     value_ac += 1
+    # if equ_ac:
+    #     equation_ac += 1
+    # eval_total += 1
+    candidate = [int(c) for c in test_res]
+
+    # num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
+    # num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
+    # diff = num_left_paren - num_right_paren
+    #
+    # if diff > 0:
+    #     for i in range(diff):
+    #         candidate.append(output_lang.index2word[")"])
+    # elif diff < 0:
+    #     candidate = candidate[:diff]
+
+    reference = ref_flatten(reference, output_lang)
+
+    ref_str = convert_to_string(reference, output_lang)
+    cand_str = convert_to_string(candidate, output_lang)
+
+    reference_list.append(reference)
+    candidate_list.append(candidate)
+
+    bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
+    bleu_scores.append(bleu_score)
+# print(equation_ac, value_ac, eval_total)
+# print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
+# print("testing time", time_since(time.time() - start))
+# print("------------------------------------------------------")
+accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+bleu_scores = np.mean(bleu_scores)
+
+

@@ -179,10 +179,10 @@ class EncoderSeq(nn.Module):
         self.gru_pade = nn.GRU(embedding_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
         self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
 
-        self.norm_01 = LayerNorm(hidden_size // 2)
-        self.norm_02 = LayerNorm(hidden_size // 2)
-        self.linear_01 = nn.Linear(hidden_size // 2, hidden_size)
-        self.linear_02 = nn.Linear(hidden_size // 2, hidden_size)
+        # self.norm_01 = LayerNorm(hidden_size // 2)
+        # self.norm_02 = LayerNorm(hidden_size // 2)
+        # self.linear_01 = nn.Linear(hidden_size // 2, hidden_size)
+        # self.linear_02 = nn.Linear(hidden_size // 2, hidden_size)
 
     def forward(self, input_seqs, input_lengths, batch_graph, hidden=None):
         # Note: we run this all at once (over multiple batches of multiple sequences)
@@ -203,10 +203,10 @@ class EncoderSeq(nn.Module):
         pade_outputs = pade_outputs.transpose(0, 1)
 
         max_pooled, _ = torch.max(pade_outputs, dim=0)
-        # avg_pooled = torch.mean(pade_outputs, dim=0)
-        # graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
+        avg_pooled = torch.mean(pade_outputs, dim=0)
+        graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
 
-        graph_embedding = max_pooled
+        # graph_embedding = max_pooled
 
         # graph_01 = self.linear_01(self.norm_01(attention_inputs[0]))
         # graph_02 = self.linear_02(self.norm_02(attention_inputs[1]))
