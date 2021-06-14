@@ -847,6 +847,8 @@ def recursive_solve(encoder_outputs, bigru_outputs,
                                                                              sibling_state)
             # structural_info -> Bi-LSTM
             pred = attention_decoder(encoder_splits[0], dec_s[cur_index][i + 1][2], structural_info)
+            # previous GT token -> dictionary -> mask
+            # masked loss
             loss += criterion(pred, dec_batch[cur_index][:, i + 1])
         cur_index = cur_index + 1
 

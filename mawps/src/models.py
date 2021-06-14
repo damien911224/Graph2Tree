@@ -623,6 +623,7 @@ class AttnUnit(nn.Module):
     def forward(self, enc_s_top, dec_s_top, enc_2):
         # L, N, C
         # N, L, C
+        print(enc_s_top.shape)
         if self.separate_attention:
             enc_s_top = self.linear_in_01(enc_s_top)
         dot = torch.bmm(enc_s_top, dec_s_top.unsqueeze(2))
