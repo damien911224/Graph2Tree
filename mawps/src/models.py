@@ -622,9 +622,10 @@ class AttnUnit(nn.Module):
 
     def forward(self, enc_s_top, dec_s_top, enc_2):
         N, L, C = enc_s_top.shape
-        encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
-        enc_s_top = encoder_splits[0]
-        enc_2 = encoder_splits[1]
+        if self.separate_attention:
+            encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
+            enc_s_top = encoder_splits[0]
+            enc_2 = encoder_splits[1]
         if self.separate_attention:
             enc_s_top = self.linear_in_01(enc_s_top)
         dot = torch.bmm(enc_s_top, dec_s_top.unsqueeze(2))
