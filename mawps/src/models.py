@@ -622,7 +622,7 @@ class AttnUnit(nn.Module):
 
     def forward(self, enc_s_top, dec_s_top, enc_2):
         if self.separate_attention:
-            N, L, C = enc_s_top.shapet(enc_s_top, C // 2, dim=-1)
+            N, L, C = enc_s_top.shape
             encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
             enc_s_top = encoder_splits[0]
             enc_2 = encoder_splits[1]
