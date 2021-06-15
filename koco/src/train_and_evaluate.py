@@ -4,6 +4,7 @@ from src.expressions_transfer import *
 from src.models import *
 import math
 import torch
+torch.multiprocessing.set_start_method('spawn')
 import torch.optim
 import torch.nn.functional as f
 import time
