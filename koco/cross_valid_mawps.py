@@ -37,7 +37,6 @@ beam_size = 5
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
-num_workers = 20
 
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
@@ -61,6 +60,8 @@ opt = {
 
 log_path = "logs/{}".format("NoSepAtt_Max")
 num_folds = 5
+target_folds = [0, 1, 2, 3, 4]
+num_workers = 20
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
 random_seed = 777
@@ -230,7 +231,7 @@ fold_pairs.append(pairs[(fold_size * 4):])
 
 best_accuracies = list()
 best_bleu_scores = list()
-for fold in range(num_folds):
+for fold in target_folds:
     fold_log_folder = os.path.join(log_path, "Fold_{:02d}".format(fold + 1))
     fold_weight_folder = os.path.join(fold_log_folder, "weights")
     try:
