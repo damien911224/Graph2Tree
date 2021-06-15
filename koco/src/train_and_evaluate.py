@@ -1117,7 +1117,7 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
         # print(num_value_batch, num_pos)
 
         input_seq1 = input_seq1.transpose(0, 1)
-        embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda:0")
+        embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
         # print(embedded.size())
 
     if USE_CUDA:
@@ -1284,7 +1284,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
         batch_graph = torch.LongTensor(batch_graph)
 
         input_seq1 = input_seq1.transpose(0, 1)
-        embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda:0")
+        embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
         input_length = input_length[0]
 
     if USE_CUDA:
@@ -1621,7 +1621,7 @@ def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings,
             batch_graph = torch.LongTensor(batch_graph)
 
             input_seq1 = input_seq1.transpose(0, 1)
-            embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda:0")
+            embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
             input_length = input_length[0]
 
         encoder_outputs, problem_output, graph_embedding, attention_inputs = \
