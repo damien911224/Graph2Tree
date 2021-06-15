@@ -22,7 +22,7 @@ def read_json(path):
 batch_size = 64
 embedding_size = 128
 hidden_size = 512
-n_epochs = 80
+n_epochs = 1
 learning_rate = 1e-3
 weight_decay = 1e-5
 beam_size = 5
@@ -369,9 +369,9 @@ for fold in range(num_folds):
     best_accuracies.append(fold_best_accuracy)
     best_bleu_scores.append(fold_best_bleu)
 
-    encoders.append(encoder)
-    decoders.append(decoder)
-    attention_decoders.append(attention_decoder)
+    encoders.append(encoder.copy())
+    decoders.append(decoder.copy())
+    attention_decoders.append(attention_decoder.copy())
 
 for fold_i in range(num_folds):
     print("-" * 50)
