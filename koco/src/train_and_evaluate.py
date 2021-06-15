@@ -847,7 +847,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             else:
                 input_word = dec_batch[cur_index][:, i]
                 if using_gpu:
-                    input_word.cuda()
+                    input_word = input_word.cuda()
 
             dec_s[cur_index][i + 1][1], dec_s[cur_index][i + 1][2] = decoder(input_word, dec_s[cur_index][i][1],
                                                                              dec_s[cur_index][i][2], parent_h,
