@@ -11,111 +11,7 @@ import torch.utils.data
 from src.pre_data import Lang, OutputLang, indexes_from_sentence
 
 import math
-
-"""
-Developed by Junseong Kim, Atlas Guide
-codertimo@goodatlas.com / github.com/codertimo
-Korean to number
-"""
-
-numbers = [
-    ("스물", 20),
-    ("서른", 30),
-    ("마흔", 40),
-    ("쉰", 50),
-    ("예순", 60),
-    ("일흔", 70),
-    ("여든", 80),
-    ("아흔", 90),
-    ("하나", 1),
-    ("한", 1),
-    ("두", 2),
-    ("둘", 2),
-    ("세", 3),
-    ("셋", 3),
-    ("네", 4),
-    ("넷", 4),
-    ("다섯", 5),
-    ("여섯", 6),
-    ("일곱", 7),
-    ("여덟", 8),
-    ("여덜", 8),
-    ("아홉", 9),
-    ("일", 1),
-    ("이", 2),
-    ("삼", 3),
-    ("사", 4),
-    ("오", 5),
-    ("육", 6),
-    ("칠", 7),
-    ("팔", 8),
-    ("구", 9),
-    ("열", 10),
-    ("십", 10),
-    ("백", 100),
-    ("천", 1000),
-    ("만", 10000),
-    ("억", 100000000),
-    ("조", 1000000000000),
-    ("경", 10000000000000000),
-    ("해", 100000000000000000000),
-]
-
-number_types = {
-    "키로": "kg",
-    "키로그램": "kg",
-    "킬로": "kg",
-    "킬로그램": "kg",
-    '킬로그람': "kg",
-    "그램": "g",
-    "그람": "g",
-    "리터": "L",
-    "밀리리터": "mL",
-    "미리리터": "mL",
-    "미리": "mL",
-    "밀리": "mL",
-    "센치미터": "cm",
-    "센티미터": "cm",
-    "밀리미터": "mm",
-    "미터": "m",
-    "개입": "개입",
-    "개": "개",
-    "명": "명",
-    "원": "원",
-    "묶음": "묶음",
-    "단": "단",
-    "모": "모",
-    "세트": "세트",
-    "병": "병",
-    "장": "장",
-    "박스": "박스",
-    "봉지": "봉지",
-    "팩": "팩",
-    "줄": "줄",
-    "망": "망",
-    "포": "포",
-    "말": "말",
-    "캔": "캔",
-    "판": "판",
-    "자루": "자루",
-    "가마니": "가마니",
-    "통": "통",
-    "다스": "다스",
-    "권":"권",
-    "쪽":"쪽"
-}
-
-float_nums = [
-    ("일", 1),
-    ("이", 2),
-    ("삼", 3),
-    ("사", 4),
-    ("오", 5),
-    ("육", 6),
-    ("칠", 7),
-    ("팔", 8),
-    ("구", 9)
-]
+from parsing_dict import *
 
 
 def decode(korean_num):
@@ -196,34 +92,12 @@ def decode(korean_num):
 
     return result
 
-change_list1 = ['첫', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열', \
-                '하나', '둘', '셋', '넷', \
-                '한', \
-                '스무', "서른", "마흔", "쉰", "예순", "일흔", "여든", "아흔" \
-]
-change_list2 = ["열", "스물", "서른", "마흔", "쉰", "예순", "일흔", "여든", "아흔"]
-change_list3 = ["한", '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉']
-target_list1 = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', \
-            '1', '2', '3', '4', \
-            '1', \
-            '20', '30', '40', '50', '60', '70', '80', '90'
-]
-target_list2 = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-target_list3 = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-
-change_list4 = ['일', '이', '삼', '사', '오', '육', '칠', '팔', '구']
-change_list5 = ['이', '삼', '사', '오', '육', '칠', '팔', '구']
-change_list6 = ['십', '백', '천', '만']
-change_list7 = ['일', '이', '삼', '사', '오', '육', '칠', '팔', '구', '십', '백', '천', '만']
-unit=['kg','g','L','ml','mL','cm','mm','m','t','쪽','권','개입','개','명','원','묶음','단','모','세트','다스','병','장','박스','봉지','팩','줄','망','포','말','캔','판','자루','가마니','통']
-target_list4 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-target_list5 = [10, 100, 1000, 10000]
-
 def read_json_mac(path):
     # this is for mac
     with codecs.open(path, 'r', encoding="utf-8-sig") as f:
         file = json.load(f)
     return file
+
 
 def read_json(path):
     with open(path, 'r') as f:
@@ -319,6 +193,14 @@ def extract(input_name):
         sent = obj[q_num]['question']
         sent = sent.replace(',', '')
         # sent = change_hangeul(sent)
+        '''
+        ql_candi = k.pos(sent)
+        for ql_c in ql_candi:
+            for idx in range(len(change_list)):
+                if change_list[idx] == ql_c[:-2] and (ql_c[-1] == 'K' or ql_c[-1] == 'N' or ql_c[-1] == 'W'):
+                    sent = sent.replace(ql_c[:-2], target_list[idx])
+        ql_candi = k.pos(sent)
+        '''
         for kw in range(len(change_list1)):
             p = "\s" + change_list1[kw] + "\s"
             sent = re.sub(p, ' ' + target_list1[kw] + ' ', sent)
@@ -340,52 +222,72 @@ def extract(input_name):
                         break
                 if breakFlag:
                     break
-        fw = "(" + "|".join(change_list4) + ")"
-        fw2 = "(" + "|".join(change_list5) + ")"
-        fw3 = "(" + "|".join(change_list6) + ")"
-        fw4 = "(" + "|".join(unit) + ")"
-        p = "(" + fw2 + "?" + fw3 + ")*" + fw + '?(\s |' + fw4 + ')'
+        fw = "[" + "".join(change_list4) + "]"
+        fw2 = "[" + "".join(change_list5) + "]"
+        fw3 = "[" + "".join(change_list6) + "]"
+        fw4 = "[" + "".join(unit) + "]"
+        p = "(" + fw2 + "?" + fw3 + ")*" + fw + '?'
+        # case1 : 삼백이십삼, 이십, 구십이 (양옆 띄어쓰기 상관X)
         cl = []
         if re.search(p, sent) is not None:
             for catch in re.finditer(p, sent):
                 if len(catch[0]) > 1:
                     cl.append(catch[0])
+        # case2 : 일, 이, 삼, 사, 오 (양옆 띄어쓰기 O)
         cl2 = []
         p = "\s(" + "|".join(change_list7) + ")\s"
         if re.search(p, sent) is not None:
             for catch in re.finditer(p, sent):
                 if len(catch[0]) > 1:
                     cl2.append(catch[0])
+        # case3 : 하나의, 하나만 1로 치환
+        cl3 = []
+        p = "(하나)[만가에의는당를\s]"
+        if re.search(p, sent) is not None:
+            for catch in re.finditer(p, sent):
+                if len(catch[0]) > 1:
+                    cl3.append(catch[0])
+        # case4 : 첫째, 둘째 -> 1, 2로 치환
+        cl4 = []
+        fw8 = "[" + "".join(change_list8) + "]"
+        p = fw8 + "째"
+        if re.search(p, sent) is not None:
+            for catch in re.finditer(p, sent):
+                if len(catch[0]) > 1:
+                    cl4.append(catch[0])
+        p = '0+'
+        p = re.compile(p)
         for i in cl:
-            sent = sent.replace(i, str(h2i(i)))
+            hh = p.match(i)
+            if hh is None:
+                sent = sent.replace(i, str(h2i(i)))
         for i in cl2:
-            sent = sent.replace(i, ' ' + str(h2i(i)) + ' ')
+            hh = p.match(i)
+            if hh is None:
+                sent = sent.replace(i, ' ' + str(h2i(i)) + ' ')
+        for i in cl3:
+            hh = p.match(i)
+            if hh is None:
+                sent = sent.replace(i, '1')
+        for i in cl4:
+            hh = p.match(i)
+            if hh is None:
+                for j in range(len(change_list8)):
+                    if change_list8[j] in i:
+                        sent = sent.replace(i, target_list2[j] + '째')
 
         nl = k.nouns(sent)
         tmp_obj = {}
         tmp_obj['NL'] = nl
 
         ql = []
-        p = "\\d+(\\.\\d+)?"
+        p = "[-+]?\\d+(\\.\\d+)?"
         if re.search(p, sent) is not None:
             for catch in re.finditer(p, sent):
-                ql.append(catch[0])
+                if catch[0] != '0':
+                    ql.append(catch[0])
 
         tmp_obj['QL'] = ql
         tmp_obj['question'] = re.sub(p, "NUM", sent).split()
         list_obj[str(q_num)] = tmp_obj
     return list_obj
-
-
-class CustomDataSet(torch.utils.data.Dataset):
-    def __init__(self, path, num_trim):
-        self.data = extract(path)
-
-        self.pairs, self.copy_nums = transfer_num_n_equation(self.data)
-        self.input_lang, self.out_pairs = prepare_infer_data(self.pairs, num_trim)
-
-    def __len__(self):
-        return len(self.out_pairs)
-
-    def __getitem__(self, idx):
-        return self.out_pairs[idx]
