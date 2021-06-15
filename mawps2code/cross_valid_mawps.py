@@ -12,6 +12,8 @@ from sympy.parsing.sympy_parser import parse_expr
 from tensorboardX import SummaryWriter
 from sklearn.model_selection import KFold
 from nltk.translate.bleu_score import sentence_bleu
+from torch.utils.data import DataLoader
+from src.pre_data import TrainDataset, my_collate
 
 def read_json(path):
     with open(path,'r') as f:
@@ -310,17 +312,36 @@ for fold in range(num_folds):
         train_loss_total = train_loss_total / len(dataloader)
 
         val_loss_total = 0
-        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-        num_stack_batches, num_pos_batches, num_size_batches, \
-        num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
-        for idx in range(len(input_lengths)):
+        # input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        # num_stack_batches, num_pos_batches, num_size_batches, \
+        # num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
+        # for idx in range(len(input_lengths)):
+        #     val_loss = val_tree(
+        #         input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+        #         num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+        #         encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+        #         output_lang, num_pos_batches[idx], graph_batches[idx])
+        #     val_loss_total += val_loss.detach().cpu().numpy()
+        # val_loss_total = val_loss_total / len(input_lengths)
+
+        dataset = TrainDataset(test_pairs, input_lang, output_lang, USE_CUDA)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
+                                collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
+
+        for idx, batch_items in enumerate(dataloader):
+            input_batch, input_length, output_batch, output_length, \
+            num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
+            contextual_input, dec_batch, queue_tree, max_index = batch_items
             val_loss = val_tree(
-                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+                input_batch, input_length, output_batch, output_length,
+                num_stack_batch, num_size_batch, num_value_batch, generate_num_ids,
+                encoder, decoder, attention_decoder,
                 encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-                output_lang, num_pos_batches[idx], graph_batches[idx])
+                input_lang, output_lang, num_pos_batch, graph_batch,
+                dec_batch, queue_tree, max_index
+            )
             val_loss_total += val_loss.detach().cpu().numpy()
-        val_loss_total = val_loss_total / len(input_lengths)
+        val_loss_total = val_loss_total / len(dataloader)
 
         reference_list = list()
         candidate_list = list()
