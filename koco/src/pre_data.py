@@ -1087,7 +1087,7 @@ class TrainDataset(torch.utils.data.Dataset):
         self.USE_CUDA = USE_CUDA
 
     def __len__(self):
-        return len(self.file_list)
+        return len(self.pairs_to_batch)
 
     def __getitem__(self, index):
         datum = self.pairs_to_batch[index]
