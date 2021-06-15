@@ -1115,8 +1115,8 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
 
         if USE_CUDA:
             batch_graph = batch_graph.cuda()
-            for item in dec_batch:
-                item.cuda()
+            for key, value in dec_batch:
+                value.cuda()
 
         # print(num_value_batch, num_pos)
 
