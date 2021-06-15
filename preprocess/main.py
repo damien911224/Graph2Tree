@@ -187,14 +187,14 @@ def decode(korean_num):
     return result
 
 change_list1 = ['첫', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열', \
-                '하나', '둘', '셋', '넷', \
+                '둘', '셋', '넷', \
                 '한', \
                 '스무', "서른", "마흔", "쉰", "예순", "일흔", "여든", "아흔" \
 ]
 change_list2 = ["열", "스물", "서른", "마흔", "쉰", "예순", "일흔", "여든", "아흔"]
 change_list3 = ["한", '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉']
 target_list1 = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', \
-            '1', '2', '3', '4', \
+            '2', '3', '4', \
             '1', \
             '20', '30', '40', '50', '60', '70', '80', '90'
 ]
@@ -203,7 +203,7 @@ target_list3 = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 change_list4 = ['일', '이', '삼', '사', '오', '육', '칠', '팔', '구']
 change_list5 = ['이', '삼', '사', '오', '육', '칠', '팔', '구']
-change_list6 = ['십', '백', '천', '만']
+change_list6 = ['십', '백']
 change_list7 = ['일', '이', '삼', '사', '오', '육', '칠', '팔', '구', '십', '백', '천', '만']
 unit=['kg','g','L','ml','mL','cm','mm','m','t','쪽','권','개입','개','명','원','묶음','단','모','세트','다스','병','장','박스','봉지','팩','줄','망','포','말','캔','판','자루','가마니','통']
 target_list4 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -284,11 +284,11 @@ def extract(input_name, ans_name, output_name):
                             break
                     if breakFlag:
                         break
-            fw = "(" + "|".join(change_list4) + ")"
-            fw2 = "(" + "|".join(change_list5) + ")"
-            fw3 = "(" + "|".join(change_list6) + ")"
-            fw4 = "(" + "|".join(unit) + ")"
-            p = "(" + fw2 + "?" + fw3 + ")*" + fw + '?(\s |' + fw4 + ')'  
+            fw = "[" + "".join(change_list4) + "]"
+            fw2 = "[" + "".join(change_list5) + "]"
+            fw3 = "[" + "".join(change_list6) + "]"
+            fw4 = "[" + "".join(unit) + "]"
+            p = "(" + fw2 + "?" + fw3 + ")*" + fw + '?' 
             cl = []
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
@@ -304,11 +304,11 @@ def extract(input_name, ans_name, output_name):
             p = re.compile(p)
             for i in cl:
                 hh = p.match(i)
-                if hh is not None:
+                if hh is None:
                     sent = sent.replace(i, str(h2i(i)))
             for i in cl2:
                 hh = p.match(i)
-                if hh is not None:
+                if hh is None:
                     sent = sent.replace(i, ' ' + str(h2i(i)) + ' ')
 
             nl = k.nouns(sent)
@@ -316,7 +316,7 @@ def extract(input_name, ans_name, output_name):
             tmp_obj['NL'] = nl
 
             ql = []
-            p = "\\d+(\\.\\d+)?"
+            p = "[-+]?\\d+(\\.\\d+)?"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
                     if catch[0] != '0':
