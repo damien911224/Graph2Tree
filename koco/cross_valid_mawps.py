@@ -50,8 +50,8 @@ opt = {
     "bert_learningRate": learning_rate * 1e-2,
     "embedding_size": 768,
     "dropout_input": 0.5,
-    "pretrained_bert_path": None
-    # "pretrained_bert_path": './electra_model'
+    # "pretrained_bert_path": None
+    "pretrained_bert_path": './electra_model'
 }
 
 log_path = "logs/{}".format("NoSepAtt_Max")
@@ -251,6 +251,7 @@ for fold in range(num_folds):
         # embedding = BertEncoder("bert-base-uncased", "cuda:0", False)
     else:
         embedding = Embedding(None, input_lang, input_size=input_lang.n_words, embedding_size=opt['embedding_size'], dropout=opt['dropout_input'])
+    embedding.to("cpu")
     encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
                          n_layers=n_layers)
     ##################################################################################################
