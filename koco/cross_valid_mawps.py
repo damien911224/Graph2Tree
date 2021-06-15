@@ -50,7 +50,8 @@ opt = {
     "bert_learningRate": learning_rate * 1e-2,
     "embedding_size": 768,
     "dropout_input": 0.5,
-    "pretrained_bert_path": None
+    # "pretrained_bert_path": None
+    "pretrained_bert_path": './electra_model'
 }
 
 log_path = "logs/{}".format("NoSepAtt_Max")
@@ -386,7 +387,8 @@ for fold in range(num_folds):
         decoder_scheduler.step(val_loss_total)
         attention_decoder_scheduler.step(val_loss_total)
 
-        torch.save(embedding.state_dict(), os.path.join(fold_weight_folder, "embedding-{}.pth".format(epoch + 1)))
+        # torch.save(embedding.state_dict(), os.path.join(fold_weight_folder, "embedding-{}.pth".format(epoch + 1)))
+        embedding.bert_layer.save_pretrained(os.path.join(fold_weight_folder, "embedding-{}".format(epoch + 1)))
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
         torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
         torch.save(attention_decoder.state_dict(),
