@@ -372,8 +372,9 @@ def extract(input_name, ans_name, output_name):
                     new_text = obj[q_num]['question']
                     new_equation = ans_obj[q_num]['equation']
                     solution = ans_obj[q_num]['answer']
-
-                    QL = "QL = " + str(num_list)
+                    
+                    num_list_str = re.sub("\'", "", str(num_list))
+                    QL = "QL = " + num_list_str
                     NL = "NL = " + str(noun_list)
 
                     tmp['id'] = id
