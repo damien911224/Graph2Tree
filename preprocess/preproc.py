@@ -227,13 +227,22 @@ def QL2Str(QL):
     return result
 
 def diff_num_list(q_num, a, b):
+    import re
     result = ''
+    p = "\\d+\/\\d+"
+    p = re.compile(p)
     if len(a) is not len(b):
         result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
         return result
     for i in range(len(a)):
-        if float(a[i]) != float(b[i]):
-	        result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
+        A = p.match(str(a[i]))
+        B = p.match(str(b[i]))
+        if str(a[i]) != str(b[i]):
+            if A is None and B is None:
+                if float(a[i]) != float(b[i]):
+                    result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
+            else:
+                result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
     return result
 
 def extract(input_name, ans_name, output_name):
