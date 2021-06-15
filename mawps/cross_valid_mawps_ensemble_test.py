@@ -395,6 +395,11 @@ for model_i in range(len(encoder_state_dicts)):
     decoder = DecoderRNN(opt, output_lang.n_words)
     attention_decoder = AttnUnit(opt, output_lang.n_words)
 
+    if USE_CUDA:
+        encoder.cuda()
+        decoder.cuda()
+        attention_decoder.cuda()
+
     encoder.load_state_dict(encoder_state_dicts[model_i])
     decoder.load_state_dict(decoder_state_dicts[model_i])
     attention_decoder.load_state_dict(attention_decoder_state_dicts[model_i])
