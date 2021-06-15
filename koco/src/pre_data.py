@@ -166,6 +166,49 @@ class OutputLang:
     #     for i, j in enumerate(self.index2word):
     #         self.word2index[j] = i
 
+class Tree():
+    def __init__(self):
+        self.parent = None
+        self.num_children = 0
+        self.children = []
+
+    def __str__(self, level=0):
+        ret = ""
+        for child in self.children:
+            if isinstance(child, type(self)):
+                ret += child.__str__(level + 1)
+            else:
+                ret += "\t" * level + str(child) + "\n"
+        return ret
+
+    def add_child(self, c):
+        if isinstance(c, type(self)):
+            c.parent = self
+        self.children.append(c)
+        self.num_children = self.num_children + 1
+
+    def to_string(self):
+        r_list = []
+        for i in range(self.num_children):
+            if isinstance(self.children[i], Tree):
+                r_list.append("( " + self.children[i].to_string() + " )")
+            else:
+                r_list.append(str(self.children[i]))
+        return "".join(r_list)
+
+    def flatten(self, output_lang):
+        r_list = []
+        for i in range(self.num_children):
+            if isinstance(self.children[i], type(self)):
+                r_list.append(output_lang.word2index["<IS>"])
+                cl = self.children[i].flatten(output_lang)
+                for k in range(len(cl)):
+                    r_list.append(cl[k])
+                r_list.append(output_lang.word2index["<IE>"])
+            else:
+                r_list.append(self.children[i])
+        return r_list
+
 def load_raw_data(filename):  # load the json data to list(dict()) for MATH 23K
     print("Reading lines...")
     f = open(filename, encoding="utf-8")
@@ -1078,6 +1121,21 @@ def index_batch_to_words(input_batch, input_length, lang):
 
 	return contextual_input
 
+def stack_to_string(stack):
+	op = ""
+	for i in stack:
+		if op == "":
+			op = op + i
+		else:
+			op = op + ' ' + i
+	return op
+
+def sentence_from_indexes(lang, indexes):
+	sent = []
+	for ind in indexes:
+		sent.append(lang.index2word[ind])
+	return sent
+
 class TrainDataset(torch.utils.data.Dataset):
 
     def __init__(self, pairs_to_batch, input_lang, output_lang, USE_CUDA):
@@ -1095,7 +1153,10 @@ class TrainDataset(torch.utils.data.Dataset):
         return datum, self.input_lang, self.output_lang, self.USE_CUDA
 
 def my_collate(batch):
-    batch, input_lang, output_lang, USE_CUDA = batch
+    input_lang = [item[1] for item in batch]
+    output_lang = [item[2] for item in batch]
+    USE_CUDA = [item[3] for item in batch]
+    batch = [item[0] for item in batch]
     input_lang = input_lang[0]
     output_lang = output_lang[0]
     USE_CUDA = USE_CUDA[0]
