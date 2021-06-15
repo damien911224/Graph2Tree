@@ -838,6 +838,8 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                     sibling_state[i - 1, :] = dec_s[sibling_index][dec_batch[sibling_index].size(1) - 1][2][i - 1, :]
 
         parent_h = dec_s[cur_index][0][2]
+        if using_gpu:
+            parent_h.cuda()
         for i in range(dec_batch[cur_index].size(1) - 1):
             teacher_force = random.random() < teacher_force_ratio
             if teacher_force != True and i > 0:
@@ -917,8 +919,6 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
         batch_graph = get_single_batch_graph(token_ids.cpu().tolist(), input_len1, new_group_batch, num_value_batch,
                                              num_pos)
         batch_graph = torch.LongTensor(batch_graph)
-        if USE_CUDA:
-            batch_graph.cuda()
 
         # print(num_value_batch, num_pos)
 
@@ -930,8 +930,8 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
     if USE_CUDA:
         batch_graph = batch_graph.cuda()
-        for value in dec_batch.values():
-            value.cuda()
+        # for value in dec_batch.values():
+        #     value.cuda()
 
     encoder_outputs, problem_output, graph_embedding, attention_inputs = \
         encoder(embedded, input_length, orig_idx, batch_graph)
@@ -1112,11 +1112,6 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
         batch_graph = get_single_batch_graph(token_ids.cpu().tolist(), input_len1, new_group_batch, num_value_batch,
                                              num_pos)
         batch_graph = torch.LongTensor(batch_graph)
-
-        if USE_CUDA:
-            batch_graph = batch_graph.cuda()
-            for value in dec_batch.values():
-                value.cuda()
 
         # print(num_value_batch, num_pos)
 
