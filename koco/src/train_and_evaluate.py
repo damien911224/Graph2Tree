@@ -846,15 +846,18 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                 input_word = pred.argmax(1)
             else:
                 input_word = dec_batch[cur_index][:, i]
+                if using_gpu:
+                    input_word.cuda()
 
             dec_s[cur_index][i + 1][1], dec_s[cur_index][i + 1][2] = decoder(input_word, dec_s[cur_index][i][1],
                                                                              dec_s[cur_index][i][2], parent_h,
                                                                              sibling_state)
             # structural_info -> Bi-LSTM
             pred = attention_decoder(attention_inputs[0], dec_s[cur_index][i + 1][2], attention_inputs[1])
-            # previous GT token -> dictionary -> mask
-            # masked loss
-            loss += criterion(pred, dec_batch[cur_index][:, i + 1])
+            gt = dec_batch[cur_index][:, i + 1]
+            if using_gpu:
+                gt.cuda()
+            loss += criterion(pred, gt)
         cur_index = cur_index + 1
 
     return loss
@@ -930,8 +933,6 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
     if USE_CUDA:
         batch_graph = batch_graph.cuda()
-        # for value in dec_batch.values():
-        #     value.cuda()
 
     encoder_outputs, problem_output, graph_embedding, attention_inputs = \
         encoder(embedded, input_length, orig_idx, batch_graph)
