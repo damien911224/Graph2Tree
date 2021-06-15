@@ -4,6 +4,7 @@ import copy
 import re
 import numpy as np
 import os
+import torch
 
 PAD_token = 0
 
@@ -986,6 +987,155 @@ def get_single_example_graph(input_batch, input_length,group,num_value,num_pos):
     batch_graph.append(graph_total)
     batch_graph = np.array(batch_graph)
     return batch_graph
+
+def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
+    queue_tree = {}
+    for i in range(1, batch_size + 1):
+        queue_tree[i] = []
+        queue_tree[i].append({"tree": dec_tree_batch[i - 1],
+                              "parent": 0, "child_index": 1})
+
+    cur_index, max_index = 1, 1
+    dec_batch = {}
+    # max_index: the max number of sequence decoder in one batch
+    while (cur_index <= max_index):
+        max_w_len = -1
+        batch_w_list = []
+        for i in range(1, batch_size + 1):
+            w_list = []
+            if (cur_index <= len(queue_tree[i])):
+                t = queue_tree[i][cur_index - 1]["tree"]
+
+                for ic in range(t.num_children):
+                    if isinstance(t.children[ic], Tree):
+                        # 4가 n?
+                        w_list.append(output_lang.word2index['<IE>'])
+                        queue_tree[i].append({"tree": t.children[ic],
+                                              "parent": cur_index,
+                                              "child_index": ic + 1})
+                    else:
+                        w_list.append(t.children[ic])
+                if len(queue_tree[i]) > max_index:
+                    max_index = len(queue_tree[i])
+            if len(w_list) > max_w_len:
+                max_w_len = len(w_list)
+            batch_w_list.append(w_list)
+        dec_batch[cur_index] = torch.zeros((batch_size,
+                                            max_w_len + 2), dtype=torch.long)
+        for i in range(batch_size):
+            w_list = batch_w_list[i]
+            if len(w_list) > 0:
+                for j in range(len(w_list)):
+                    dec_batch[cur_index][i][j + 1] = w_list[j]
+                # add <S>, <E>
+                if cur_index == 1:
+                    dec_batch[cur_index][i][0] = output_lang.word2index['<S>']
+                else:
+                    dec_batch[cur_index][i][0] = output_lang.word2index['<IS>']
+                dec_batch[cur_index][i][len(w_list) + 1] = output_lang.word2index['<E>']
+
+        if using_gpu:
+            dec_batch[cur_index] = dec_batch[cur_index].cuda()
+        cur_index += 1
+
+    return dec_batch, queue_tree, max_index
+
+def list_to_tree(r_list, initial=False, depth=0):
+   t = Tree()
+   if initial:
+       t.add_child(r_list[0])
+       # print(r_list[0])
+       input_len = len(r_list)
+       for i in range(1, input_len):
+           if isinstance(r_list[i], list):
+               t.add_child(list_to_tree(r_list[i], depth=depth + 1))
+           else:
+               t.add_child(r_list[i])
+               # print('\t' * depth + str(r_list[i]))
+       return t
+
+   else:
+       input_len = len(r_list)
+       for i in range(input_len):
+           if isinstance(r_list[i], list):
+               t.add_child(list_to_tree(r_list[i], depth=depth + 1))
+           else:
+               t.add_child(r_list[i])
+               # print('\t' * depth + str(r_list[i]))
+       return t
+
+def index_batch_to_words(input_batch, input_length, lang):
+	'''
+		Args:
+			input_batch: List of BS x Max_len
+			input_length: List of BS
+		Return:
+			contextual_input: List of BS
+	'''
+	contextual_input = []
+	for i in range(len(input_batch)):
+		contextual_input.append(stack_to_string(sentence_from_indexes(lang, input_batch[i][:input_length[i]])))
+
+	return contextual_input
+
+class TrainDataset(torch.utils.data.Dataset):
+
+    def __init__(self, pairs_to_batch, input_lang, output_lang, USE_CUDA):
+        self.pairs_to_batch = pairs_to_batch
+        self.input_lang = input_lang
+        self.output_lang = output_lang
+        self.USE_CUDA = USE_CUDA
+
+    def __len__(self):
+        return len(self.file_list)
+
+    def __getitem__(self, index):
+        datum = self.pairs_to_batch[index]
+
+        return datum, self.input_lang, self.output_lang, self.USE_CUDA
+
+def my_collate(batch):
+    batch, input_lang, output_lang, USE_CUDA = batch
+    input_lang = input_lang[0]
+    output_lang = output_lang[0]
+    USE_CUDA = USE_CUDA[0]
+    batch = sorted(batch, key=lambda tp: tp[1], reverse=True)
+    batch_size = len(batch)
+    input_length = []
+    output_length = []
+    for _, i, _, j, _, _, _, _ in batch:
+        input_length.append(i)
+        output_length.append(j)
+    input_len_max = input_length[0]
+    output_len_max = max(output_length)
+    input_batch = []
+    output_batch = []
+    num_batch = []
+    num_stack_batch = []
+    num_pos_batch = []
+    num_size_batch = []
+    group_batch = []
+    num_value_batch = []
+    for i, li, j, lj, num, num_pos, num_stack, group in batch:
+        num_batch.append(len(num))
+        input_batch.append(pad_seq(i, li, input_len_max))
+        output_batch.append(pad_seq(j, lj, output_len_max))
+        num_stack_batch.append(num_stack)
+        num_pos_batch.append(num_pos)
+        num_size_batch.append(len(num_pos))
+        num_value_batch.append(num)
+        group_batch.append(group)
+
+    graph_batch = get_single_batch_graph(input_batch, input_length,group_batch,num_value_batch,num_pos_batch)
+
+    output_batch = [list_to_tree(l) for l in output_batch]
+
+    contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
+    dec_batch, queue_tree, max_index = get_dec_batch(output_batch, batch_size, USE_CUDA, output_lang)
+
+    return input_batch, input_length, output_batch, output_length, \
+           num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
+           contextual_input, dec_batch, queue_tree, max_index
 
 # prepare the batches
 def prepare_train_batch(pairs_to_batch, batch_size):
