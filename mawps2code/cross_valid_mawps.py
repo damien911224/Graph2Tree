@@ -31,6 +31,7 @@ beam_size = 5
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
+num_workers = 20
 
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
