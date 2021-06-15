@@ -351,7 +351,7 @@ for fold in range(num_folds):
         # num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
 
         dataset = TrainDataset(train_pairs, input_lang, output_lang, USE_CUDA)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
                                 collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
 
         # for idx in range(len(input_lengths)):
