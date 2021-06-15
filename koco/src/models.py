@@ -257,6 +257,7 @@ class EncoderSeq(nn.Module):
                               bidirectional=True)
 
         self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
+        self.graph_embedding = nn.Linear(hidden_size * 2, hidden_size)
 
     def forward(self, embedded, input_lengths, orig_idx, batch_graph, hidden=None):
         # Note: we run this all at once (over multiple batches of multiple sequences)

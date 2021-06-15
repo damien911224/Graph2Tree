@@ -48,6 +48,7 @@ class BertEncoder(nn.Module):
 			# self.bert_layer = BertModel.from_pretrained('monologg/kobert')
 			# self.bert_tokenizer = get_tokenizer()
 			self.bert_layer = ElectraModel.from_pretrained(bert_model)
+			# self.bert_layer.save_pretrained("./electra_model")
 			# original tokenizer
 			# self.bert_tokenizer = ElectraTokenizer.from_pretrained("monologg/koelectra-base-v3-discriminator")
 			# add names and "NUM" token
