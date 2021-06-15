@@ -930,6 +930,8 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
     if USE_CUDA:
         batch_graph = batch_graph.cuda()
+        for item in dec_batch:
+            item.cuda()
 
     encoder_outputs, problem_output, graph_embedding, attention_inputs = \
         encoder(embedded, input_length, orig_idx, batch_graph)
