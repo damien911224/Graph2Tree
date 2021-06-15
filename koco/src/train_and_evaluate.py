@@ -1090,13 +1090,6 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     decoder.eval()
     attention_decoder.eval()
 
-    if USE_CUDA:
-        input_var = input_var.cuda()
-        # seq_mask = seq_mask.cuda()
-        # padding_hidden = padding_hidden.cuda()
-        # num_mask = num_mask.cuda()
-        batch_graph = batch_graph.cuda()
-
     orig_idx = None
     embedded = None
     # if config.embedding == 'bert' or config.embedding == 'roberta':
@@ -1116,6 +1109,9 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
         batch_graph = get_single_batch_graph(token_ids.cpu().tolist(), input_len1, new_group_batch, num_value_batch,
                                              num_pos)
         batch_graph = torch.LongTensor(batch_graph)
+
+        if USE_CUDA:
+            batch_graph = batch_graph.cuda()
 
         # print(num_value_batch, num_pos)
 
