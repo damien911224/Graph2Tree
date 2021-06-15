@@ -1214,12 +1214,11 @@ def my_collate(batch):
 
     output_batch = [list_to_tree(l) for l in output_batch]
 
-    contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
     dec_batch, queue_tree, max_index = get_dec_batch(output_batch, batch_size, USE_CUDA, output_lang)
 
     return input_batch, input_length, output_batch, output_length, \
            num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
-           contextual_input, dec_batch, queue_tree, max_index
+           dec_batch, queue_tree, max_index
 
 # prepare the batches
 def prepare_train_batch(pairs_to_batch, batch_size):
