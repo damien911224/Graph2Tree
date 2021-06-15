@@ -416,7 +416,7 @@ for model_i in range(len(encoders)):
 
     reference_list = list()
     candidate_list = list()
-    bleu_scores = list()
+    dummy_bleu_scores = list()
     for test_batch in test_pairs:
         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4],
                                                test_batch[5])
@@ -437,9 +437,9 @@ for model_i in range(len(encoders)):
         candidate_list.append(candidate)
 
         bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
-        bleu_scores.append(bleu_score)
+        dummy_bleu_scores.append(bleu_score)
     dummy_accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-    dummy_bleu_scores = np.mean(bleu_scores)
+    dummy_bleu_scores = np.mean(dummy_bleu_scores)
 
     print("Model_{:02d} Acc: {:.5f}|Dummy Acc: {:.5f}".format(model_i + 1, accuracy, dummy_accuracy))
     print("Model_{:02d} BLEU: {:.5f}|Dummy BLEU: {:.5f}".format(model_i + 1, bleu_scores, dummy_bleu_scores))
