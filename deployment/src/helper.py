@@ -66,7 +66,7 @@ def sort_by_len(seqs, input_len, device=None, dim=1):
 		sorted_idx = sorted_idx.to(device)
 
 	sorted_seqs = seqs.index_select(1, sorted_idx)
-	sorted_lens=  [input_len[i] for i in sorted_idx]
+	sorted_lens = [input_len[i] for i in sorted_idx]
 
 	# For restoring original order
 	orig_idx = sorted(orig_idx, key=lambda k: sorted_idx[k])

@@ -1,6 +1,7 @@
 # coding: utf-8
 from src.train_and_evaluate import *
 from src.models import *
+from src.contextual_embeddings import *
 import time
 import torch.optim
 from src.expressions_transfer import *
@@ -12,6 +13,8 @@ from sympy.parsing.sympy_parser import parse_expr
 from tensorboardX import SummaryWriter
 from sklearn.model_selection import KFold
 from nltk.translate.bleu_score import sentence_bleu
+from torch.utils.data import DataLoader
+from src.pre_data import TrainDataset, my_collate
 
 def read_json(path):
     with open(path,'r') as f:
@@ -20,7 +23,10 @@ def read_json(path):
 
 
 batch_size = 64
-embedding_size = 128
+# embedding_size = 128
+# ===============changed=================
+embedding_size = 768
+# =======================================
 hidden_size = 512
 n_epochs = 80
 learning_rate = 1e-3
@@ -29,6 +35,7 @@ beam_size = 5
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
+num_workers = 20
 
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
@@ -40,7 +47,14 @@ opt = {
     "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5,
-    "separate_attention": False
+    "separate_attention": False,
+
+    # for BERT
+    "bert_learningRate": learning_rate * 1e-2,
+    "embedding_size": 768,
+    "dropout_input": 0.5,
+    "pretrained_bert_path": None
+    # "pretrained_bert_path": './electra_model'
 }
 
 log_path = "logs/{}".format("NoSepAtt_Max")
@@ -181,7 +195,7 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/mawps_dummy.json")
+data = load_mawps_data("data/custom_dummy.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
@@ -192,17 +206,16 @@ pairs, generate_nums, copy_nums = transfer_english_num(data)
 # pairs = temp_pairs
 
 #train_fold, test_fold, valid_fold = get_train_test_fold(ori_path,prefix,data,pairs,group_data)
-new_fold = get_new_fold(data, pairs, group_data)
-pairs = new_fold
+pairs = get_new_fold(data, pairs, group_data)
 
 fold_size = int(len(pairs) * (1.0 / num_folds))
 fold_pairs = []
-for split_fold in range(num_folds):
+for split_fold in range(4):
     fold_start = fold_size * split_fold
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
-fold_pairs.append(pairs[(fold_size * num_folds):])
-whole_fold = fold_pairs
+fold_pairs.append(pairs[(fold_size * 4):])
+# whole_fold = fold_pairs
 # random.shuffle(whole_fold)
 
 best_accuracies = list()
@@ -224,15 +237,29 @@ for fold in range(num_folds):
         else:
             pairs_trained += fold_pairs[fold_t]
 
-    input_lang, output_lang, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums,
+    # ===============changed=================
+    # input_lang, output_lang, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums,
+    #                                                                     copy_nums, tree=False)
+    input_lang, output_lang, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 1, generate_nums,
                                                                     copy_nums, tree=False)
 
     #print('train_pairs[0]')
     #print(train_pairs[0])
     #exit()
-    # Initialize models
-    encoder = EncoderSeq(input_size=input_lang.n_words, embedding_size=embedding_size, hidden_size=hidden_size,
+    # ===============changed=================
+    if True:
+        # Initialize models
+        embedding = BertEncoder(opt["pretrained_bert_path"], "cuda" if USE_CUDA else "cpu", False)
+        # embedding = BertEncoder("bert-base-uncased", "cuda:0", False)
+    else:
+        embedding = Embedding(None, input_lang, input_size=input_lang.n_words, embedding_size=opt['embedding_size'], dropout=opt['dropout_input'])
+    embedding.to("cpu")
+    encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
                          n_layers=n_layers)
+    ##################################################################################################
+    # Initialize models
+    # encoder = EncoderSeq(input_size=input_lang.n_words, embedding_size=embedding_size, hidden_size=hidden_size,
+    #                      n_layers=n_layers)
     # predict = Prediction(hidden_size=hidden_size, op_nums=output_lang.n_words - copy_nums - 1 - len(generate_nums),
     #                      input_size=len(generate_nums))
     # generate = GenerateNode(hidden_size=hidden_size, op_nums=output_lang.n_words - copy_nums - 1 - len(generate_nums),
@@ -243,6 +270,7 @@ for fold in range(num_folds):
     attention_decoder = AttnUnit(opt, output_lang.n_words)
     # the embedding layer is  only for generated number embeddings, operators, and paddings
 
+    embedding_optimizer = torch.optim.Adam(embedding.parameters(), lr=opt['bert_learningRate'], weight_decay=weight_decay)
     encoder_optimizer = torch.optim.AdamW(encoder.parameters(), lr=learning_rate, weight_decay=weight_decay)
     decoder_optimizer = torch.optim.AdamW(decoder.parameters(), lr=opt["learningRate"], weight_decay=weight_decay)
     attention_decoder_optimizer = torch.optim.AdamW(attention_decoder.parameters(), lr=opt["learningRate"],
@@ -251,6 +279,10 @@ for fold in range(num_folds):
     # encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
     # decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
     # attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
+
+    # ===============changed=================
+    # embedding_scheduler = torch.optim.lr_scheduler.StepLR(embedding_optimizer, step_size=20, gamma=0.5)
+    embedding_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(embedding_optimizer, 'min', patience=optimizer_patience)
 
     encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer,
                                                                    'min', patience=optimizer_patience)
@@ -261,6 +293,7 @@ for fold in range(num_folds):
 
     # Move models to GPU
     if USE_CUDA:
+        embedding.cuda()
         encoder.cuda()
         decoder.cuda()
         attention_decoder.cuda()
@@ -278,47 +311,86 @@ for fold in range(num_folds):
         start = time.time()
 
         train_loss_total = 0
-        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-        num_stack_batches, num_pos_batches, num_size_batches, \
-        num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
-        for idx in range(len(input_lengths)):
+        # input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        # num_stack_batches, num_pos_batches, num_size_batches, \
+        # num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
+
+        dataset = TrainDataset(train_pairs, input_lang, output_lang, USE_CUDA)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
+                                collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
+
+        # for idx in range(len(input_lengths)):
+        #     train_loss = train_tree(
+        #         input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+        #         num_stack_batches[idx], num_size_batches[idx], num_value_batches[idx], generate_num_ids, embedding, encoder, decoder, attention_decoder,
+        #         embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+        #         input_lang, output_lang, num_pos_batches[idx], graph_batches[idx])
+        #     train_loss_total += train_loss.detach().cpu().numpy()
+        # train_loss_total = train_loss_total / len(input_lengths)
+
+        for idx, batch_items in enumerate(dataloader):
+            input_batch, input_length, output_batch, output_length, \
+            num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
+            contextual_input, dec_batch, queue_tree, max_index = batch_items
             train_loss = train_tree(
-                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
-                encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-                output_lang, num_pos_batches[idx], graph_batches[idx])
+                input_batch, input_length, output_batch, output_length,
+                num_stack_batch, num_size_batch, num_value_batch, generate_num_ids,
+                embedding, encoder, decoder, attention_decoder,
+                embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+                input_lang, output_lang, num_pos_batch, graph_batch,
+                contextual_input, dec_batch, queue_tree, max_index
+            )
             train_loss_total += train_loss.detach().cpu().numpy()
         train_loss_total = train_loss_total / len(input_lengths)
 
         val_loss_total = 0
-        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-        num_stack_batches, num_pos_batches, num_size_batches, \
-        num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
-        for idx in range(len(input_lengths)):
+
+        # input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        # num_stack_batches, num_pos_batches, num_size_batches, \
+        # num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
+
+        dataset = TrainDataset(train_pairs, input_lang, output_lang, USE_CUDA)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
+                                collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
+
+        # for idx in range(len(input_lengths)):
+        #     val_loss = val_tree(
+        #         input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+        #         num_stack_batches[idx], num_size_batches[idx], num_value_batches[idx], generate_num_ids, embedding,
+        #         encoder, decoder, attention_decoder,
+        #         embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+        #         input_lang, output_lang, num_pos_batches[idx], graph_batches[idx])
+        #     val_loss_total += val_loss.detach().cpu().numpy()
+        # val_loss_total = val_loss_total / len(input_lengths)
+
+        for idx, batch_items in enumerate(dataloader):
+            input_batch, input_length, output_batch, output_length, \
+            num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
+            contextual_input, dec_batch, queue_tree, max_index = batch_items
             val_loss = val_tree(
-                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
-                encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-                output_lang, num_pos_batches[idx], graph_batches[idx])
+                input_batch, input_length, output_batch, output_length,
+                num_stack_batch, num_size_batch, num_value_batch, generate_num_ids,
+                embedding, encoder, decoder, attention_decoder,
+                embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+                input_lang, output_lang, num_pos_batch, graph_batch,
+                contextual_input, dec_batch, queue_tree, max_index
+            )
             val_loss_total += val_loss.detach().cpu().numpy()
         val_loss_total = val_loss_total / len(input_lengths)
 
+        # if epoch % 2 == 0 or epoch > n_epochs - 5:
+        # value_ac = 0
+        # equation_ac = 0
+        # eval_total = 0
+        # start = time.time()
         reference_list = list()
         candidate_list = list()
         bleu_scores = list()
         for test_batch in test_pairs:
             #print(test_batch)
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
-            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
-                                     output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-            # test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
-            #                                   [encoder for _ in range(3)],
-            #                                   [decoder for _ in range(3)],
-            #                                   [attention_decoder for _ in range(3)],
-            #                                   output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-            # test_res = evaluate_beam_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder,
-            #                               attention_decoder,
-            #                               output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
+                                     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
             reference = test_batch[2]
             # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
             # if val_ac:
@@ -359,6 +431,8 @@ for fold in range(num_folds):
         decoder_scheduler.step(val_loss_total)
         attention_decoder_scheduler.step(val_loss_total)
 
+        # torch.save(embedding.state_dict(), os.path.join(fold_weight_folder, "embedding-{}.pth".format(epoch + 1)))
+        embedding.bert_layer.save_pretrained(os.path.join(fold_weight_folder, "embedding-{}".format(epoch + 1)))
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
         torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
         torch.save(attention_decoder.state_dict(),

@@ -279,7 +279,7 @@ def prepare_infer_data(pairs, trim_min_count):
         test_pairs.append((input_cell, len(input_cell),
                           pair[2], pair[3]))
 
-    return input_lang, test_pairs
+    return input_lang, output_lang, test_pairs
 
 
 def load_data(filename):
