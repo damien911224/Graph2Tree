@@ -306,6 +306,8 @@ for fold in range(num_folds):
         reference_list = list()
         candidate_list = list()
         bleu_scores = list()
+        ref_str = None
+        cand_str = None
         for test_batch in test_pairs:
             #print(test_batch)
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
@@ -354,6 +356,8 @@ for fold in range(num_folds):
         # print("------------------------------------------------------")
         accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
         bleu_scores = np.mean(bleu_scores)
+
+        print(ref_str, cand_str)
 
         encoder_scheduler.step(val_loss_total)
         decoder_scheduler.step(val_loss_total)
