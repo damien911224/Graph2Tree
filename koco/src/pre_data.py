@@ -1078,7 +1078,7 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
                 dec_batch[cur_index][i][len(w_list) + 1] = output_lang.word2index['<E>']
 
         if using_gpu:
-            dec_batch[cur_index] = dec_batch[cur_index]
+            dec_batch[cur_index] = dec_batch[cur_index].cuda()
         cur_index += 1
 
     return dec_batch, queue_tree, max_index
