@@ -341,7 +341,7 @@ for fold in range(num_folds):
                 contextual_input, dec_batch, queue_tree, max_index
             )
             train_loss_total += train_loss.detach().cpu().numpy()
-        train_loss_total = train_loss_total / len(input_lengths)
+        train_loss_total = train_loss_total / len(dataloader)
 
         val_loss_total = 0
 
@@ -376,7 +376,7 @@ for fold in range(num_folds):
                 contextual_input, dec_batch, queue_tree, max_index
             )
             val_loss_total += val_loss.detach().cpu().numpy()
-        val_loss_total = val_loss_total / len(input_lengths)
+        val_loss_total = val_loss_total / len(dataloader)
 
         # if epoch % 2 == 0 or epoch > n_epochs - 5:
         # value_ac = 0
