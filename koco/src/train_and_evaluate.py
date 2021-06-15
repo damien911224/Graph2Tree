@@ -859,10 +859,10 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
 
 def train_tree(input_batch, input_length, target_batch, target_length, nums_stack_batch, num_size_batch, num_value_batch, generate_nums,
                embedding, encoder, decoder, attention_decoder, embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-               input_lang, output_lang, num_pos, batch_graph, english=False):
+               input_lang, output_lang, num_pos, batch_graph, contextual_input, dec_batch, queue_tree, max_index):
     # sequence mask for attention
     # seq_mask = []
-    max_len = max(input_length)
+    # max_len = max(input_length)
     # for i in input_length:
     #     seq_mask.append([0 for _ in range(i)] + [1 for _ in range(i, max_len)])
     # seq_mask = torch.ByteTensor(seq_mask)
@@ -877,10 +877,10 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     # unk = output_lang.word2index["UNK"]
 
     # Turn padded arrays into (batch_size x max_len) tensors, transpose into (max_len x batch_size)
-    input_var = torch.LongTensor(input_batch).transpose(0, 1)
+    # input_var = torch.LongTensor(input_batch).transpose(0, 1)
 
     # target = torch.LongTensor(target_batch).transpose(0, 1)
-    batch_graph = torch.LongTensor(batch_graph)
+    # batch_graph = torch.LongTensor(batch_graph)
 
     # padding_hidden = torch.FloatTensor([0.0 for _ in range(predict.hidden_size)]).unsqueeze(0)
     batch_size = len(input_length)
@@ -904,11 +904,11 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     attention_decoder_optimizer.zero_grad()
 
     # ===========================================for BERT===================================================
-    orig_idx = None
-    embedded = None
+    # orig_idx = None
+    # embedded = None
     # if config.embedding == 'bert' or config.embedding == 'roberta':
     if True:
-        contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
+        # contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
 
         input_seq1, input_len1, token_ids, index_retrieve = embedding(contextual_input)
         num_pos = index_retrieve.copy()
@@ -936,14 +936,14 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
     # ===============changed=================
     # sequence mask for attention
-    seq_mask = []
-    max_len = max(input_length)
-    for i in input_length:
-        seq_mask.append([0 for _ in range(i)] + [1 for _ in range(i, max_len)])
-    seq_mask = torch.BoolTensor(seq_mask)
-
-    if USE_CUDA:
-        seq_mask = seq_mask.cuda()
+    # seq_mask = []
+    # max_len = max(input_length)
+    # for i in input_length:
+    #     seq_mask.append([0 for _ in range(i)] + [1 for _ in range(i, max_len)])
+    # seq_mask = torch.BoolTensor(seq_mask)
+    #
+    # if USE_CUDA:
+    #     seq_mask = seq_mask.cuda()
     # ==============================================================================================
 
 
@@ -1033,9 +1033,9 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     # generate_optimizer.step()
     # merge_optimizer.step()
 
-    target_batch = [list_to_tree(l) for l in target_batch]
-
-    dec_batch, queue_tree, max_index = get_dec_batch(target_batch, batch_size, USE_CUDA, output_lang)
+    # target_batch = [list_to_tree(l) for l in target_batch]
+    #
+    # dec_batch, queue_tree, max_index = get_dec_batch(target_batch, batch_size, USE_CUDA, output_lang)
 
     loss = \
         recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
@@ -1060,10 +1060,10 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
 def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_batch, num_size_batch, num_value_batch, generate_nums,
                embedding, encoder, decoder, attention_decoder, embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-               input_lang, output_lang, num_pos, batch_graph, english=False):
+               input_lang, output_lang, num_pos, batch_graph, contextual_input, dec_batch, queue_tree, max_index):
     # sequence mask for attention
     # seq_mask = []
-    max_len = max(input_length)
+    # max_len = max(input_length)
     # for i in input_length:
     #     seq_mask.append([0 for _ in range(i)] + [1 for _ in range(i, max_len)])
     # seq_mask = torch.ByteTensor(seq_mask)
@@ -1078,10 +1078,10 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     # unk = output_lang.word2index["UNK"]
 
     # Turn padded arrays into (batch_size x max_len) tensors, transpose into (max_len x batch_size)
-    input_var = torch.LongTensor(input_batch).transpose(0, 1)
+    # input_var = torch.LongTensor(input_batch).transpose(0, 1)
 
     # target = torch.LongTensor(target_batch).transpose(0, 1)
-    batch_graph = torch.LongTensor(batch_graph)
+    # batch_graph = torch.LongTensor(batch_graph)
 
     # padding_hidden = torch.FloatTensor([0.0 for _ in range(predict.hidden_size)]).unsqueeze(0)
     batch_size = len(input_length)
@@ -1091,11 +1091,11 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     decoder.eval()
     attention_decoder.eval()
 
-    orig_idx = None
-    embedded = None
+    # orig_idx = None
+    # embedded = None
     # if config.embedding == 'bert' or config.embedding == 'roberta':
     if True:
-        contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
+        # contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
         input_seq1, input_len1, token_ids, index_retrieve = embedding(contextual_input)
         num_pos = index_retrieve.copy()
 
@@ -1214,9 +1214,9 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
     # generate_optimizer.step()
     # merge_optimizer.step()
 
-    target_batch = [list_to_tree(l) for l in target_batch]
-
-    dec_batch, queue_tree, max_index = get_dec_batch(target_batch, batch_size, USE_CUDA, output_lang)
+    # target_batch = [list_to_tree(l) for l in target_batch]
+    #
+    # dec_batch, queue_tree, max_index = get_dec_batch(target_batch, batch_size, USE_CUDA, output_lang)
 
     loss = \
         recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
