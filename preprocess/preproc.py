@@ -300,6 +300,12 @@ def extract(input_name, ans_name, output_name):
                 for catch in re.finditer(p, sent):
                     if len(catch[0]) > 1:
                         cl2.append(catch[0])
+            cl3 = []
+            p = "(하나)[만가에의는당를\s]"
+            if re.search(p, sent) is not None:
+                for catch in re.finditer(p, sent):
+                    if len(catch[0]) > 1:
+                        cl3.append(catch[0])
             p = '0+'
             p = re.compile(p)
             for i in cl:
@@ -310,6 +316,10 @@ def extract(input_name, ans_name, output_name):
                 hh = p.match(i)
                 if hh is None:
                     sent = sent.replace(i, ' ' + str(h2i(i)) + ' ')
+            for i in cl3:
+                hh = p.match(i)
+                if hh is None:
+                    sent = sent.replace(i, '1')
 
             nl = k.nouns(sent)
             tmp_obj = {}
