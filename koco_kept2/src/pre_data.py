@@ -494,7 +494,7 @@ def transfer_english_num(data):  # transfer num into "NUM"
         nums = []
         input_seq = []
         # seg = d["sQuestion"].strip().split(" ")
-        seg = d["new_text"].strip().split(" ")
+        seg = d["question"].strip().split(" ")
         equations = d["lequations"]
 
         for s in seg:
