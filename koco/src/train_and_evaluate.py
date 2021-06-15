@@ -933,6 +933,7 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
     encoder_outputs, problem_output, graph_embedding, attention_inputs = \
         encoder(embedded, input_length, orig_idx, batch_graph)
+    exit()
 
     # ===============changed=================
     # sequence mask for attention
