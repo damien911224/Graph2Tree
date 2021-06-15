@@ -21,8 +21,9 @@ class Lang:
 
     def add_sen_to_vocab(self, sentence):  # add words of sentence to vocab
         for word in sentence:
-            if re.search("N\d+|NUM|\d+", word):
-                continue
+            # if re.search("N\d+|NUM|\d+", word):
+            #     continue
+
             if word not in self.index2word:
                 self.word2index[word] = self.n_words
                 self.word2count[word] = 1
@@ -89,14 +90,10 @@ class OutputLang:
         self.word2count = {}
         self.index2word = {}
         self.n_words = 0  # Count word tokens
-        # self.word2index_json_path = "data/reverse_label_dict.json"
-        # with open(self.word2index_json_path, "r") as fp:
-        #     self.word2index = json.load(fp)
 
-        self.word2index["<S>"] = 0
-        self.word2index["<E>"] = 1
-        self.word2index["<IS>"] = 2
-        self.word2index["<IE>"] = 3
+        self.word2index_json_path = "data/reverse_label_dict.json"
+        with open(self.word2index_json_path, "r") as fp:
+            self.word2index = json.load(fp)
 
         for key, value in self.word2index.items():
             self.index2word[value] = key
@@ -104,19 +101,21 @@ class OutputLang:
         for key, value in self.word2index.items():
             self.word2count[key] = 1
 
+        self.add_to_vocab("<S>")
+        self.add_to_vocab("<E>")
+        self.add_to_vocab("<IS>")
+        self.add_to_vocab("<IE>")
+
         self.n_words = len(self.word2index)
 
-    def add_sen_to_vocab(self, sentence):  # add words of sentence to vocab
-        for word in sentence:
-            # if re.search("N\d+|NUM|\d+", word):
-            #     continue
-            if word not in self.word2index:
-                self.word2index[word] = self.n_words
-                self.index2word[self.n_words] = word
-                self.word2count[word] = 1
-                self.n_words += 1
-            else:
-                self.word2count[word] += 1
+    def add_to_vocab(self, word):
+        if word not in self.word2index:
+            self.word2index[word] = self.n_words
+            self.index2word[self.n_words] = word
+            self.word2count[word] = 1
+            self.n_words += 1
+        else:
+            self.word2count[word] += 1
 
     # def trim(self, min_count):  # trim words below a certain count threshold
     #     keep_words = []
@@ -248,6 +247,7 @@ def load_mawps_data(filename):  # load the json data to list(dict()) for MAWPS
                 temp["lEquations"] = x[:-2]
                 out_data.append(temp)
                 continue
+    out_data = data
     return out_data
 
 
@@ -472,107 +472,61 @@ def transfer_english_num(data):  # transfer num into "NUM"
 
         if copy_nums < len(nums):
             copy_nums = len(nums)
-        eq_segs = []
-        temp_eq = ""
-        for e in equations:
-            if e not in "()+-*/":
-                temp_eq += e
-            elif temp_eq != "":
-                count_eq = []
-                for n_idx, n in enumerate(nums):
-                    if abs(float(n) - float(temp_eq)) < 1e-4:
-                        count_eq.append(n_idx)
-                        if n != temp_eq:
-                            nums[n_idx] = temp_eq
-                if len(count_eq) == 0:
-                    flag = True
-                    for gn in generate_nums:
-                        if abs(float(gn) - float(temp_eq)) < 1e-4:
-                            generate_nums[gn] += 1
-                            if temp_eq != gn:
-                                temp_eq = gn
-                            flag = False
-                    if flag:
-                        generate_nums[temp_eq] = 0
-                    eq_segs.append(temp_eq)
-                elif len(count_eq) == 1:
-                    eq_segs.append("N"+str(count_eq[0]))
-                else:
-                    eq_segs.append(temp_eq)
-                eq_segs.append(e)
-                temp_eq = ""
-            else:
-                eq_segs.append(e)
-        if temp_eq != "":
-            count_eq = []
-            for n_idx, n in enumerate(nums):
-                if abs(float(n) - float(temp_eq)) < 1e-4:
-                    count_eq.append(n_idx)
-                    if n != temp_eq:
-                        nums[n_idx] = temp_eq
-            if len(count_eq) == 0:
-                flag = True
-                for gn in generate_nums:
-                    if abs(float(gn) - float(temp_eq)) < 1e-4:
-                        generate_nums[gn] += 1
-                        if temp_eq != gn:
-                            temp_eq = gn
-                        flag = False
-                if flag:
-                    generate_nums[temp_eq] = 0
-                eq_segs.append(temp_eq)
-            elif len(count_eq) == 1:
-                eq_segs.append("N" + str(count_eq[0]))
-            else:
-                eq_segs.append(temp_eq)
+        # eq_segs = []
+        # temp_eq = ""
+        # for e in equations:
+        #     if e not in "()+-*/":
+        #         temp_eq += e
+        #     elif temp_eq != "":
+        #         count_eq = []
+        #         for n_idx, n in enumerate(nums):
+        #             if abs(float(n) - float(temp_eq)) < 1e-4:
+        #                 count_eq.append(n_idx)
+        #                 if n != temp_eq:
+        #                     nums[n_idx] = temp_eq
+        #         if len(count_eq) == 0:
+        #             flag = True
+        #             for gn in generate_nums:
+        #                 if abs(float(gn) - float(temp_eq)) < 1e-4:
+        #                     generate_nums[gn] += 1
+        #                     if temp_eq != gn:
+        #                         temp_eq = gn
+        #                     flag = False
+        #             if flag:
+        #                 generate_nums[temp_eq] = 0
+        #             eq_segs.append(temp_eq)
+        #         elif len(count_eq) == 1:
+        #             eq_segs.append("N"+str(count_eq[0]))
+        #         else:
+        #             eq_segs.append(temp_eq)
+        #         eq_segs.append(e)
+        #         temp_eq = ""
+        #     else:
+        #         eq_segs.append(e)
+        # if temp_eq != "":
+        #     count_eq = []
+        #     for n_idx, n in enumerate(nums):
+        #         if abs(float(n) - float(temp_eq)) < 1e-4:
+        #             count_eq.append(n_idx)
+        #             if n != temp_eq:
+        #                 nums[n_idx] = temp_eq
+        #     if len(count_eq) == 0:
+        #         flag = True
+        #         for gn in generate_nums:
+        #             if abs(float(gn) - float(temp_eq)) < 1e-4:
+        #                 generate_nums[gn] += 1
+        #                 if temp_eq != gn:
+        #                     temp_eq = gn
+        #                 flag = False
+        #         if flag:
+        #             generate_nums[temp_eq] = 0
+        #         eq_segs.append(temp_eq)
+        #     elif len(count_eq) == 1:
+        #         eq_segs.append("N" + str(count_eq[0]))
+        #     else:
+        #         eq_segs.append(temp_eq)
 
-        dummy_equation_below = None
-        # eq_segs = ['Module', ['For', ['IndentedBlock', ['If', ['IndentedBlock', ['SimpleStatementLine',
-        #                                                                          ['AugAssign', ['AddAssign'],
-        #                                                                           ['Name', ['var0']],
-        #                                                                           ['BinaryOperation', ['Call', ['Arg',
-        #                                                                                                         ['Name',
-        #                                                                                                          [
-        #                                                                                                              'const1']]],
-        #                                                                                                ['Attribute',
-        #                                                                                                 ['Name',
-        #                                                                                                  ['acos']],
-        #                                                                                                 ['Name',
-        #                                                                                                  ['math']]]],
-        #                                                                            ['Add'],
-        #                                                                            ['Call', ['Arg', ['Name', ['var2']]],
-        #                                                                             ['Attribute', ['Name', ['atan']],
-        #                                                                              ['Name', ['math']]]]]]]],
-        #                                                 ['Comparison', ['ComparisonTarget', ['Subscript',
-        #                                                                                      ['SubscriptElement',
-        #                                                                                       ['Index',
-        #                                                                                        ['Integer', ['2']]]],
-        #                                                                                      ['Name', ['QL']]],
-        #                                                                 ['GreaterThan']], ['Name', ['var1']]]]],
-        #                       ['Call', ['Arg', ['List', ['Element', ['Subscript', ['SubscriptElement',
-        #                                                                            ['Index', ['Integer', ['0']]]],
-        #                                                              ['Name', ['QL']]], 'Element', ['Subscript',
-        #                                                                                             ['SubscriptElement',
-        #                                                                                              ['Index',
-        #                                                                                               ['Integer',
-        #                                                                                                ['1']]]],
-        #                                                                                             ['Name', ['QL']]],
-        #                                                  'Element', ['Subscript', ['SubscriptElement',
-        #                                                                            ['Index', ['Integer', ['2']]]],
-        #                                                              ['Name', ['QL']]], 'Element', ['Subscript',
-        #                                                                                             ['SubscriptElement',
-        #                                                                                              ['Index',
-        #                                                                                               ['Integer',
-        #                                                                                                ['3']]]],
-        #                                                                                             ['Name', ['QL']]],
-        #                                                  'Element', ['Subscript', ['SubscriptElement',
-        #                                                                            ['Index', ['Integer', ['4']]]],
-        #                                                              ['Name', ['QL']]]]], 'Arg', ['Name', ['const2']]],
-        #                        ['Attribute', ['Name', ['combinations']], ['Name', ['itertools']]]],
-        #                       ['Tuple', ['Element', ['Name', ['var1']], 'Element', ['Name', ['var2']]]],
-        #                       'SimpleStatementLine',
-        #                       ['Assign', ['AssignTarget', ['Name', ['result']]], ['Name', ['var0']]]]]
-        dummy_equation_above = None
+        eq_segs = equations
 
         # def seg_and_tag(st):  # seg the equation and tag the num
         #     res = []
@@ -651,57 +605,57 @@ def transfer_roth_num(data):  # transfer num into "NUM"
             copy_nums = len(nums)
         eq_segs = []
         temp_eq = ""
-        for e in equations:
-            if e not in "()+-*/":
-                temp_eq += e
-            elif temp_eq != "":
-                count_eq = []
-                for n_idx, n in enumerate(nums):
-                    if abs(float(n) - float(temp_eq)) < 1e-4:
-                        count_eq.append(n_idx)
-                        if n != temp_eq:
-                            nums[n_idx] = temp_eq
-                if len(count_eq) == 0:
-                    flag = True
-                    for gn in generate_nums:
-                        if abs(float(gn) - float(temp_eq)) < 1e-4:
-                            generate_nums[gn] += 1
-                            if temp_eq != gn:
-                                temp_eq = gn
-                            flag = False
-                    if flag:
-                        generate_nums[temp_eq] = 0
-                    eq_segs.append(temp_eq)
-                elif len(count_eq) == 1:
-                    eq_segs.append("N"+str(count_eq[0]))
-                else:
-                    eq_segs.append(temp_eq)
-                eq_segs.append(e)
-                temp_eq = ""
-            else:
-                eq_segs.append(e)
-        if temp_eq != "":
-            count_eq = []
-            for n_idx, n in enumerate(nums):
-                if abs(float(n) - float(temp_eq)) < 1e-4:
-                    count_eq.append(n_idx)
-                    if n != temp_eq:
-                        nums[n_idx] = temp_eq
-            if len(count_eq) == 0:
-                flag = True
-                for gn in generate_nums:
-                    if abs(float(gn) - float(temp_eq)) < 1e-4:
-                        generate_nums[gn] += 1
-                        if temp_eq != gn:
-                            temp_eq = gn
-                        flag = False
-                if flag:
-                    generate_nums[temp_eq] = 0
-                eq_segs.append(temp_eq)
-            elif len(count_eq) == 1:
-                eq_segs.append("N" + str(count_eq[0]))
-            else:
-                eq_segs.append(temp_eq)
+        # for e in equations:
+        #     if e not in "()+-*/":
+        #         temp_eq += e
+        #     elif temp_eq != "":
+        #         count_eq = []
+        #         for n_idx, n in enumerate(nums):
+        #             if abs(float(n) - float(temp_eq)) < 1e-4:
+        #                 count_eq.append(n_idx)
+        #                 if n != temp_eq:
+        #                     nums[n_idx] = temp_eq
+        #         if len(count_eq) == 0:
+        #             flag = True
+        #             for gn in generate_nums:
+        #                 if abs(float(gn) - float(temp_eq)) < 1e-4:
+        #                     generate_nums[gn] += 1
+        #                     if temp_eq != gn:
+        #                         temp_eq = gn
+        #                     flag = False
+        #             if flag:
+        #                 generate_nums[temp_eq] = 0
+        #             eq_segs.append(temp_eq)
+        #         elif len(count_eq) == 1:
+        #             eq_segs.append("N"+str(count_eq[0]))
+        #         else:
+        #             eq_segs.append(temp_eq)
+        #         eq_segs.append(e)
+        #         temp_eq = ""
+        #     else:
+        #         eq_segs.append(e)
+        # if temp_eq != "":
+        #     count_eq = []
+        #     for n_idx, n in enumerate(nums):
+        #         if abs(float(n) - float(temp_eq)) < 1e-4:
+        #             count_eq.append(n_idx)
+        #             if n != temp_eq:
+        #                 nums[n_idx] = temp_eq
+        #     if len(count_eq) == 0:
+        #         flag = True
+        #         for gn in generate_nums:
+        #             if abs(float(gn) - float(temp_eq)) < 1e-4:
+        #                 generate_nums[gn] += 1
+        #                 if temp_eq != gn:
+        #                     temp_eq = gn
+        #                 flag = False
+        #         if flag:
+        #             generate_nums[temp_eq] = 0
+        #         eq_segs.append(temp_eq)
+        #     elif len(count_eq) == 1:
+        #         eq_segs.append("N" + str(count_eq[0]))
+        #     else:
+        #         eq_segs.append(temp_eq)
 
         # def seg_and_tag(st):  # seg the equation and tag the num
         #     res = []
@@ -726,7 +680,7 @@ def transfer_roth_num(data):  # transfer num into "NUM"
         #         for sst in st:
         #             res.append(sst)
         #     return res
-        # out_seq = seg_and_tag(equations)
+        out_seq = seg_and_tag(equations)
 
         # for s in out_seq:  # tag the num which is generated
         #     if s[0].isdigit() and s not in generate_nums and s not in nums:
@@ -772,10 +726,10 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     for pair in pairs_trained + pairs_tested:
         if not tree:
             input_lang.add_sen_to_vocab(pair[0])
-            output_lang.add_sen_to_vocab(pair[1])
+            # output_lang.add_sen_to_vocab(pair[1])
         elif pair[-1]:
             input_lang.add_sen_to_vocab(pair[0])
-            output_lang.add_sen_to_vocab(pair[1])
+            # output_lang.add_sen_to_vocab(pair[1])
     input_lang.build_input_lang(trim_min_count)
     # if tree:
     #     output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
@@ -803,7 +757,7 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         input_cell = indexes_from_sentence(input_lang, pair[0])
         output_cell = indexes_from_sentence(output_lang, pair[1], tree)
         # the below code should be removed for the new dataset!!
-        output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
+        # output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
 
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
@@ -832,7 +786,7 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         input_cell = indexes_from_sentence(input_lang, pair[0])
         output_cell = indexes_from_sentence(output_lang, pair[1], tree)
         # the below code should be removed for the new dataset!!
-        output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
+        # output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
 
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))

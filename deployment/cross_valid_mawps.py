@@ -40,10 +40,10 @@ opt = {
     "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5,
-    "separate_attention": True
+    "separate_attention": False
 }
 
-log_path = "logs/{}".format("SepAtt_EncoderSplit")
+log_path = "logs/{}".format("NoSepAtt_Max")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
@@ -181,7 +181,7 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/mawps_combine.json")
+data = load_mawps_data("data/mawps_dummy.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
@@ -197,11 +197,11 @@ pairs = new_fold
 
 fold_size = int(len(pairs) * (1.0 / num_folds))
 fold_pairs = []
-for split_fold in range(4):
+for split_fold in range(num_folds):
     fold_start = fold_size * split_fold
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
-fold_pairs.append(pairs[(fold_size * 4):])
+fold_pairs.append(pairs[(fold_size * num_folds):])
 whole_fold = fold_pairs
 # random.shuffle(whole_fold)
 
@@ -303,11 +303,6 @@ for fold in range(num_folds):
             val_loss_total += val_loss.detach().cpu().numpy()
         val_loss_total = val_loss_total / len(input_lengths)
 
-        # if epoch % 2 == 0 or epoch > n_epochs - 5:
-        # value_ac = 0
-        # equation_ac = 0
-        # eval_total = 0
-        # start = time.time()
         reference_list = list()
         candidate_list = list()
         bleu_scores = list()
@@ -316,6 +311,14 @@ for fold in range(num_folds):
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
             test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
                                      output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+            # test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
+            #                                   [encoder for _ in range(3)],
+            #                                   [decoder for _ in range(3)],
+            #                                   [attention_decoder for _ in range(3)],
+            #                                   output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+            # test_res = evaluate_beam_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder,
+            #                               attention_decoder,
+            #                               output_lang, test_batch[5], batch_graph, beam_size=beam_size)
             reference = test_batch[2]
             # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
             # if val_ac:

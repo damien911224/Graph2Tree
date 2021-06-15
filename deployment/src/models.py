@@ -175,8 +175,14 @@ class EncoderSeq(nn.Module):
 
         self.embedding = nn.Embedding(input_size, embedding_size, padding_idx=0)
         self.em_dropout = nn.Dropout(dropout)
+        self.graph_embedding = nn.Linear(hidden_size * 2, hidden_size)
         self.gru_pade = nn.GRU(embedding_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
         self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
+
+        # self.norm_01 = LayerNorm(hidden_size // 2)
+        # self.norm_02 = LayerNorm(hidden_size // 2)
+        # self.linear_01 = nn.Linear(hidden_size // 2, hidden_size)
+        # self.linear_02 = nn.Linear(hidden_size // 2, hidden_size)
 
     def forward(self, input_seqs, input_lengths, batch_graph, hidden=None):
         # Note: we run this all at once (over multiple batches of multiple sequences)
@@ -192,10 +198,21 @@ class EncoderSeq(nn.Module):
         problem_output = pade_outputs[-1, :, :self.hidden_size] + pade_outputs[0, :, self.hidden_size:]
         # max_len, N, C
         pade_outputs = pade_outputs[:, :, :self.hidden_size] + pade_outputs[:, :, self.hidden_size:]  # S x B x H
-        BiGRU_outputs = pade_outputs
-        _, pade_outputs = self.gcn(pade_outputs, batch_graph)
+        # BiGRU_outputs = pade_outputs
+        _, pade_outputs, attention_inputs = self.gcn(pade_outputs, batch_graph)
         pade_outputs = pade_outputs.transpose(0, 1)
-        return pade_outputs, problem_output, BiGRU_outputs
+
+        max_pooled, _ = torch.max(pade_outputs, dim=0)
+        avg_pooled = torch.mean(pade_outputs, dim=0)
+        graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
+
+        # graph_embedding = max_pooled
+
+        # graph_01 = self.linear_01(self.norm_01(attention_inputs[0]))
+        # graph_02 = self.linear_02(self.norm_02(attention_inputs[1]))
+        graph_01, graph_02 = pade_outputs.transpose(0, 1), pade_outputs.transpose(0, 1)
+
+        return pade_outputs, problem_output, graph_embedding, (graph_01, graph_02)
 
 
 class Prediction(nn.Module):
@@ -479,15 +496,16 @@ class Graph_Module(nn.Module):
         #g_feature_3 = self.Graph_3(graph_nodes,adj[3])
         #print('g_feature')
         #print(type(g_feature))
-        
-        
+
+        graph_01 = torch.cat(g_feature[:2], 2)
+        graph_02 = torch.cat(g_feature[2:], 2)
         g_feature = self.norm(torch.cat(g_feature,2)) + graph_nodes
         #print('g_feature')
         #print(g_feature.shape)
-        
+
         graph_encode_features = self.feed_foward(g_feature) + g_feature
         
-        return adj, graph_encode_features
+        return adj, graph_encode_features, (graph_01, graph_02)
 
 # GCN
 class GCN(nn.Module):
@@ -607,8 +625,8 @@ class AttnUnit(nn.Module):
         self.hidden_size = opt["rnn_size"]
         self.separate_attention = self.opt["separate_attention"]
         if self.separate_attention:
-            self.linear_in_01 = nn.Linear(self.hidden_size // 2, self.hidden_size)
-            self.linear_in_02 = nn.Linear(self.hidden_size // 2, self.hidden_size)
+            # self.linear_in_01 = nn.Linear(self.hidden_size // 2, self.hidden_size)
+            # self.linear_in_02 = nn.Linear(self.hidden_size // 2, self.hidden_size)
             self.linear_att = nn.Linear(3*self.hidden_size, self.hidden_size)
         else:
             self.linear_att = nn.Linear(2*self.hidden_size, self.hidden_size)
@@ -621,19 +639,19 @@ class AttnUnit(nn.Module):
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
     def forward(self, enc_s_top, dec_s_top, enc_2):
-        if self.separate_attention:
-            N, L, C = enc_s_top.shape
-            encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
-            enc_s_top = encoder_splits[0]
-            enc_2 = encoder_splits[1]
-        if self.separate_attention:
-            enc_s_top = self.linear_in_01(enc_s_top)
+        # if self.separate_attention:
+        #     N, L, C = enc_s_top.shape
+        #     encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
+        #     enc_s_top = encoder_splits[0]
+        #     enc_2 = encoder_splits[1]
+        # if self.separate_attention:
+        #     enc_s_top = self.linear_in_01(enc_s_top)
         dot = torch.bmm(enc_s_top, dec_s_top.unsqueeze(2))
         attention = self.softmax(dot.squeeze(2)).unsqueeze(2)
         enc_attention = torch.bmm(enc_s_top.permute(0,2,1), attention)
 
         if self.separate_attention:
-            enc_2 = self.linear_in_02(enc_2)
+            # enc_2 = self.linear_in_02(enc_2)
             dot_2 = torch.bmm(enc_2, dec_s_top.unsqueeze(2))
             attention_2 = self.softmax(dot_2.squeeze(2)).unsqueeze(2)
             enc_attention_2 = torch.bmm(enc_2.permute(0,2,1), attention_2)
