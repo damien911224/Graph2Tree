@@ -1400,10 +1400,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
     #     if flag:
     #         break
 
-    graph_embedding, _ = torch.max(encoder_outputs, 0)
     encoder_outputs = encoder_outputs.transpose(0, 1)
-    bigru_outputs = bigru_outputs.transpose(0, 1)
-    structural_info = bigru_outputs
     prev_c = graph_embedding
     prev_h = graph_embedding
 
