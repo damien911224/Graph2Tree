@@ -320,7 +320,7 @@ def extract(input_name, ans_name, output_name):
                         cl3.append(catch[0])
             # case4 : 첫째, 둘째 -> 1, 2로 치환
             cl4 = []
-            fw8 = "[" + "".join(change_list8) + "]"
+            fw8 = "(" + "|".join(change_list8) + ")"
             p = fw8 + "째"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
@@ -360,8 +360,7 @@ def extract(input_name, ans_name, output_name):
             p = "[-+]?\\d+(\\.\\d+)?(\\/\\d+)?"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
-                    if catch[0] != '0':
-                        ql.append(catch[0])
+                    ql.append(catch[0])
                     
             tmp_obj['QL'] = ql
             list_obj[str(q_num)] = tmp_obj
