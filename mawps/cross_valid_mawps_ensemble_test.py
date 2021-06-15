@@ -202,15 +202,15 @@ for split_fold in range(num_folds + 1):
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
 fold_pairs.append(pairs[(fold_size * (num_folds + 1)):])
-test_fold = fold_pairs[-1]
+test_fold = fold_pairs[-2:]
 fold_pairs = fold_pairs[:-1]
 # random.shuffle(whole_fold)
 
 input_lang, output_lang, _, _ = prepare_data(pairs, pairs, 5, generate_nums, copy_nums, tree=False)
 
-encoders = list()
-decoders = list()
-attention_decoders = list()
+encoder_state_dicts = list()
+decoder_state_dicts = list()
+attention_decoder_state_dicts = list()
 best_accuracies = list()
 best_bleu_scores = list()
 for fold in range(num_folds):
@@ -369,9 +369,9 @@ for fold in range(num_folds):
     best_accuracies.append(fold_best_accuracy)
     best_bleu_scores.append(fold_best_bleu)
 
-    encoders.append(encoder)
-    decoders.append(decoder)
-    attention_decoders.append(attention_decoder)
+    encoder_state_dicts.append(encoder.state_dict())
+    decoder_state_dicts.append(decoder.state_dict())
+    attention_decoder_state_dicts.append(attention_decoder.state_dict())
 
 for fold_i in range(num_folds):
     print("-" * 50)
@@ -385,6 +385,28 @@ print("-" * 50)
 pairs_tested = test_fold
 pairs_trained = test_fold
 _, _, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums, copy_nums, tree=False)
+
+encoders = list()
+decoders = list()
+attention_decoders = list()
+for model_i in range(len(encoder_state_dicts)):
+    encoder = EncoderSeq(input_size=input_lang.n_words, embedding_size=embedding_size, hidden_size=hidden_size,
+                         n_layers=n_layers)
+    decoder = DecoderRNN(opt, output_lang.n_words)
+    attention_decoder = AttnUnit(opt, output_lang.n_words)
+
+    if USE_CUDA:
+        encoder.cuda()
+        decoder.cuda()
+        attention_decoder.cuda()
+
+    encoder.load_state_dict(encoder_state_dicts[model_i])
+    decoder.load_state_dict(decoder_state_dicts[model_i])
+    attention_decoder.load_state_dict(attention_decoder_state_dicts[model_i])
+
+    encoders.append(encoder)
+    decoders.append(decoder)
+    attention_decoders.append(attention_decoder)
 
 model_accuracies = list()
 model_blue_scores = list()
