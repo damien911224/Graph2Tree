@@ -226,6 +226,16 @@ def QL2Str(QL):
     result += ']'
     return result
 
+def diff_num_list(q_num, a, b):
+    result = ''
+    if len(a) is not len(b):
+        result = str(q_num) + " -> user-define : " + str(a) + " auto : " + str(list(map(str, b))) + '\n'
+        return result
+    for i in range(len(a)):
+        if float(a[i]) != float(b[i]):
+	        result = str(q_num) + " -> user-define : " + str(a) + " auto : " + str(list(map(str, b))) + '\n'
+    return result
+
 def extract(input_name, ans_name, output_name):
     from konlp.kma.klt2000 import klt2000 
     import json
@@ -309,6 +319,7 @@ def extract(input_name, ans_name, output_name):
             list_obj[str(q_num)] = tmp_obj
         with open(output_name, 'w', encoding='utf8') as g:
             e = open('error_list.txt', 'w')
+            diff_txt = ''
             main_obj = []
             error_list = []
             for q_num in list_obj:
@@ -316,6 +327,8 @@ def extract(input_name, ans_name, output_name):
                 id = q_num
                 try:
                     num_list = list_obj[str(q_num)]['QL']
+                    ud_num_list = ans_obj[q_num]['QL']
+                    diff_txt += diff_num_list(q_num, num_list, ud_num_list)
                     noun_list = list_obj[str(q_num)]['NL']
                     new_text = obj[q_num]['question']
                     new_equation = ans_obj[q_num]['equation']
@@ -328,12 +341,17 @@ def extract(input_name, ans_name, output_name):
                     tmp['new_equation'] = new_equation
                     tmp['lSolution'] = solution
                     main_obj.append(tmp)
-                except:
-                    error_list.append(q_num)
+                except Exception as ex:
+                    error_tmp = {}
+                    error_tmp['q_num'] = q_num
+                    error_tmp['error'] = str(ex)
+                    error_list.append(error_tmp)
                     continue
 
             g.write(json.dumps(main_obj, indent=4, ensure_ascii=False))
             e.write(json.dumps(error_list, indent=4))
+            with open('diff.txt', 'w', encoding='utf8') as d:
+                d.write(diff_txt)
             e.close()
 
 if __name__ == '__main__':
