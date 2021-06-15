@@ -22,7 +22,7 @@ def read_json(path):
     return file
 
 
-batch_size = 2
+batch_size = 64
 # embedding_size = 128
 # ===============changed=================
 embedding_size = 768
@@ -35,6 +35,7 @@ beam_size = 5
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
+num_workers = 20
 
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
@@ -317,7 +318,7 @@ for fold in range(num_folds):
 
         dataset = TrainDataset(train_pairs, input_lang, output_lang, USE_CUDA)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
-                                collate_fn=my_collate, pin_memory=True)
+                                collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
 
         # for idx in range(len(input_lengths)):
         #     train_loss = train_tree(
@@ -351,7 +352,7 @@ for fold in range(num_folds):
 
         dataset = TrainDataset(train_pairs, input_lang, output_lang, USE_CUDA)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
-                                collate_fn=my_collate, pin_memory=True)
+                                collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
 
         # for idx in range(len(input_lengths)):
         #     val_loss = val_tree(
