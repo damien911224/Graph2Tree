@@ -933,7 +933,6 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
     encoder_outputs, problem_output, graph_embedding, attention_inputs = \
         encoder(embedded, input_length, orig_idx, batch_graph)
-    exit()
 
     # ===============changed=================
     # sequence mask for attention
@@ -1120,6 +1119,7 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
         input_seq1 = input_seq1.transpose(0, 1)
         embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
         # print(embedded.size())
+        input_length = torch.IntTensor(input_length)
 
     if USE_CUDA:
         batch_graph = batch_graph.cuda()
@@ -1287,6 +1287,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
         input_seq1 = input_seq1.transpose(0, 1)
         embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
         input_length = input_length[0]
+        input_length = torch.IntTensor(input_length)
 
     if USE_CUDA:
         batch_graph = batch_graph.cuda()
@@ -1624,6 +1625,7 @@ def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings,
             input_seq1 = input_seq1.transpose(0, 1)
             embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
             input_length = input_length[0]
+            input_length = torch.IntTensor(input_length)
 
         encoder_outputs, problem_output, graph_embedding, attention_inputs = \
             encoders[model_i](embedded, input_var, [input_length], batch_graph)
