@@ -1095,7 +1095,8 @@ class TrainDataset(torch.utils.data.Dataset):
         return datum, self.input_lang, self.output_lang, self.USE_CUDA
 
 def my_collate(batch):
-    batch, input_lang, output_lang, USE_CUDA = [(item[0], item[1], item[2], item[3]) for item in batch]
+    print(len(batch))
+    batch, input_lang, output_lang, USE_CUDA = [[item[0], item[1], item[2], item[3]] for item in batch]
     input_lang = input_lang[0]
     output_lang = output_lang[0]
     USE_CUDA = USE_CUDA[0]
