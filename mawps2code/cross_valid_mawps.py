@@ -278,17 +278,36 @@ for fold in range(num_folds):
         start = time.time()
 
         train_loss_total = 0
-        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-        num_stack_batches, num_pos_batches, num_size_batches, \
-        num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
-        for idx in range(len(input_lengths)):
+        # input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        # num_stack_batches, num_pos_batches, num_size_batches, \
+        # num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
+        # for idx in range(len(input_lengths)):
+        #     train_loss = train_tree(
+        #         input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+        #         num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+        #         encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+        #         output_lang, num_pos_batches[idx], graph_batches[idx])
+        #     train_loss_total += train_loss.detach().cpu().numpy()
+        # train_loss_total = train_loss_total / len(input_lengths)
+
+        dataset = TrainDataset(train_pairs, input_lang, output_lang, USE_CUDA)
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
+                                collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
+
+        for idx, batch_items in enumerate(dataloader):
+            input_batch, input_length, output_batch, output_length, \
+            num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
+            contextual_input, dec_batch, queue_tree, max_index = batch_items
             train_loss = train_tree(
-                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+                input_batch, input_length, output_batch, output_length,
+                num_stack_batch, num_size_batch, num_value_batch, generate_num_ids,
+                encoder, decoder, attention_decoder,
                 encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-                output_lang, num_pos_batches[idx], graph_batches[idx])
+                input_lang, output_lang, num_pos_batch, graph_batch,
+                dec_batch, queue_tree, max_index
+            )
             train_loss_total += train_loss.detach().cpu().numpy()
-        train_loss_total = train_loss_total / len(input_lengths)
+        train_loss_total = train_loss_total / len(dataloader)
 
         val_loss_total = 0
         input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
