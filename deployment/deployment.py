@@ -35,13 +35,9 @@ num_workers = 20
 
 if __name__ == "__main__":
 
-    data = extract(problem_file)
-
     USE_CUDA = True
 
-    decoder = None
-    attention_decoder = None
-
+    data = extract(problem_file)
     pairs, copy_nums = transfer_num_n_equation(data)
     input_lang, output_lang, test_pairs = prepare_infer_data(pairs, 5)
 
@@ -67,3 +63,4 @@ if __name__ == "__main__":
 
         print(sent)
         exit()
+
