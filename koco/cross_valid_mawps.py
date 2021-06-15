@@ -215,7 +215,7 @@ for split_fold in range(4):
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
 fold_pairs.append(pairs[(fold_size * 4):])
-whole_fold = fold_pairs
+# whole_fold = fold_pairs
 # random.shuffle(whole_fold)
 
 best_accuracies = list()
