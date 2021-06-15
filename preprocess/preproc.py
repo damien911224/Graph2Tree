@@ -205,6 +205,7 @@ change_list4 = ['일', '이', '삼', '사', '오', '육', '칠', '팔', '구']
 change_list5 = ['이', '삼', '사', '오', '육', '칠', '팔', '구']
 change_list6 = ['십', '백']
 change_list7 = ['일', '이', '삼', '사', '오', '육', '칠', '팔', '구', '십', '백', '천', '만']
+change_list8 = ['첫', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉']
 unit=['kg','g','L','ml','mL','cm','mm','m','t','쪽','권','개입','개','명','원','묶음','단','모','세트','다스','병','장','박스','봉지','팩','줄','망','포','말','캔','판','자루','가마니','통']
 target_list4 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 target_list5 = [10, 100, 1000, 10000]
@@ -212,7 +213,6 @@ target_list5 = [10, 100, 1000, 10000]
 def h2i(hangeul):
     hangeul = hangeul.strip()
     result = decode(hangeul)
-
 
     return result
 
@@ -288,24 +288,35 @@ def extract(input_name, ans_name, output_name):
             fw2 = "[" + "".join(change_list5) + "]"
             fw3 = "[" + "".join(change_list6) + "]"
             fw4 = "[" + "".join(unit) + "]"
-            p = "(" + fw2 + "?" + fw3 + ")*" + fw + '?' 
+            p = "(" + fw2 + "?" + fw3 + ")*" + fw + '?'
+            # case1 : 삼백이십삼, 이십, 구십이 (양옆 띄어쓰기 상관X)
             cl = []
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
                     if len(catch[0]) > 1:
                         cl.append(catch[0])
+            # case2 : 일, 이, 삼, 사, 오 (양옆 띄어쓰기 O)
             cl2 = []
             p = "\s(" + "|".join(change_list7) + ")\s"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
                     if len(catch[0]) > 1:
                         cl2.append(catch[0])
+            # case3 : 하나의, 하나만 1로 치환
             cl3 = []
             p = "(하나)[만가에의는당를\s]"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
                     if len(catch[0]) > 1:
                         cl3.append(catch[0])
+            # case4 : 첫째, 둘째 -> 1, 2로 치환
+            cl4 = []
+            fw8 = "[" + "".join(change_list8) + "]"
+            p = fw8 + "째"
+            if re.search(p, sent) is not None:
+                for catch in re.finditer(p, sent):
+                    if len(catch[0]) > 1:
+                        cl4.append(catch[0])
             p = '0+'
             p = re.compile(p)
             for i in cl:
@@ -320,13 +331,19 @@ def extract(input_name, ans_name, output_name):
                 hh = p.match(i)
                 if hh is None:
                     sent = sent.replace(i, '1')
+            for i in cl4:
+                hh = p.match(i)
+                if hh is None:
+                    for j in range(len(change_list8)):
+                        if change_list8[j] in i:
+                            sent = sent.replace(i, target_list2[j] + '째')
 
             nl = k.nouns(sent)
             tmp_obj = {}
             tmp_obj['NL'] = nl
 
             ql = []
-            p = "[-+]?\\d+(\\.\\d+)?"
+            p = "[-+]?\\d+(\\.\\d+)?(\\/\\d+)?"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
                     if catch[0] != '0':
@@ -351,9 +368,12 @@ def extract(input_name, ans_name, output_name):
                     new_equation = ans_obj[q_num]['equation']
                     solution = ans_obj[q_num]['answer']
 
+                    QL = "QL = " + str(num_list)
+                    NL = "NL = " + str(noun_list)
+
                     tmp['id'] = id
-                    tmp['num_list'] = num_list
-                    tmp['noun_list'] = noun_list
+                    tmp['QL_code'] = QL
+                    tmp['NL_code'] = NL
                     tmp['new_text'] = new_text
                     tmp['new_equation'] = new_equation
                     tmp['lSolution'] = solution
