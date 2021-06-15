@@ -1458,7 +1458,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
 
     return queue_decode[0]["t"].flatten(output_lang)
 
-# 앙상블 수정 필요
+
 def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings, encoders, decoders, attention_decoders,
                            input_lang, output_lang, num_value, num_pos, batch_graph, beam_size=5, english=False,
                            max_length=MAX_OUTPUT_LENGTH):
