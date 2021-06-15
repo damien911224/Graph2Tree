@@ -490,7 +490,7 @@ def transfer_english_num(data):  # transfer num into "NUM"
     pairs = []
     generate_nums = {}
     copy_nums = 0
-    for d in data:
+    for i, d in data.items():
         nums = []
         input_seq = []
         # seg = d["sQuestion"].strip().split(" ")
