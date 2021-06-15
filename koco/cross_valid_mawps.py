@@ -206,8 +206,7 @@ pairs, generate_nums, copy_nums = transfer_english_num(data)
 # pairs = temp_pairs
 
 #train_fold, test_fold, valid_fold = get_train_test_fold(ori_path,prefix,data,pairs,group_data)
-new_fold = get_new_fold(data, pairs, group_data)
-pairs = new_fold
+pairs = get_new_fold(data, pairs, group_data)
 
 fold_size = int(len(pairs) * (1.0 / num_folds))
 fold_pairs = []
