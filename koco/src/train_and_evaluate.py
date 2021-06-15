@@ -921,7 +921,7 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
         input_seq1 = input_seq1.transpose(0, 1)
         # embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda:0")
-        embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1)
+        embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
         exit()
         # print(embedded.size())
 

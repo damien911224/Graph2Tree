@@ -50,8 +50,8 @@ opt = {
     "bert_learningRate": learning_rate * 1e-2,
     "embedding_size": 768,
     "dropout_input": 0.5,
-    "pretrained_bert_path": None
-    # "pretrained_bert_path": './electra_model'
+    # "pretrained_bert_path": None
+    "pretrained_bert_path": './electra_model'
 }
 
 log_path = "logs/{}".format("NoSepAtt_Max")
