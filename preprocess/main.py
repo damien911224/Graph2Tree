@@ -226,11 +226,16 @@ def QL2Str(QL):
     result += ']'
     return result
 
-def extract(input_name):
+def extract(input_name, ans_name, output_name):
     from konlp.kma.klt2000 import klt2000 
     import json
     import re
     k = klt2000()
+
+    ans_obj = {}
+    with open(ans_name, 'r', encoding='utf8') as g:
+        ans_txt = g.read()
+        ans_obj = json.loads(ans_txt)
 
     with open(input_name, 'r', encoding='utf8') as f:
         full_txt = f.read()
@@ -302,123 +307,40 @@ def extract(input_name):
                     
             tmp_obj['QL'] = ql
             list_obj[str(q_num)] = tmp_obj
-        with open('qlnl_list.txt', 'w', encoding='utf8') as g:
+        with open(output_name, 'w', encoding='utf8') as g:
+            e = open('error_list.txt', 'w')
+            main_obj = []
+            error_list = []
             for q_num in list_obj:
-                QL = list_obj[str(q_num)]['QL']
-                NL = list_obj[str(q_num)]['NL']
-                g.write(str(q_num) + ":\n")
-                g.write("QL = ")
-                g.write(QL2Str(QL) + '\n')
-                g.write("NL = ")
-                g.write(str(NL) + '\n\n')
+                tmp = {}
+                id = q_num
+                try:
+                    num_list = list_obj[str(q_num)]['QL']
+                    noun_list = list_obj[str(q_num)]['NL']
+                    new_text = obj[q_num]['question']
+                    new_equation = ans_obj[q_num]['equation']
+                    solution = ans_obj[q_num]['answer']
 
-                QL_index = []
-                NL_index = []
-                for i in range(len(QL)):
-                    QL_index.append(str(i) + ': ' + str(QL[i]))
-                for j in range(len(NL)):
-                    NL_index.append(str(j) + ': ' + str(NL[j]))
+                    tmp['id'] = id
+                    tmp['num_list'] = num_list
+                    tmp['noun_list'] = noun_list
+                    tmp['new_text'] = new_text
+                    tmp['new_equation'] = new_equation
+                    tmp['lSolution'] = solution
+                    main_obj.append(tmp)
+                except:
+                    error_list.append(q_num)
+                    continue
 
-                g.write("QL_index = ")
-                g.write(QL2Str(QL_index) + '\n')
-                g.write("NL_index = ")
-                g.write(str(NL_index) + '\n\n')
+            g.write(json.dumps(main_obj, indent=4, ensure_ascii=False))
+            e.write(json.dumps(error_list, indent=4))
+            e.close()
 
-def extract2(input_name, answer_name):
-    from konlp.kma.klt2000 import klt2000 
-    import json
-    import re
-    k = klt2000()
-    h = open(answer_name, 'r', encoding='utf8') 
-    full_ans = h.read()
-    ans_obj = json.loads(full_ans)
-
-    with open(input_name, 'r', encoding='utf8') as f:
-        full_txt = f.read()
-        obj = json.loads(full_txt)
-        list_obj = {}
-        for q_num in obj:
-            sent = obj[q_num]['question']
-            sent = sent.replace(',', '')
-            #sent = change_hangeul(sent)
-            ql_candi = k.pos(sent)
-            for ql_c in ql_candi:
-                for idx in range(len(change_list)):
-                    if change_list[idx] == ql_c[:-2] and (ql_c[-1] == 'K' or ql_c[-1] == 'N'):
-                        sent = sent.replace(ql_c[:-2], target_list[idx])
-            ql_candi = k.pos(sent)
-            nl = k.nouns(sent)
-            tmp_obj = {}
-            tmp_obj['NL'] = nl
-
-            ql = []
-            p = "\\d+(\\.\\d+)?"
-            if re.search(p, sent) is not None:
-                for catch in re.finditer(p, sent):
-                    ql.append(catch[0])
-                    
-            '''
-            for i in ql_candi:
-                if '#' in i:
-                    num = i[:-2]
-                    num = str(float(num))
-                    if num[-1] == '0' and num[-2] == '.':
-                        num = num[:-2]
-                    ql.append(num)
-            '''
-            tmp_obj['QL'] = ql
-            list_obj[str(q_num)] = tmp_obj
-            if q_num in ans_obj:
-                if str(ans_obj[q_num]['answer'])[-1] == '0' and str(ans_obj[q_num]['answer'])[-2] == '.':
-                    ans_obj[q_num]['answer'] = int(str(ans_obj[q_num]['answer'])[:-2])
-                eq = ans_obj[q_num]['equation']
-                eq_list = eq.split('=')
-                eq_list[0] = 'result'
-                if len(eq) < 2:
-                    eq_list.append('')
-
-                p = "\\d+(\\.\\d+)?"
-                if re.search(p, eq_list[1]) is not None:
-                    for catch in re.finditer(p, eq_list[1]):
-                        if len(catch[0]) > 2 and catch[0][-1] == '0' and catch[0][-2] == '.':
-                            eq_list[1] = eq_list[1].replace(catch[0], catch[0][:-2])
-                for i in range(len(ql)):
-                    if str(ql[i]) in eq_list[1]:
-                        eq_list[1] = eq_list[1].replace(str(ql[i]), 'QL[' + str(i) + ']')
-                eq = '='.join(eq_list)
-                ans_obj[q_num]['equation'] = eq
-        with open('ans.json', 'w', encoding='utf8') as a:
-            a.write(json.dumps(ans_obj, indent=4))
-
-        with open('qlnl_list.txt', 'w', encoding='utf8') as g:
-            for q_num in list_obj:
-                QL = list_obj[str(q_num)]['QL']
-                NL = list_obj[str(q_num)]['NL']
-                g.write(str(q_num) + ":\n")
-                g.write("QL = ")
-                g.write(QL2Str(QL) + '\n')
-                g.write("NL = ")
-                g.write(str(NL) + '\n\n')
-
-                QL_index = []
-                NL_index = []
-                for i in range(len(QL)):
-                    QL_index.append(str(i) + ': ' + str(QL[i]))
-                for j in range(len(NL)):
-                    NL_index.append(str(j) + ': ' + NL[j])
-
-                g.write("QL_index = ")
-                g.write(QL2Str(QL_index) + '\n')
-                g.write("NL_index = ")
-                g.write(str(NL_index) + '\n\n')
-        h.close()
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Input File Name')
-    parser.add_argument('--input', required=False, default='problem.json', help='Input File Name')
-    parser.add_argument('--ans', required=False, default='', help='Answer File Name')
+    parser.add_argument('--prob', required=True, default='problem.json', help='Problem File Name')
+    parser.add_argument('--ans', required=True, default='', help='Answer File Name')
+    output_name = "output.json"
     args = parser.parse_args()
-    if args.ans != '':
-        extract(args.input)
-    else:
-        extract(args.input)
+    extract(args.prob, args.ans, output_name)
