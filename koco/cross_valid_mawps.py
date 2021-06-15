@@ -1,9 +1,9 @@
 # coding: utf-8
+torch.multiprocessing.set_start_method('spawn')
 from src.train_and_evaluate import *
 from src.models import *
 from src.contextual_embeddings import *
 import time
-torch.multiprocessing.set_start_method('spawn')
 import torch.optim
 from src.expressions_transfer import *
 import json
