@@ -890,12 +890,12 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     decoder.train()
     attention_decoder.train()
 
-    if USE_CUDA:
-        input_var = input_var.cuda()
-        # seq_mask = seq_mask.cuda()
-        # padding_hidden = padding_hidden.cuda()
-        # num_mask = num_mask.cuda()
-        batch_graph = batch_graph.cuda()
+    # if USE_CUDA:
+    #     input_var = input_var.cuda()
+    #     # seq_mask = seq_mask.cuda()
+    #     # padding_hidden = padding_hidden.cuda()
+    #     # num_mask = num_mask.cuda()
+    #     batch_graph = batch_graph.cuda()
 
     # Zero gradients of both optimizers
     embedding_optimizer.zero_grad()
@@ -908,6 +908,9 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     embedded = None
     # if config.embedding == 'bert' or config.embedding == 'roberta':
     if True:
+        if USE_CUDA:
+            input_batch.cuda()
+
         contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
         input_seq1, input_len1, token_ids, index_retrieve = embedding(contextual_input)
         num_pos = index_retrieve.copy()
@@ -916,6 +919,8 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
         batch_graph = get_single_batch_graph(token_ids.cpu().tolist(), input_len1, new_group_batch, num_value_batch,
                                              num_pos)
         batch_graph = torch.LongTensor(batch_graph)
+        if USE_CUDA:
+            batch_graph.cuda()
 
         # print(num_value_batch, num_pos)
 
