@@ -1063,8 +1063,7 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
             if len(w_list) > max_w_len:
                 max_w_len = len(w_list)
             batch_w_list.append(w_list)
-        dec_batch[cur_index] = torch.zeros((batch_size,
-                                            max_w_len + 2), dtype=torch.long)
+        dec_batch[cur_index] = torch.zeros((batch_size, max_w_len + 2), dtype=torch.long)
         for i in range(batch_size):
             w_list = batch_w_list[i]
             if len(w_list) > 0:
