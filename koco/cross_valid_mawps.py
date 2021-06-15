@@ -44,7 +44,7 @@ opt = {
     "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5,
-    "separate_attention": True,
+    "separate_attention": False,
 
     # for BERT
     "bert_learningRate": learning_rate * 1e-2,
@@ -53,7 +53,7 @@ opt = {
     "pretrained_bert_path": None
 }
 
-log_path = "logs/{}".format("SepAtt_EncoderSplit")
+log_path = "logs/{}".format("NoSepAtt_Max")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
