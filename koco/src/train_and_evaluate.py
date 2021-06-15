@@ -856,7 +856,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             pred = attention_decoder(attention_inputs[0], dec_s[cur_index][i + 1][2], attention_inputs[1])
             gt = dec_batch[cur_index][:, i + 1]
             if using_gpu:
-                gt.cuda()
+                gt = gt.cuda()
             loss += criterion(pred, gt)
         cur_index = cur_index + 1
 
