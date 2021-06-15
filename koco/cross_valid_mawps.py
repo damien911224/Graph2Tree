@@ -49,7 +49,8 @@ opt = {
     # for BERT
     "bert_learningRate": learning_rate * 1e-2,
     "embedding_size": 768,
-    "dropout_input": 0.5
+    "dropout_input": 0.5,
+    "pretrained_bert_path": None
 }
 
 log_path = "logs/{}".format("SepAtt_EncoderSplit")
@@ -243,9 +244,9 @@ for fold in range(num_folds):
     #print(train_pairs[0])
     #exit()
     # ===============changed=================
-    if False:
+    if True:
         # Initialize models
-        embedding = BertEncoder("kobert", "cuda:0", False)
+        embedding = BertEncoder(opt["pretrained_bert_path"], "cuda:0", False)
         # embedding = BertEncoder("bert-base-uncased", "cuda:0", False)
     else:
         embedding = Embedding(None, input_lang, input_size=input_lang.n_words, embedding_size=opt['embedding_size'], dropout=opt['dropout_input'])
