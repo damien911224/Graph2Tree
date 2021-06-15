@@ -1121,6 +1121,21 @@ def index_batch_to_words(input_batch, input_length, lang):
 
 	return contextual_input
 
+def stack_to_string(stack):
+	op = ""
+	for i in stack:
+		if op == "":
+			op = op + i
+		else:
+			op = op + ' ' + i
+	return op
+
+def sentence_from_indexes(lang, indexes):
+	sent = []
+	for ind in indexes:
+		sent.append(lang.index2word[ind])
+	return sent
+
 class TrainDataset(torch.utils.data.Dataset):
 
     def __init__(self, pairs_to_batch, input_lang, output_lang, USE_CUDA):
