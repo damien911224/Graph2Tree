@@ -3,6 +3,7 @@ from src.train_and_evaluate import *
 from src.models import *
 from src.contextual_embeddings import *
 import time
+torch.multiprocessing.set_start_method('spawn')
 import torch.optim
 from src.expressions_transfer import *
 import json
@@ -15,7 +16,6 @@ from sklearn.model_selection import KFold
 from nltk.translate.bleu_score import sentence_bleu
 from torch.utils.data import DataLoader
 from src.pre_data import TrainDataset, my_collate
-torch.multiprocessing.set_start_method('spawn')
 
 def read_json(path):
     with open(path,'r') as f:
