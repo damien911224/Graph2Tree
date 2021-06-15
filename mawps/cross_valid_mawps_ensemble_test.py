@@ -208,9 +208,9 @@ fold_pairs = fold_pairs[:-1]
 
 input_lang, output_lang, _, _ = prepare_data(pairs, pairs, 5, generate_nums, copy_nums, tree=False)
 
-encoders = list()
-decoders = list()
-attention_decoders = list()
+encoder_state_dicts = list()
+decoder_state_dicts = list()
+attention_decoder_state_dicts = list()
 best_accuracies = list()
 best_bleu_scores = list()
 for fold in range(num_folds):
@@ -369,9 +369,9 @@ for fold in range(num_folds):
     best_accuracies.append(fold_best_accuracy)
     best_bleu_scores.append(fold_best_bleu)
 
-    encoders.append(encoder.copy())
-    decoders.append(decoder.copy())
-    attention_decoders.append(attention_decoder.copy())
+    encoder_state_dicts.append(encoder.state_dict())
+    decoder_state_dicts.append(decoder.state_dict())
+    attention_decoder_state_dicts.append(attention_decoder.state_dict())
 
 for fold_i in range(num_folds):
     print("-" * 50)
@@ -446,6 +446,23 @@ for model_i in range(len(encoders)):
 
     model_accuracies.append(accuracy)
     model_blue_scores.append(bleu_scores)
+
+encoders = list()
+decoders = list()
+attention_decoders = list()
+for model_i in range(len(encoder_state_dicts)):
+    encoder = EncoderSeq(input_size=input_lang.n_words, embedding_size=embedding_size, hidden_size=hidden_size,
+                         n_layers=n_layers)
+    decoder = DecoderRNN(opt, output_lang.n_words)
+    attention_decoder = AttnUnit(opt, output_lang.n_words)
+
+    encoder.load_state_dict(encoder_state_dicts[model_i])
+    decoder.load_state_dict(decoder_state_dicts[model_i])
+    attention_decoder.load_state_dict(attention_decoder_state_dicts[model_i])
+
+    encoders.append(encoder)
+    decoders.append(decoder)
+    attention_decoders.append(attention_decoder)
 
 reference_list = list()
 candidate_list = list()
