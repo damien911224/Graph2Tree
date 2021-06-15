@@ -263,6 +263,7 @@ class EncoderSeq(nn.Module):
         # Note: we run this all at once (over multiple batches of multiple sequences)
         # embedded = self.embedding(input_seqs)  # S x B x E
         # embedded = self.em_dropout(embedded)
+        input_lengths = [ii.cpu() for ii in range(input_lengths)]
         packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths)
         pade_hidden = hidden
         # pade_outputs, pade_hidden = self.gru_pade(packed, pade_hidden)
