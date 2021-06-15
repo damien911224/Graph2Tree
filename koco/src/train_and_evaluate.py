@@ -926,6 +926,7 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
         # embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda:0")
         embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
         # print(embedded.size())
+        input_length = torch.IntTensor(input_length)
 
     if USE_CUDA:
         batch_graph = batch_graph.cuda()
