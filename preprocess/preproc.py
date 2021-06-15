@@ -317,6 +317,11 @@ def extract(input_name, ans_name, output_name):
                 for catch in re.finditer(p, sent):
                     if len(catch[0]) > 1:
                         cl4.append(catch[0])
+            # case5 : 한으로 시작하는 경우
+            fw9 = "^[한]\s"
+            p = fw9
+            sent = re.sub(fw9, "1 ", sent)
+
             p = '0+'
             p = re.compile(p)
             for i in cl:
