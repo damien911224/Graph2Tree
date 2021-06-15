@@ -300,13 +300,13 @@ for fold in range(num_folds):
         for idx, batch_items in enumerate(dataloader):
             input_batch, input_length, output_batch, output_length, \
             num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
-            contextual_input, dec_batch, queue_tree, max_index = batch_items
+            dec_batch, queue_tree, max_index = batch_items
             train_loss = train_tree(
                 input_batch, input_length, output_batch, output_length,
-                num_stack_batch, num_size_batch, num_value_batch, generate_num_ids,
+                num_stack_batch, num_size_batch, generate_num_ids,
                 encoder, decoder, attention_decoder,
                 encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-                input_lang, output_lang, num_pos_batch, graph_batch,
+                output_lang, num_pos_batch, graph_batch,
                 dec_batch, queue_tree, max_index
             )
             train_loss_total += train_loss.detach().cpu().numpy()
@@ -332,13 +332,13 @@ for fold in range(num_folds):
         for idx, batch_items in enumerate(dataloader):
             input_batch, input_length, output_batch, output_length, \
             num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
-            contextual_input, dec_batch, queue_tree, max_index = batch_items
+            dec_batch, queue_tree, max_index = batch_items
             val_loss = val_tree(
                 input_batch, input_length, output_batch, output_length,
-                num_stack_batch, num_size_batch, num_value_batch, generate_num_ids,
+                num_stack_batch, num_size_batch, generate_num_ids,
                 encoder, decoder, attention_decoder,
                 encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-                input_lang, output_lang, num_pos_batch, graph_batch,
+                output_lang, num_pos_batch, graph_batch,
                 dec_batch, queue_tree, max_index
             )
             val_loss_total += val_loss.detach().cpu().numpy()

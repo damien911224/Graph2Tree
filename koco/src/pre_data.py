@@ -101,10 +101,12 @@ class OutputLang:
         for key, value in self.word2index.items():
             self.word2count[key] = 1
 
+        """
         self.add_to_vocab("<S>")
         self.add_to_vocab("<E>")
         self.add_to_vocab("<IS>")
         self.add_to_vocab("<IE>")
+        """
 
         self.n_words = len(self.word2index)
 
@@ -752,7 +754,7 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
-                            pair[2], pair[3], num_stack, pair[4]))
+                            pair[2], pair[3], num_stack, pair[4], pair[5]))
 
     print('Indexed %d words in input language, %d words in output' % (input_lang.n_words, output_lang.n_words))
     print('Number of training data %d' % (len(train_pairs)))
@@ -781,9 +783,9 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         test_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
-                           pair[2], pair[3], num_stack,pair[4]))
+                           pair[2], pair[3], num_stack,pair[4], pair[5]))
 
-    print('Number of testind data %d' % (len(test_pairs)))
+    print('Number of testing data %d' % (len(test_pairs)))
     return input_lang, output_lang, train_pairs, test_pairs
 
 
@@ -1163,7 +1165,7 @@ def my_collate(batch):
     batch_size = len(batch)
     input_length = []
     output_length = []
-    for _, i, _, j, _, _, _, _ in batch:
+    for _, i, _, j, _, _, _, _, _ in batch:
         input_length.append(i)
         output_length.append(j)
     input_len_max = input_length[0]
@@ -1175,8 +1177,9 @@ def my_collate(batch):
     num_pos_batch = []
     num_size_batch = []
     group_batch = []
+    mask_batch = []
     num_value_batch = []
-    for i, li, j, lj, num, num_pos, num_stack, group in batch:
+    for i, li, j, lj, num, num_pos, num_stack, group, mask in batch:
         num_batch.append(len(num))
         input_batch.append(pad_seq(i, li, input_len_max))
         output_batch.append(pad_seq(j, lj, output_len_max))
@@ -1185,6 +1188,7 @@ def my_collate(batch):
         num_size_batch.append(len(num_pos))
         num_value_batch.append(num)
         group_batch.append(group)
+        mask_batch.append(mask)
 
     graph_batch = get_single_batch_graph(input_batch, input_length,group_batch,num_value_batch,num_pos_batch)
 
@@ -1195,7 +1199,7 @@ def my_collate(batch):
 
     return input_batch, input_length, output_batch, output_length, \
            num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
-           contextual_input, dec_batch, queue_tree, max_index
+           contextual_input, dec_batch, queue_tree, max_index, mask_batch
 
 # prepare the batches
 def prepare_train_batch(pairs_to_batch, batch_size):

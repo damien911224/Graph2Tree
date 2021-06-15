@@ -652,10 +652,6 @@
         "error": "'QL'"
     },
     {
-        "q_num": "968",
-        "error": "'968'"
-    },
-    {
         "q_num": "1150",
         "error": "'QL'"
     },
@@ -922,5 +918,9 @@
     {
         "q_num": "1221",
         "error": "'QL'"
+    },
+    {
+        "q_num": "1568",
+        "error": "could not convert string to float: '1/6'"
     }
 ]
