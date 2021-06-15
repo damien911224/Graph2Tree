@@ -357,7 +357,11 @@ for fold in range(num_folds):
         accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
         bleu_scores = np.mean(bleu_scores)
 
-        print(ref_str, cand_str)
+        print("=" * 30)
+        print(ref_str)
+        print("=" * 30)
+        print(cand_str)
+        print("=" * 30)
 
         encoder_scheduler.step(val_loss_total)
         decoder_scheduler.step(val_loss_total)
