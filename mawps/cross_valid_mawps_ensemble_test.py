@@ -22,7 +22,7 @@ def read_json(path):
 batch_size = 64
 embedding_size = 128
 hidden_size = 512
-n_epochs = 1
+n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
 beam_size = 5
