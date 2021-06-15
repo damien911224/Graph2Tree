@@ -40,10 +40,10 @@ opt = {
     "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5,
-    "separate_attention": True
+    "separate_attention": False
 }
 
-log_path = "logs/{}".format("SepAtt_EncoderSplit")
+log_path = "logs/{}".format("NoSepAtt_Max")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
@@ -197,11 +197,11 @@ pairs = new_fold
 
 fold_size = int(len(pairs) * (1.0 / num_folds))
 fold_pairs = []
-for split_fold in range(4):
+for split_fold in range(num_folds):
     fold_start = fold_size * split_fold
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
-fold_pairs.append(pairs[(fold_size * 4):])
+fold_pairs.append(pairs[(fold_size * num_folds):])
 whole_fold = fold_pairs
 # random.shuffle(whole_fold)
 
