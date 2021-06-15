@@ -229,11 +229,11 @@ def QL2Str(QL):
 def diff_num_list(q_num, a, b):
     result = ''
     if len(a) is not len(b):
-        result = str(q_num) + " -> user-define : " + str(a) + " auto : " + str(list(map(str, b))) + '\n'
+        result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
         return result
     for i in range(len(a)):
         if float(a[i]) != float(b[i]):
-	        result = str(q_num) + " -> user-define : " + str(a) + " auto : " + str(list(map(str, b))) + '\n'
+	        result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
     return result
 
 def extract(input_name, ans_name, output_name):
@@ -300,10 +300,16 @@ def extract(input_name, ans_name, output_name):
                 for catch in re.finditer(p, sent):
                     if len(catch[0]) > 1:
                         cl2.append(catch[0])
+            p = '0+'
+            p = re.compile(p)
             for i in cl:
-                sent = sent.replace(i, str(h2i(i)))
+                hh = p.match(i)
+                if hh is not None:
+                    sent = sent.replace(i, str(h2i(i)))
             for i in cl2:
-                sent = sent.replace(i, ' ' + str(h2i(i)) + ' ')
+                hh = p.match(i)
+                if hh is not None:
+                    sent = sent.replace(i, ' ' + str(h2i(i)) + ' ')
 
             nl = k.nouns(sent)
             tmp_obj = {}
@@ -313,7 +319,8 @@ def extract(input_name, ans_name, output_name):
             p = "\\d+(\\.\\d+)?"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
-                    ql.append(catch[0])
+                    if catch[0] != '0':
+                        ql.append(catch[0])
                     
             tmp_obj['QL'] = ql
             list_obj[str(q_num)] = tmp_obj
@@ -327,8 +334,8 @@ def extract(input_name, ans_name, output_name):
                 id = q_num
                 try:
                     num_list = list_obj[str(q_num)]['QL']
-                    ud_num_list = ans_obj[q_num]['QL']
-                    diff_txt += diff_num_list(q_num, num_list, ud_num_list)
+                    ud_num_list = ans_obj[str(q_num)]['QL']
+                    diff_txt += diff_num_list(str(q_num), num_list, ud_num_list)
                     noun_list = list_obj[str(q_num)]['NL']
                     new_text = obj[q_num]['question']
                     new_equation = ans_obj[q_num]['equation']
