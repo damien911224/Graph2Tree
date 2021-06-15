@@ -495,7 +495,7 @@ def transfer_english_num(data):  # transfer num into "NUM"
         input_seq = []
         # seg = d["sQuestion"].strip().split(" ")
         seg = d["question"].strip().split(" ")
-        equations = d["lequations"]
+        equations = d["lequation"]
 
         for s in seg:
             pos = re.search(pattern, s)
