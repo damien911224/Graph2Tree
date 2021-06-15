@@ -1,6 +1,4 @@
 # coding: utf-8
-import torch
-torch.multiprocessing.set_start_method('spawn')
 from src.train_and_evaluate import *
 from src.models import *
 from src.contextual_embeddings import *
