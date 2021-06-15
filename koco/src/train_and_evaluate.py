@@ -908,10 +908,9 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
     embedded = None
     # if config.embedding == 'bert' or config.embedding == 'roberta':
     if True:
-        if USE_CUDA:
-            input_batch.cuda()
-
         contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
+        if USE_CUDA:
+            contextual_input.cuda()
         input_seq1, input_len1, token_ids, index_retrieve = embedding(contextual_input)
         num_pos = index_retrieve.copy()
 
