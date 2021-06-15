@@ -44,15 +44,17 @@ opt = {
     "learningRate": learning_rate, # default 1.0e-3
     "init_weight": 0.08,
     "grad_clip": 5,
-    "separate_attention": True,
+    "separate_attention": False,
 
     # for BERT
     "bert_learningRate": learning_rate * 1e-2,
     "embedding_size": 768,
-    "dropout_input": 0.5
+    "dropout_input": 0.5,
+    "pretrained_bert_path": None
+    # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("SepAtt_EncoderSplit")
+log_path = "logs/{}".format("NoSepAtt_Max")
 num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
@@ -190,7 +192,7 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/mawps_combine.json")
+data = load_mawps_data("data/custom_dummy.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
@@ -243,12 +245,13 @@ for fold in range(num_folds):
     #print(train_pairs[0])
     #exit()
     # ===============changed=================
-    if False:
+    if True:
         # Initialize models
-        embedding = BertEncoder("kobert", "cuda:0", False)
+        embedding = BertEncoder(opt["pretrained_bert_path"], "cuda:0", False)
         # embedding = BertEncoder("bert-base-uncased", "cuda:0", False)
     else:
         embedding = Embedding(None, input_lang, input_size=input_lang.n_words, embedding_size=opt['embedding_size'], dropout=opt['dropout_input'])
+    embedding.to("cpu")
     encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
                          n_layers=n_layers)
     ##################################################################################################
@@ -385,7 +388,8 @@ for fold in range(num_folds):
         decoder_scheduler.step(val_loss_total)
         attention_decoder_scheduler.step(val_loss_total)
 
-        torch.save(embedding.state_dict(), os.path.join(fold_weight_folder, "embedding-{}.pth".format(epoch + 1)))
+        # torch.save(embedding.state_dict(), os.path.join(fold_weight_folder, "embedding-{}.pth".format(epoch + 1)))
+        embedding.bert_layer.save_pretrained(os.path.join(fold_weight_folder, "embedding-{}".format(epoch + 1)))
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
         torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
         torch.save(attention_decoder.state_dict(),

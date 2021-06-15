@@ -39,13 +39,16 @@ def combine_num_(all_tokens):
 class BertEncoder(nn.Module):
 	def __init__(self, bert_model = 'kobert',device = 'cuda:0 ', freeze_bert = False):
 		super(BertEncoder, self).__init__()
-		if bert_model != 'kobert':
+		if False:
 			self.bert_layer = BertModel.from_pretrained(bert_model)
 			self.bert_tokenizer = BertTokenizer.from_pretrained(bert_model)
 		else:
+			if bert_model == None:
+				bert_model = "monologg/koelectra-base-v3-discriminator"
 			# self.bert_layer = BertModel.from_pretrained('monologg/kobert')
 			# self.bert_tokenizer = get_tokenizer()
-			self.bert_layer = ElectraModel.from_pretrained("monologg/koelectra-base-v3-discriminator")
+			self.bert_layer = ElectraModel.from_pretrained(bert_model)
+			# self.bert_layer.save_pretrained("./electra_model")
 			# original tokenizer
 			# self.bert_tokenizer = ElectraTokenizer.from_pretrained("monologg/koelectra-base-v3-discriminator")
 			# add names and "NUM" token
