@@ -386,6 +386,23 @@ pairs_tested = test_fold
 pairs_trained = test_fold
 _, _, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums, copy_nums, tree=False)
 
+encoders = list()
+decoders = list()
+attention_decoders = list()
+for model_i in range(len(encoder_state_dicts)):
+    encoder = EncoderSeq(input_size=input_lang.n_words, embedding_size=embedding_size, hidden_size=hidden_size,
+                         n_layers=n_layers)
+    decoder = DecoderRNN(opt, output_lang.n_words)
+    attention_decoder = AttnUnit(opt, output_lang.n_words)
+
+    encoder.load_state_dict(encoder_state_dicts[model_i])
+    decoder.load_state_dict(decoder_state_dicts[model_i])
+    attention_decoder.load_state_dict(attention_decoder_state_dicts[model_i])
+
+    encoders.append(encoder)
+    decoders.append(decoder)
+    attention_decoders.append(attention_decoder)
+
 model_accuracies = list()
 model_blue_scores = list()
 for model_i in range(len(encoders)):
@@ -446,23 +463,6 @@ for model_i in range(len(encoders)):
 
     model_accuracies.append(accuracy)
     model_blue_scores.append(bleu_scores)
-
-encoders = list()
-decoders = list()
-attention_decoders = list()
-for model_i in range(len(encoder_state_dicts)):
-    encoder = EncoderSeq(input_size=input_lang.n_words, embedding_size=embedding_size, hidden_size=hidden_size,
-                         n_layers=n_layers)
-    decoder = DecoderRNN(opt, output_lang.n_words)
-    attention_decoder = AttnUnit(opt, output_lang.n_words)
-
-    encoder.load_state_dict(encoder_state_dicts[model_i])
-    decoder.load_state_dict(decoder_state_dicts[model_i])
-    attention_decoder.load_state_dict(attention_decoder_state_dicts[model_i])
-
-    encoders.append(encoder)
-    decoders.append(decoder)
-    attention_decoders.append(attention_decoder)
 
 reference_list = list()
 candidate_list = list()
