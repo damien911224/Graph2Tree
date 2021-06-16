@@ -1570,7 +1570,7 @@ def evaluate_tree_ensemble(input_batch, input_length, generate_nums, encoders, d
 def beam_copy(beam):
     # beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]),
     #           "score": 0.0, "score_length": 0.0,
-    #           "head": 1, "child": 1, "depth_done": False, "child_done": False}]
+    #           "head": 1, "child": 1, "head_done": False}]
     new_beam = dict(beam)
     q = beam["q"]
     new_q = list()
