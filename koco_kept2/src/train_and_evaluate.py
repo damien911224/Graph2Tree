@@ -1510,10 +1510,18 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
         contextual_input = index_batch_to_words([input_batch], [input_length], input_lang)
         input_seq1, input_len1, token_ids, index_retrieve = embeddings[model_i](contextual_input)
         num_pos = index_retrieve.copy()[0]
-        new_group_batch = allocate_group_num(index_retrieve, input_len1)[0]
 
-        batch_graph = get_single_example_graph(token_ids.cpu().tolist()[0], input_len1[0],
-                                               new_group_batch, num_value, num_pos)
+        new_group_batch = allocate_group_num(index_retrieve, input_len1)[0]
+        # print(new_group_batch, token_ids.cpu().tolist()[0],  input_len1[0], num_value, num_pos)
+        # new_group_batch = []
+        # for bat in range(len(group_batch)):
+        # 	try:
+        # 		new_group_batch.append([index_retrieve[bat][index1] for index1 in group_batch[bat] if index1 < len(index_retrieve[bat])])
+        # 	except:
+        # 		pdb.set_trace()
+
+        batch_graph = get_single_example_graph(token_ids.cpu().tolist()[0], input_len1[0], new_group_batch, num_value,
+                                               num_pos)
         batch_graph = torch.LongTensor(batch_graph)
 
         input_seq1 = input_seq1.transpose(0, 1)
@@ -1525,7 +1533,8 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
             batch_graph = batch_graph.cuda()
 
         encoder_outputs, problem_output, graph_embedding, attention_inputs = \
-            encoders[model_i](embedded, input_var, input_length, batch_graph)
+            encoders[model_i](embedded, input_length, orig_idx, batch_graph)
+
         all_encoder_outputs.append((encoder_outputs.transpose(0, 1), graph_embedding, attention_inputs))
 
     s = [(out[1], out[1]) for out in all_encoder_outputs]
