@@ -1,5 +1,10 @@
-*.pyc
+.idea
 __pycache__
+.DS_Store
+*.pyc
 events*
 *.pth
 *.bin
+config*
+.vscode
+pyaichtools/.git

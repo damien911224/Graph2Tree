@@ -4,6 +4,7 @@ import copy
 import re
 import numpy as np
 import os
+import torch
 
 PAD_token = 0
 
@@ -21,8 +22,8 @@ class Lang:
 
     def add_sen_to_vocab(self, sentence):  # add words of sentence to vocab
         for word in sentence:
-            if re.search("N\d+|NUM|\d+", word):
-                continue
+            # if re.search("N\d+|NUM|\d+", word):
+            #     continue
             if word not in self.index2word:
                 self.word2index[word] = self.n_words
                 self.word2count[word] = 1
@@ -89,14 +90,10 @@ class OutputLang:
         self.word2count = {}
         self.index2word = {}
         self.n_words = 0  # Count word tokens
-        # self.word2index_json_path = "data/reverse_label_dict.json"
-        # with open(self.word2index_json_path, "r") as fp:
-        #     self.word2index = json.load(fp)
 
-        self.word2index["<S>"] = 0
-        self.word2index["<E>"] = 1
-        self.word2index["<IS>"] = 2
-        self.word2index["<IE>"] = 3
+        self.word2index_json_path = "data/reverse_label_dict.json"
+        with open(self.word2index_json_path, "r") as fp:
+            self.word2index = json.load(fp)
 
         for key, value in self.word2index.items():
             self.index2word[value] = key
@@ -104,68 +101,67 @@ class OutputLang:
         for key, value in self.word2index.items():
             self.word2count[key] = 1
 
+        """
+        self.add_to_vocab("<S>")
+        self.add_to_vocab("<E>")
+        self.add_to_vocab("<IS>")
+        self.add_to_vocab("<IE>")
+        """
+
         self.n_words = len(self.word2index)
 
-    def add_sen_to_vocab(self, sentence):  # add words of sentence to vocab
-        for word in sentence:
-            # if re.search("N\d+|NUM|\d+", word):
-            #     continue
-            if word not in self.word2index:
-                self.word2index[word] = self.n_words
-                self.index2word[self.n_words] = word
-                self.word2count[word] = 1
-                self.n_words += 1
-            else:
-                self.word2count[word] += 1
+    def add_to_vocab(self, word):
+        if word not in self.word2index:
+            self.word2index[word] = self.n_words
+            self.index2word[self.n_words] = word
+            self.word2count[word] = 1
+            self.n_words += 1
+        else:
+            self.word2count[word] += 1
 
-    # def trim(self, min_count):  # trim words below a certain count threshold
-    #     keep_words = []
-    #
-    #     for k, v in self.word2count.items():
-    #         if v >= min_count:
-    #             keep_words.append(k)
-    #
-    #     print('keep_words %s / %s = %.4f' % (
-    #         len(keep_words), len(self.index2word), len(keep_words) / len(self.index2word)
-    #     ))
-    #
-    #     # Reinitialize dictionaries
-    #     self.word2index = {}
-    #     self.word2count = {}
-    #     self.index2word = []
-    #     self.n_words = 0  # Count default tokens
-    #
-    #     for word in keep_words:
-    #         self.word2index[word] = self.n_words
-    #         self.index2word.append(word)
-    #         self.n_words += 1
-    #
-    # def build_input_lang(self, trim_min_count):  # build the input lang vocab and dict
-    #     if trim_min_count > 0:
-    #         self.trim(trim_min_count)
-    #         self.index2word = ["PAD", "NUM", "UNK"] + self.index2word
-    #     else:
-    #         self.index2word = ["PAD", "NUM"] + self.index2word
-    #     self.word2index = {}
-    #     self.n_words = len(self.index2word)
-    #     for i, j in enumerate(self.index2word):
-    #         self.word2index[j] = i
-    #
-    # def build_output_lang(self, generate_num, copy_nums):  # build the output lang vocab and dict
-    #     self.index2word = ["PAD", "EOS"] + self.index2word + generate_num + ["N" + str(i) for i in range(copy_nums)] +\
-    #                       ["SOS", "UNK"]
-    #     self.n_words = len(self.index2word)
-    #     for i, j in enumerate(self.index2word):
-    #         self.word2index[j] = i
-    #
-    # def build_output_lang_for_tree(self, generate_num, copy_nums):  # build the output lang vocab and dict
-    #     self.num_start = len(self.index2word)
-    #
-    #     self.index2word = self.index2word + generate_num + ["N" + str(i) for i in range(copy_nums)] + ["UNK"]
-    #     self.n_words = len(self.index2word)
-    #
-    #     for i, j in enumerate(self.index2word):
-    #         self.word2index[j] = i
+
+class Tree():
+    def __init__(self):
+        self.parent = None
+        self.num_children = 0
+        self.children = []
+
+    def __str__(self, level=0):
+        ret = ""
+        for child in self.children:
+            if isinstance(child, type(self)):
+                ret += child.__str__(level + 1)
+            else:
+                ret += "\t" * level + str(child) + "\n"
+        return ret
+
+    def add_child(self, c):
+        if isinstance(c, type(self)):
+            c.parent = self
+        self.children.append(c)
+        self.num_children = self.num_children + 1
+
+    def to_string(self):
+        r_list = []
+        for i in range(self.num_children):
+            if isinstance(self.children[i], Tree):
+                r_list.append("( " + self.children[i].to_string() + " )")
+            else:
+                r_list.append(str(self.children[i]))
+        return "".join(r_list)
+
+    def flatten(self, output_lang):
+        r_list = []
+        for i in range(self.num_children):
+            if isinstance(self.children[i], type(self)):
+                r_list.append(output_lang.word2index["<IS>"])
+                cl = self.children[i].flatten(output_lang)
+                for k in range(len(cl)):
+                    r_list.append(cl[k])
+                r_list.append(output_lang.word2index["<IE>"])
+            else:
+                r_list.append(self.children[i])
+        return r_list
 
 def load_raw_data(filename):  # load the json data to list(dict()) for MATH 23K
     print("Reading lines...")
@@ -209,45 +205,46 @@ def load_mawps_data(filename):  # load the json data to list(dict()) for MAWPS
     print("Reading lines...")
     f = open(filename, encoding="utf-8")
     data = json.load(f)
-    out_data = []
-    for d in data:
-        if "lEquations" not in d or len(d["lEquations"]) != 1:
-            continue
-        x = d["lEquations"][0].replace(" ", "")
-
-        if "lQueryVars" in d and len(d["lQueryVars"]) == 1:
-            v = d["lQueryVars"][0]
-            if v + "=" == x[:len(v)+1]:
-                xt = x[len(v)+1:]
-                if len(set(xt) - set("0123456789.+-*/()")) == 0:
-                    temp = d.copy()
-                    temp["lEquations"] = xt
-                    out_data.append(temp)
-                    continue
-
-            if "=" + v == x[-len(v)-1:]:
-                xt = x[:-len(v)-1]
-                if len(set(xt) - set("0123456789.+-*/()")) == 0:
-                    temp = d.copy()
-                    temp["lEquations"] = xt
-                    out_data.append(temp)
-                    continue
-
-        if len(set(x) - set("0123456789.+-*/()=xX")) != 0:
-            continue
-
-        if x[:2] == "x=" or x[:2] == "X=":
-            if len(set(x[2:]) - set("0123456789.+-*/()")) == 0:
-                temp = d.copy()
-                temp["lEquations"] = x[2:]
-                out_data.append(temp)
-                continue
-        if x[-2:] == "=x" or x[-2:] == "=X":
-            if len(set(x[:-2]) - set("0123456789.+-*/()")) == 0:
-                temp = d.copy()
-                temp["lEquations"] = x[:-2]
-                out_data.append(temp)
-                continue
+    # out_data = []
+    # for d in data:
+    #     if "lEquations" not in d or len(d["lEquations"]) != 1:
+    #         continue
+    #     x = d["lEquations"][0].replace(" ", "")
+    #
+    #     if "lQueryVars" in d and len(d["lQueryVars"]) == 1:
+    #         v = d["lQueryVars"][0]
+    #         if v + "=" == x[:len(v)+1]:
+    #             xt = x[len(v)+1:]
+    #             if len(set(xt) - set("0123456789.+-*/()")) == 0:
+    #                 temp = d.copy()
+    #                 temp["lEquations"] = xt
+    #                 out_data.append(temp)
+    #                 continue
+    #
+    #         if "=" + v == x[-len(v)-1:]:
+    #             xt = x[:-len(v)-1]
+    #             if len(set(xt) - set("0123456789.+-*/()")) == 0:
+    #                 temp = d.copy()
+    #                 temp["lEquations"] = xt
+    #                 out_data.append(temp)
+    #                 continue
+    #
+    #     if len(set(x) - set("0123456789.+-*/()=xX")) != 0:
+    #         continue
+    #
+    #     if x[:2] == "x=" or x[:2] == "X=":
+    #         if len(set(x[2:]) - set("0123456789.+-*/()")) == 0:
+    #             temp = d.copy()
+    #             temp["lEquations"] = x[2:]
+    #             out_data.append(temp)
+    #             continue
+    #     if x[-2:] == "=x" or x[-2:] == "=X":
+    #         if len(set(x[:-2]) - set("0123456789.+-*/()")) == 0:
+    #             temp = d.copy()
+    #             temp["lEquations"] = x[:-2]
+    #             out_data.append(temp)
+    #             continue
+    out_data = data
     return out_data
 
 
@@ -331,26 +328,6 @@ def load_roth_data(filename):  # load the json data to dict(dict()) for roth dat
                 out_data[temp["iIndex"]] = temp
                 continue
     return out_data
-
-# for testing equation
-# def out_equation(test, num_list):
-#     test_str = ""
-#     for c in test:
-#         if c[0] == "N":
-#             x = num_list[int(c[1:])]
-#             if x[-1] == "%":
-#                 test_str += "(" + x[:-1] + "/100.0" + ")"
-#             else:
-#                 test_str += x
-#         elif c == "^":
-#             test_str += "**"
-#         elif c == "[":
-#             test_str += "("
-#         elif c == "]":
-#             test_str += ")"
-#         else:
-#             test_str += c
-#     return test_str
 
 
 def transfer_num(data):  # transfer num into "NUM"
@@ -472,107 +449,8 @@ def transfer_english_num(data):  # transfer num into "NUM"
 
         if copy_nums < len(nums):
             copy_nums = len(nums)
-        eq_segs = []
-        temp_eq = ""
-        for e in equations:
-            if e not in "()+-*/":
-                temp_eq += e
-            elif temp_eq != "":
-                count_eq = []
-                for n_idx, n in enumerate(nums):
-                    if abs(float(n) - float(temp_eq)) < 1e-4:
-                        count_eq.append(n_idx)
-                        if n != temp_eq:
-                            nums[n_idx] = temp_eq
-                if len(count_eq) == 0:
-                    flag = True
-                    for gn in generate_nums:
-                        if abs(float(gn) - float(temp_eq)) < 1e-4:
-                            generate_nums[gn] += 1
-                            if temp_eq != gn:
-                                temp_eq = gn
-                            flag = False
-                    if flag:
-                        generate_nums[temp_eq] = 0
-                    eq_segs.append(temp_eq)
-                elif len(count_eq) == 1:
-                    eq_segs.append("N"+str(count_eq[0]))
-                else:
-                    eq_segs.append(temp_eq)
-                eq_segs.append(e)
-                temp_eq = ""
-            else:
-                eq_segs.append(e)
-        if temp_eq != "":
-            count_eq = []
-            for n_idx, n in enumerate(nums):
-                if abs(float(n) - float(temp_eq)) < 1e-4:
-                    count_eq.append(n_idx)
-                    if n != temp_eq:
-                        nums[n_idx] = temp_eq
-            if len(count_eq) == 0:
-                flag = True
-                for gn in generate_nums:
-                    if abs(float(gn) - float(temp_eq)) < 1e-4:
-                        generate_nums[gn] += 1
-                        if temp_eq != gn:
-                            temp_eq = gn
-                        flag = False
-                if flag:
-                    generate_nums[temp_eq] = 0
-                eq_segs.append(temp_eq)
-            elif len(count_eq) == 1:
-                eq_segs.append("N" + str(count_eq[0]))
-            else:
-                eq_segs.append(temp_eq)
 
-        dummy_equation_below = None
-        # eq_segs = ['Module', ['For', ['IndentedBlock', ['If', ['IndentedBlock', ['SimpleStatementLine',
-        #                                                                          ['AugAssign', ['AddAssign'],
-        #                                                                           ['Name', ['var0']],
-        #                                                                           ['BinaryOperation', ['Call', ['Arg',
-        #                                                                                                         ['Name',
-        #                                                                                                          [
-        #                                                                                                              'const1']]],
-        #                                                                                                ['Attribute',
-        #                                                                                                 ['Name',
-        #                                                                                                  ['acos']],
-        #                                                                                                 ['Name',
-        #                                                                                                  ['math']]]],
-        #                                                                            ['Add'],
-        #                                                                            ['Call', ['Arg', ['Name', ['var2']]],
-        #                                                                             ['Attribute', ['Name', ['atan']],
-        #                                                                              ['Name', ['math']]]]]]]],
-        #                                                 ['Comparison', ['ComparisonTarget', ['Subscript',
-        #                                                                                      ['SubscriptElement',
-        #                                                                                       ['Index',
-        #                                                                                        ['Integer', ['2']]]],
-        #                                                                                      ['Name', ['QL']]],
-        #                                                                 ['GreaterThan']], ['Name', ['var1']]]]],
-        #                       ['Call', ['Arg', ['List', ['Element', ['Subscript', ['SubscriptElement',
-        #                                                                            ['Index', ['Integer', ['0']]]],
-        #                                                              ['Name', ['QL']]], 'Element', ['Subscript',
-        #                                                                                             ['SubscriptElement',
-        #                                                                                              ['Index',
-        #                                                                                               ['Integer',
-        #                                                                                                ['1']]]],
-        #                                                                                             ['Name', ['QL']]],
-        #                                                  'Element', ['Subscript', ['SubscriptElement',
-        #                                                                            ['Index', ['Integer', ['2']]]],
-        #                                                              ['Name', ['QL']]], 'Element', ['Subscript',
-        #                                                                                             ['SubscriptElement',
-        #                                                                                              ['Index',
-        #                                                                                               ['Integer',
-        #                                                                                                ['3']]]],
-        #                                                                                             ['Name', ['QL']]],
-        #                                                  'Element', ['Subscript', ['SubscriptElement',
-        #                                                                            ['Index', ['Integer', ['4']]]],
-        #                                                              ['Name', ['QL']]]]], 'Arg', ['Name', ['const2']]],
-        #                        ['Attribute', ['Name', ['combinations']], ['Name', ['itertools']]]],
-        #                       ['Tuple', ['Element', ['Name', ['var1']], 'Element', ['Name', ['var2']]]],
-        #                       'SimpleStatementLine',
-        #                       ['Assign', ['AssignTarget', ['Name', ['result']]], ['Name', ['var0']]]]]
-        dummy_equation_above = None
+        eq_segs = equations
 
         # def seg_and_tag(st):  # seg the equation and tag the num
         #     res = []
@@ -613,7 +491,7 @@ def transfer_english_num(data):  # transfer num into "NUM"
     for g in generate_nums:
         if generate_nums[g] >= 5:
             temp_g.append(g)
-
+    # print(input_seq)
     return pairs, temp_g, copy_nums
 
 
@@ -772,10 +650,10 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     for pair in pairs_trained + pairs_tested:
         if not tree:
             input_lang.add_sen_to_vocab(pair[0])
-            output_lang.add_sen_to_vocab(pair[1])
+            # output_lang.add_sen_to_vocab(pair[1])
         elif pair[-1]:
             input_lang.add_sen_to_vocab(pair[0])
-            output_lang.add_sen_to_vocab(pair[1])
+            # output_lang.add_sen_to_vocab(pair[1])
     input_lang.build_input_lang(trim_min_count)
     # if tree:
     #     output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
@@ -803,12 +681,12 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         input_cell = indexes_from_sentence(input_lang, pair[0])
         output_cell = indexes_from_sentence(output_lang, pair[1], tree)
         # the below code should be removed for the new dataset!!
-        output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
+        # output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
 
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
-                            pair[2], pair[3], num_stack, pair[4]))
+                            pair[2], pair[3], num_stack, pair[4], pair[5]))
 
     print('Indexed %d words in input language, %d words in output' % (input_lang.n_words, output_lang.n_words))
     print('Number of training data %d' % (len(train_pairs)))
@@ -832,14 +710,14 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         input_cell = indexes_from_sentence(input_lang, pair[0])
         output_cell = indexes_from_sentence(output_lang, pair[1], tree)
         # the below code should be removed for the new dataset!!
-        output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
+        # output_cell = convert_to_tree(output_cell, 0, len(output_cell), output_lang)
 
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         test_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
-                           pair[2], pair[3], num_stack,pair[4]))
+                           pair[2], pair[3], num_stack,pair[4], pair[5]))
 
-    print('Number of testind data %d' % (len(test_pairs)))
+    print('Number of testing data %d' % (len(test_pairs)))
     return input_lang, output_lang, train_pairs, test_pairs
 
 
@@ -1086,6 +964,174 @@ def get_single_example_graph(input_batch, input_length,group,num_value,num_pos):
     batch_graph.append(graph_total)
     batch_graph = np.array(batch_graph)
     return batch_graph
+
+def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
+    queue_tree = {}
+    for i in range(1, batch_size + 1):
+        queue_tree[i] = []
+        queue_tree[i].append({"tree": dec_tree_batch[i - 1],
+                              "parent": 0, "child_index": 1})
+
+    cur_index, max_index = 1, 1
+    dec_batch = {}
+    # max_index: the max number of sequence decoder in one batch
+    while (cur_index <= max_index):
+        max_w_len = -1
+        batch_w_list = []
+        for i in range(1, batch_size + 1):
+            w_list = []
+            if (cur_index <= len(queue_tree[i])):
+                t = queue_tree[i][cur_index - 1]["tree"]
+
+                for ic in range(t.num_children):
+                    if isinstance(t.children[ic], Tree):
+                        # 4가 n?
+                        w_list.append(output_lang.word2index['<IE>'])
+                        queue_tree[i].append({"tree": t.children[ic],
+                                              "parent": cur_index,
+                                              "child_index": ic + 1})
+                    else:
+                        w_list.append(t.children[ic])
+                if len(queue_tree[i]) > max_index:
+                    max_index = len(queue_tree[i])
+            if len(w_list) > max_w_len:
+                max_w_len = len(w_list)
+            batch_w_list.append(w_list)
+        dec_batch[cur_index] = torch.zeros((batch_size, max_w_len + 2), dtype=torch.long)
+        for i in range(batch_size):
+            w_list = batch_w_list[i]
+            if len(w_list) > 0:
+                for j in range(len(w_list)):
+                    dec_batch[cur_index][i][j + 1] = w_list[j]
+                # add <S>, <E>
+                if cur_index == 1:
+                    dec_batch[cur_index][i][0] = output_lang.word2index['<S>']
+                else:
+                    dec_batch[cur_index][i][0] = output_lang.word2index['<IS>']
+                dec_batch[cur_index][i][len(w_list) + 1] = output_lang.word2index['<E>']
+
+        # if using_gpu:
+        #     dec_batch[cur_index] = dec_batch[cur_index].cuda()
+        cur_index += 1
+
+    return dec_batch, queue_tree, max_index
+
+def list_to_tree(r_list, initial=False, depth=0):
+   t = Tree()
+   if initial:
+       t.add_child(r_list[0])
+       # print(r_list[0])
+       input_len = len(r_list)
+       for i in range(1, input_len):
+           if isinstance(r_list[i], list):
+               t.add_child(list_to_tree(r_list[i], depth=depth + 1))
+           else:
+               t.add_child(r_list[i])
+               # print('\t' * depth + str(r_list[i]))
+       return t
+
+   else:
+       input_len = len(r_list)
+       for i in range(input_len):
+           if isinstance(r_list[i], list):
+               t.add_child(list_to_tree(r_list[i], depth=depth + 1))
+           else:
+               t.add_child(r_list[i])
+               # print('\t' * depth + str(r_list[i]))
+       return t
+
+def index_batch_to_words(input_batch, input_length, lang):
+	'''
+		Args:
+			input_batch: List of BS x Max_len
+			input_length: List of BS
+		Return:
+			contextual_input: List of BS
+	'''
+	contextual_input = []
+	for i in range(len(input_batch)):
+		contextual_input.append(stack_to_string(sentence_from_indexes(lang, input_batch[i][:input_length[i]])))
+
+	return contextual_input
+
+def stack_to_string(stack):
+	op = ""
+	for i in stack:
+		if op == "":
+			op = op + i
+		else:
+			op = op + ' ' + i
+	return op
+
+def sentence_from_indexes(lang, indexes):
+	sent = []
+	for ind in indexes:
+		sent.append(lang.index2word[ind])
+	return sent
+
+class TrainDataset(torch.utils.data.Dataset):
+
+    def __init__(self, pairs_to_batch, input_lang, output_lang, USE_CUDA):
+        self.pairs_to_batch = pairs_to_batch
+        self.input_lang = input_lang
+        self.output_lang = output_lang
+        self.USE_CUDA = USE_CUDA
+
+    def __len__(self):
+        return len(self.pairs_to_batch)
+
+    def __getitem__(self, index):
+        datum = self.pairs_to_batch[index]
+
+        return datum, self.input_lang, self.output_lang, self.USE_CUDA
+
+def my_collate(batch):
+    input_lang = [item[1] for item in batch]
+    output_lang = [item[2] for item in batch]
+    USE_CUDA = [item[3] for item in batch]
+    batch = [item[0] for item in batch]
+    input_lang = input_lang[0]
+    output_lang = output_lang[0]
+    USE_CUDA = USE_CUDA[0]
+    batch = sorted(batch, key=lambda tp: tp[1], reverse=True)
+    batch_size = len(batch)
+    input_length = []
+    output_length = []
+    for _, i, _, j, _, _, _, _, _ in batch:
+        input_length.append(i)
+        output_length.append(j)
+    input_len_max = input_length[0]
+    output_len_max = max(output_length)
+    input_batch = []
+    output_batch = []
+    num_batch = []
+    num_stack_batch = []
+    num_pos_batch = []
+    num_size_batch = []
+    group_batch = []
+    mask_batch = []
+    num_value_batch = []
+    for i, li, j, lj, num, num_pos, num_stack, group, mask in batch:
+        num_batch.append(len(num))
+        input_batch.append(pad_seq(i, li, input_len_max))
+        output_batch.append(pad_seq(j, lj, output_len_max))
+        num_stack_batch.append(num_stack)
+        num_pos_batch.append(num_pos)
+        num_size_batch.append(len(num_pos))
+        num_value_batch.append(num)
+        group_batch.append(group)
+        mask_batch.append(mask)
+
+    graph_batch = get_single_batch_graph(input_batch, input_length,group_batch,num_value_batch,num_pos_batch)
+
+    output_batch = [list_to_tree(l) for l in output_batch]
+
+    contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
+    dec_batch, queue_tree, max_index = get_dec_batch(output_batch, batch_size, USE_CUDA, output_lang)
+
+    return input_batch, input_length, output_batch, output_length, \
+           num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
+           contextual_input, dec_batch, queue_tree, max_index, mask_batch
 
 # prepare the batches
 def prepare_train_batch(pairs_to_batch, batch_size):
