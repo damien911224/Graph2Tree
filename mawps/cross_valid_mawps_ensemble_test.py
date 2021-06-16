@@ -437,7 +437,7 @@ for model_i in range(len(encoders)):
     reference_list = list()
     candidate_list = list()
     dummy_bleu_scores = list()
-    for test_batch in test_pairs:
+    for t_i, test_batch in enumerate(test_pairs):
         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4],
                                                test_batch[5])
         # test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
@@ -451,6 +451,7 @@ for model_i in range(len(encoders)):
                                           [decoders[model_i], decoders[model_i]],
                                           [attention_decoders[model_i], attention_decoders[model_i]],
                                           output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+        print(t_i)
         reference = test_batch[2]
         candidate = [int(c) for c in test_res]
 
