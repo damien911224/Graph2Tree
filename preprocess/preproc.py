@@ -227,13 +227,22 @@ def QL2Str(QL):
     return result
 
 def diff_num_list(q_num, a, b):
+    import re
     result = ''
+    p = "\\d+\/\\d+"
+    p = re.compile(p)
     if len(a) is not len(b):
         result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
         return result
     for i in range(len(a)):
-        if float(a[i]) != float(b[i]):
-	        result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
+        A = p.match(str(a[i]))
+        B = p.match(str(b[i]))
+        if str(a[i]) != str(b[i]):
+            if A is None and B is None:
+                if float(a[i]) != float(b[i]):
+                    result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
+            else:
+                result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
     return result
 
 def extract(input_name, ans_name, output_name):
@@ -254,15 +263,6 @@ def extract(input_name, ans_name, output_name):
         for q_num in obj:
             sent = obj[q_num]['question']
             sent = sent.replace(',', '')
-            #sent = change_hangeul(sent)
-            '''
-            ql_candi = k.pos(sent)
-            for ql_c in ql_candi:
-                for idx in range(len(change_list)):
-                    if change_list[idx] == ql_c[:-2] and (ql_c[-1] == 'K' or ql_c[-1] == 'N' or ql_c[-1] == 'W'):
-                        sent = sent.replace(ql_c[:-2], target_list[idx])
-            ql_candi = k.pos(sent)
-            '''
             for kw in range(len(change_list1)):
                 p = "\s" + change_list1[kw] + "\s"
                 sent = re.sub(p, ' ' + target_list1[kw] + ' ', sent)
@@ -311,12 +311,17 @@ def extract(input_name, ans_name, output_name):
                         cl3.append(catch[0])
             # case4 : 첫째, 둘째 -> 1, 2로 치환
             cl4 = []
-            fw8 = "[" + "".join(change_list8) + "]"
+            fw8 = "(" + "|".join(change_list8) + ")"
             p = fw8 + "째"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
                     if len(catch[0]) > 1:
                         cl4.append(catch[0])
+            # case5 : 한으로 시작하는 경우
+            fw9 = "^[한]\s"
+            p = fw9
+            sent = re.sub(fw9, "1 ", sent)
+
             p = '0+'
             p = re.compile(p)
             for i in cl:
@@ -346,8 +351,7 @@ def extract(input_name, ans_name, output_name):
             p = "[-+]?\\d+(\\.\\d+)?(\\/\\d+)?"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
-                    if catch[0] != '0':
-                        ql.append(catch[0])
+                    ql.append(catch[0])
                     
             tmp_obj['QL'] = ql
             list_obj[str(q_num)] = tmp_obj
@@ -367,8 +371,9 @@ def extract(input_name, ans_name, output_name):
                     new_text = obj[q_num]['question']
                     new_equation = ans_obj[q_num]['equation']
                     solution = ans_obj[q_num]['answer']
-
-                    QL = "QL = " + str(num_list)
+                    
+                    num_list_str = re.sub("\'", "", str(num_list))
+                    QL = "QL = " + num_list_str
                     NL = "NL = " + str(noun_list)
 
                     tmp['id'] = id
@@ -396,6 +401,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Input File Name')
     parser.add_argument('--prob', required=True, default='problem.json', help='Problem File Name')
     parser.add_argument('--ans', required=True, default='', help='Answer File Name')
+    parser.add_argument('--data', required=False, default='data/output.json', help='Output File Name')
     output_name = "output.json"
     args = parser.parse_args()
-    extract(args.prob, args.ans, output_name)
+    extract(args.prob, args.ans, args.data)
