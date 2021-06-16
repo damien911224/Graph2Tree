@@ -713,7 +713,7 @@ class AttnUnit(nn.Module):
         self.softmax = nn.Softmax(dim=1)
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, enc_s_top, dec_s_top, enc_2):
+    def forward(self, enc_s_top, dec_s_top, enc_2, mask=None):
         # if self.separate_attention:
         #     N, L, C = enc_s_top.shape
         #     encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
@@ -738,7 +738,12 @@ class AttnUnit(nn.Module):
         h2y_in = hid
         if self.opt["dropout_for_predict"] > 0:
             h2y_in = self.dropout(h2y_in)
+        
         h2y = self.linear_out(h2y_in)
-        pred = self.logsoftmax(h2y)
+        if mask is None:
+            pred = self.logsoftmax(h2y)
+        else:
+            assert mask.shape == h2y.shape
+            pred = self.logsoftmax(h2y * mask.cuda())
 
         return pred

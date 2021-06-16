@@ -101,10 +101,12 @@ class OutputLang:
         for key, value in self.word2index.items():
             self.word2count[key] = 1
 
+        """
         self.add_to_vocab("<S>")
         self.add_to_vocab("<E>")
         self.add_to_vocab("<IS>")
         self.add_to_vocab("<IE>")
+        """
 
         self.n_words = len(self.word2index)
 
@@ -165,6 +167,49 @@ class OutputLang:
     #
     #     for i, j in enumerate(self.index2word):
     #         self.word2index[j] = i
+
+class Tree():
+    def __init__(self):
+        self.parent = None
+        self.num_children = 0
+        self.children = []
+
+    def __str__(self, level=0):
+        ret = ""
+        for child in self.children:
+            if isinstance(child, type(self)):
+                ret += child.__str__(level + 1)
+            else:
+                ret += "\t" * level + str(child) + "\n"
+        return ret
+
+    def add_child(self, c):
+        if isinstance(c, type(self)):
+            c.parent = self
+        self.children.append(c)
+        self.num_children = self.num_children + 1
+
+    def to_string(self):
+        r_list = []
+        for i in range(self.num_children):
+            if isinstance(self.children[i], Tree):
+                r_list.append("( " + self.children[i].to_string() + " )")
+            else:
+                r_list.append(str(self.children[i]))
+        return "".join(r_list)
+
+    def flatten(self, output_lang):
+        r_list = []
+        for i in range(self.num_children):
+            if isinstance(self.children[i], type(self)):
+                r_list.append(output_lang.word2index["<IS>"])
+                cl = self.children[i].flatten(output_lang)
+                for k in range(len(cl)):
+                    r_list.append(cl[k])
+                r_list.append(output_lang.word2index["<IE>"])
+            else:
+                r_list.append(self.children[i])
+        return r_list
 
 def load_raw_data(filename):  # load the json data to list(dict()) for MATH 23K
     print("Reading lines...")
@@ -709,7 +754,7 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
-                            pair[2], pair[3], num_stack, pair[4]))
+                            pair[2], pair[3], num_stack, pair[4], pair[5]))
 
     print('Indexed %d words in input language, %d words in output' % (input_lang.n_words, output_lang.n_words))
     print('Number of training data %d' % (len(train_pairs)))
@@ -738,9 +783,9 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         test_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
-                           pair[2], pair[3], num_stack,pair[4]))
+                           pair[2], pair[3], num_stack,pair[4], pair[5]))
 
-    print('Number of testind data %d' % (len(test_pairs)))
+    print('Number of testing data %d' % (len(test_pairs)))
     return input_lang, output_lang, train_pairs, test_pairs
 
 
@@ -1020,8 +1065,7 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
             if len(w_list) > max_w_len:
                 max_w_len = len(w_list)
             batch_w_list.append(w_list)
-        dec_batch[cur_index] = torch.zeros((batch_size,
-                                            max_w_len + 2), dtype=torch.long)
+        dec_batch[cur_index] = torch.zeros((batch_size, max_w_len + 2), dtype=torch.long)
         for i in range(batch_size):
             w_list = batch_w_list[i]
             if len(w_list) > 0:
@@ -1034,8 +1078,8 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
                     dec_batch[cur_index][i][0] = output_lang.word2index['<IS>']
                 dec_batch[cur_index][i][len(w_list) + 1] = output_lang.word2index['<E>']
 
-        if using_gpu:
-            dec_batch[cur_index] = dec_batch[cur_index].cuda()
+        # if using_gpu:
+        #     dec_batch[cur_index] = dec_batch[cur_index].cuda()
         cur_index += 1
 
     return dec_batch, queue_tree, max_index
@@ -1078,6 +1122,21 @@ def index_batch_to_words(input_batch, input_length, lang):
 
 	return contextual_input
 
+def stack_to_string(stack):
+	op = ""
+	for i in stack:
+		if op == "":
+			op = op + i
+		else:
+			op = op + ' ' + i
+	return op
+
+def sentence_from_indexes(lang, indexes):
+	sent = []
+	for ind in indexes:
+		sent.append(lang.index2word[ind])
+	return sent
+
 class TrainDataset(torch.utils.data.Dataset):
 
     def __init__(self, pairs_to_batch, input_lang, output_lang, USE_CUDA):
@@ -1095,7 +1154,10 @@ class TrainDataset(torch.utils.data.Dataset):
         return datum, self.input_lang, self.output_lang, self.USE_CUDA
 
 def my_collate(batch):
-    batch, input_lang, output_lang, USE_CUDA = batch
+    input_lang = [item[1] for item in batch]
+    output_lang = [item[2] for item in batch]
+    USE_CUDA = [item[3] for item in batch]
+    batch = [item[0] for item in batch]
     input_lang = input_lang[0]
     output_lang = output_lang[0]
     USE_CUDA = USE_CUDA[0]
@@ -1103,7 +1165,7 @@ def my_collate(batch):
     batch_size = len(batch)
     input_length = []
     output_length = []
-    for _, i, _, j, _, _, _, _ in batch:
+    for _, i, _, j, _, _, _, _, _ in batch:
         input_length.append(i)
         output_length.append(j)
     input_len_max = input_length[0]
@@ -1115,8 +1177,9 @@ def my_collate(batch):
     num_pos_batch = []
     num_size_batch = []
     group_batch = []
+    mask_batch = []
     num_value_batch = []
-    for i, li, j, lj, num, num_pos, num_stack, group in batch:
+    for i, li, j, lj, num, num_pos, num_stack, group, mask in batch:
         num_batch.append(len(num))
         input_batch.append(pad_seq(i, li, input_len_max))
         output_batch.append(pad_seq(j, lj, output_len_max))
@@ -1125,6 +1188,7 @@ def my_collate(batch):
         num_size_batch.append(len(num_pos))
         num_value_batch.append(num)
         group_batch.append(group)
+        mask_batch.append(mask)
 
     graph_batch = get_single_batch_graph(input_batch, input_length,group_batch,num_value_batch,num_pos_batch)
 
@@ -1135,7 +1199,7 @@ def my_collate(batch):
 
     return input_batch, input_length, output_batch, output_length, \
            num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
-           contextual_input, dec_batch, queue_tree, max_index
+           contextual_input, dec_batch, queue_tree, max_index, mask_batch
 
 # prepare the batches
 def prepare_train_batch(pairs_to_batch, batch_size):

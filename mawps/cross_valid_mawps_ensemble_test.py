@@ -202,7 +202,7 @@ for split_fold in range(num_folds + 1):
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
 fold_pairs.append(pairs[(fold_size * (num_folds + 1)):])
-test_fold = fold_pairs[-2:]
+test_fold = fold_pairs[-2]
 fold_pairs = fold_pairs[:-1]
 # random.shuffle(whole_fold)
 
