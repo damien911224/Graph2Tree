@@ -1743,6 +1743,8 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                 queue_decode = b["q"]
                 s = queue_decode[head - 1]["s"]
 
+                print(head, len(queue_decode), i_child)
+
                 if i_child == 1:
                     sibling_state = [torch.zeros((1, encoders[0].hidden_size), dtype=torch.float, requires_grad=False)
                                      for _ in range(num_models)]
@@ -1820,10 +1822,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
             else:
                 new_beams.append(b)
 
-        beams = new_beams
-        beams = sorted(beams, key=lambda x: x["score"] / x["score_length"], reverse=True)[:beam_size]
-
-    print("Done")
+        beams = sorted(new_beams, key=lambda x: x["score"] / x["score_length"], reverse=True)[:beam_size]
 
     queue_decode = beams[0]["q"]
     for i in range(len(queue_decode) - 1, 0, -1):
