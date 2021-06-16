@@ -1,4 +1,4 @@
-from data_util import read_json_mac, extract, transfer_num_n_equation, prepare_infer_data
+from deployment.data.data_util import extract, transfer_num_n_equation, prepare_infer_data
 from src.train_and_evaluate import evaluate_tree
 from src.contextual_embeddings import *
 from src.models import *
@@ -14,7 +14,7 @@ DEBUG = False
 GENERATE_DUMMY_WEIGHTS = False
 
 weight_path = "weights/"
-problem_file = "problemsheet.json"
+problem_file = "../problemsheet.json"
 answer_file = "answersheet.json"
 
 
