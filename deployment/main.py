@@ -6,6 +6,7 @@ from pyaichtools.pyaichtools import Reducer
 from pyaichtools.pyaichtools import Converter
 from pyaichtools.pyaichtools import DefaultCfg
 import libcst as cst
+import os
 
 
 DEBUG = True
@@ -79,7 +80,7 @@ if __name__ == "__main__":
         decoder.cuda()
         attention_decoder.cuda()
 
-    reducer = Reducer(label_root_path="data")
+    reducer = Reducer(label_root_path=os.path.join(os.getcwd(), "pyaichtools", "label"))
     if DEBUG:
         print("reducer loaded")
 
@@ -95,9 +96,9 @@ if __name__ == "__main__":
         torch.save(state_dict, "weights/state_dicts.pth")
 
     state_dicts = {
-        'encoder': torch.load("weights/encoder-80.pth"),
-        'decoder': torch.load("weights/decoder-80.pth"),
-        'attention_decoder': torch.load("weights/attention_decoder-80.pth"),
+        'encoder': torch.load(os.path.join(os.getcwd(), "weights/encoder-80.pth")),
+        'decoder': torch.load(os.path.join(os.getcwd(), "weights/decoder-80.pth")),
+        'attention_decoder': torch.load(os.path.join(os.getcwd(), "weights/attention_decoder-80.pth")),
     }
 
     if DEBUG:

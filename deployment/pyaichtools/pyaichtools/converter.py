@@ -4,6 +4,7 @@ import inspect
 import json
 from treelib import Tree, plugins
 from .utils import *
+import typing
 import re
 
 
@@ -218,7 +219,12 @@ class Converter:
 
 		curr_class = getattr(cst, class_name)
 
-		check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and curr_class.__dict__['__annotations__'][x]._name is 'Sequence'
+		if hasattr(typing, '_GenericAlias'):
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and \
+									   curr_class.__dict__['__annotations__'][x]._name is 'Sequence'
+		else:
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and type(
+				curr_class.__dict__['__annotations__'][x]) is typing.Sequence
 
 		arg_dict = {
 			attr: [] if check_sequence(attr) else None
@@ -232,10 +238,16 @@ class Converter:
 				arg_dict[child_arg_name].append(self.tree_to_cst(ann_tree.subtree(child_node.identifier)))
 			else:
 				arg_dict[child_arg_name] = self.tree_to_cst(ann_tree.subtree(child_node.identifier))
+
 		try:
 			return curr_class(**arg_dict)
+
 		except:
-			raise Exception(curr_class, arg_dict)
+			x = child_arg_name
+			print(hasattr(curr_class.__dict__['__annotations__'][x], '_name'))
+
+			print(type(curr_class.__dict__['__annotations__'][x]))
+
 
 	def label_ele(self, ann_ele, ann_tree=None, debug=False):
 		if ann_ele in self.hard_code_label:

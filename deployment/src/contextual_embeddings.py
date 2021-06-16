@@ -1,9 +1,7 @@
 import torch.nn as nn
 import torch
 from transformers import BertModel, BertTokenizer, RobertaModel, RobertaTokenizer, ElectraModel, ElectraTokenizer
-from kobert_transformers import get_tokenizer
 from transformers import ElectraModel, ElectraTokenizer
-import konlpy
 import pdb
 
 def combine_num(all_tokens):
