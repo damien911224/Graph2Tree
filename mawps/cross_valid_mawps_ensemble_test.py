@@ -273,99 +273,99 @@ for fold in range(num_folds):
 
     generate_num_ids = []
 
-    # fold_best_accuracy = -1
-    # fold_best_bleu = -1
-    # for epoch in range(n_epochs):
-    #     print("fold:", fold + 1)
-    #     print("epoch:", epoch + 1)
-    #
-    #     start = time.time()
-    #
-    #     train_loss_total = 0
-    #     input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-    #     num_stack_batches, num_pos_batches, num_size_batches, \
-    #     num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
-    #     for idx in range(len(input_lengths)):
-    #         train_loss = train_tree(
-    #             input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-    #             num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
-    #             encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-    #             output_lang, num_pos_batches[idx], graph_batches[idx])
-    #         train_loss_total += train_loss.detach().cpu().numpy()
-    #     train_loss_total = train_loss_total / len(input_lengths)
-    #
-    #     val_loss_total = 0
-    #     input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-    #     num_stack_batches, num_pos_batches, num_size_batches, \
-    #     num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
-    #     for idx in range(len(input_lengths)):
-    #         val_loss = val_tree(
-    #             input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-    #             num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
-    #             encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-    #             output_lang, num_pos_batches[idx], graph_batches[idx])
-    #         val_loss_total += val_loss.detach().cpu().numpy()
-    #     val_loss_total = val_loss_total / len(input_lengths)
-    #
-    #     reference_list = list()
-    #     candidate_list = list()
-    #     bleu_scores = list()
-    #     for test_batch in test_pairs:
-    #         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
-    #         test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
-    #                                  output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-    #         # test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
-    #         #                                   [encoder, encoder],
-    #         #                                   [decoder, decoder],
-    #         #                                   [attention_decoder, attention_decoder],
-    #         #                          output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-    #         reference = test_batch[2]
-    #         candidate = [int(c) for c in test_res]
-    #
-    #         reference = ref_flatten(reference, output_lang)
-    #
-    #         ref_str = convert_to_string(reference, output_lang)
-    #         cand_str = convert_to_string(candidate, output_lang)
-    #
-    #         reference_list.append(reference)
-    #         candidate_list.append(candidate)
-    #
-    #         bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
-    #         bleu_scores.append(bleu_score)
-    #     accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-    #     bleu_scores = np.mean(bleu_scores)
-    #
-    #     encoder_scheduler.step(val_loss_total)
-    #     decoder_scheduler.step(val_loss_total)
-    #     attention_decoder_scheduler.step(val_loss_total)
-    #
-    #     torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
-    #     torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
-    #     torch.save(attention_decoder.state_dict(),
-    #                os.path.join(fold_weight_folder, "attention_decoder-{}.pth".format(epoch + 1)))
-    #
-    #     if accuracy >= fold_best_accuracy:
-    #         fold_best_accuracy = accuracy
-    #
-    #     if bleu_scores >= fold_best_bleu:
-    #         fold_best_bleu = bleu_scores
-    #
-    #     current_lr = encoder_optimizer.param_groups[0]['lr']
-    #     writer.add_scalars("Loss", {"train": train_loss_total}, epoch + 1)
-    #     writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
-    #     writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
-    #     writer.add_scalars("BLEU Score", {"val": bleu_scores}, epoch + 1)
-    #     writer.add_scalar("Learning Rate", current_lr, epoch + 1)
-    #
-    #     print("train_loss:", train_loss_total)
-    #     print("validation_loss:", val_loss_total)
-    #     print("validation_accuracy:", accuracy)
-    #     print("validation_bleu_score:", bleu_scores)
-    #     print("current_learning_rate:", current_lr)
-    #     print("training time:", time_since(time.time() - start))
-    #     print("--------------------------------")
-    # best_accuracies.append(fold_best_accuracy)
-    # best_bleu_scores.append(fold_best_bleu)
+    fold_best_accuracy = -1
+    fold_best_bleu = -1
+    for epoch in range(n_epochs):
+        print("fold:", fold + 1)
+        print("epoch:", epoch + 1)
+
+        start = time.time()
+
+        train_loss_total = 0
+        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        num_stack_batches, num_pos_batches, num_size_batches, \
+        num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
+        for idx in range(len(input_lengths)):
+            train_loss = train_tree(
+                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+                encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+                output_lang, num_pos_batches[idx], graph_batches[idx])
+            train_loss_total += train_loss.detach().cpu().numpy()
+        train_loss_total = train_loss_total / len(input_lengths)
+
+        val_loss_total = 0
+        input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
+        num_stack_batches, num_pos_batches, num_size_batches, \
+        num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
+        for idx in range(len(input_lengths)):
+            val_loss = val_tree(
+                input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
+                num_stack_batches[idx], num_size_batches[idx], generate_num_ids, encoder, decoder, attention_decoder,
+                encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
+                output_lang, num_pos_batches[idx], graph_batches[idx])
+            val_loss_total += val_loss.detach().cpu().numpy()
+        val_loss_total = val_loss_total / len(input_lengths)
+
+        reference_list = list()
+        candidate_list = list()
+        bleu_scores = list()
+        for test_batch in test_pairs:
+            batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
+            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, encoder, decoder, attention_decoder,
+                                     output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+            # test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
+            #                                   [encoder, encoder],
+            #                                   [decoder, decoder],
+            #                                   [attention_decoder, attention_decoder],
+            #                          output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+            reference = test_batch[2]
+            candidate = [int(c) for c in test_res]
+
+            reference = ref_flatten(reference, output_lang)
+
+            ref_str = convert_to_string(reference, output_lang)
+            cand_str = convert_to_string(candidate, output_lang)
+
+            reference_list.append(reference)
+            candidate_list.append(candidate)
+
+            bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
+            bleu_scores.append(bleu_score)
+        accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+        bleu_scores = np.mean(bleu_scores)
+
+        encoder_scheduler.step(val_loss_total)
+        decoder_scheduler.step(val_loss_total)
+        attention_decoder_scheduler.step(val_loss_total)
+
+        torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
+        torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
+        torch.save(attention_decoder.state_dict(),
+                   os.path.join(fold_weight_folder, "attention_decoder-{}.pth".format(epoch + 1)))
+
+        if accuracy >= fold_best_accuracy:
+            fold_best_accuracy = accuracy
+
+        if bleu_scores >= fold_best_bleu:
+            fold_best_bleu = bleu_scores
+
+        current_lr = encoder_optimizer.param_groups[0]['lr']
+        writer.add_scalars("Loss", {"train": train_loss_total}, epoch + 1)
+        writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
+        writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
+        writer.add_scalars("BLEU Score", {"val": bleu_scores}, epoch + 1)
+        writer.add_scalar("Learning Rate", current_lr, epoch + 1)
+
+        print("train_loss:", train_loss_total)
+        print("validation_loss:", val_loss_total)
+        print("validation_accuracy:", accuracy)
+        print("validation_bleu_score:", bleu_scores)
+        print("current_learning_rate:", current_lr)
+        print("training time:", time_since(time.time() - start))
+        print("--------------------------------")
+    best_accuracies.append(fold_best_accuracy)
+    best_bleu_scores.append(fold_best_bleu)
 
     encoder_state_dicts.append(encoder.state_dict())
     decoder_state_dicts.append(decoder.state_dict())
@@ -406,66 +406,72 @@ for model_i in range(len(encoder_state_dicts)):
     decoders.append(decoder)
     attention_decoders.append(attention_decoder)
 
-# model_accuracies = list()
-# model_blue_scores = list()
-# for model_i in range(len(encoders)):
-#     reference_list = list()
-#     candidate_list = list()
-#     bleu_scores = list()
-#     for test_batch in test_pairs:
-#         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4],
-#                                                test_batch[5])
-#         test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids,
-#                                           encoders[model_i], decoders[model_i], attention_decoders[model_i],
-#                                           output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-#         reference = test_batch[2]
-#         candidate = [int(c) for c in test_res]
-#
-#         reference = ref_flatten(reference, output_lang)
-#
-#         ref_str = convert_to_string(reference, output_lang)
-#         cand_str = convert_to_string(candidate, output_lang)
-#
-#         reference_list.append(reference)
-#         candidate_list.append(candidate)
-#
-#         bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
-#         bleu_scores.append(bleu_score)
-#     accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-#     bleu_scores = np.mean(bleu_scores)
-#
-#     reference_list = list()
-#     candidate_list = list()
-#     dummy_bleu_scores = list()
-#     for test_batch in test_pairs:
-#         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4],
-#                                                test_batch[5])
-#         test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
-#                                           [encoders[model_i], encoders[model_i]],
-#                                           [decoders[model_i], decoders[model_i]],
-#                                           [attention_decoders[model_i], attention_decoders[model_i]],
-#                                           output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-#         reference = test_batch[2]
-#         candidate = [int(c) for c in test_res]
-#
-#         reference = ref_flatten(reference, output_lang)
-#
-#         ref_str = convert_to_string(reference, output_lang)
-#         cand_str = convert_to_string(candidate, output_lang)
-#
-#         reference_list.append(reference)
-#         candidate_list.append(candidate)
-#
-#         bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
-#         dummy_bleu_scores.append(bleu_score)
-#     dummy_accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-#     dummy_bleu_scores = np.mean(dummy_bleu_scores)
-#
-#     print("Model_{:02d} Acc: {:.5f}|Dummy Acc: {:.5f}".format(model_i + 1, accuracy, dummy_accuracy))
-#     print("Model_{:02d} BLEU: {:.5f}|Dummy BLEU: {:.5f}".format(model_i + 1, bleu_scores, dummy_bleu_scores))
-#
-#     model_accuracies.append(accuracy)
-#     model_blue_scores.append(bleu_scores)
+model_accuracies = list()
+model_blue_scores = list()
+for model_i in range(len(encoders)):
+    reference_list = list()
+    candidate_list = list()
+    bleu_scores = list()
+    for test_batch in test_pairs:
+        batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4],
+                                               test_batch[5])
+        test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids,
+                                          encoders[model_i], decoders[model_i], attention_decoders[model_i],
+                                          output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+        reference = test_batch[2]
+        candidate = [int(c) for c in test_res]
+
+        reference = ref_flatten(reference, output_lang)
+
+        ref_str = convert_to_string(reference, output_lang)
+        cand_str = convert_to_string(candidate, output_lang)
+
+        reference_list.append(reference)
+        candidate_list.append(candidate)
+
+        bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
+        bleu_scores.append(bleu_score)
+    accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+    bleu_scores = np.mean(bleu_scores)
+
+    reference_list = list()
+    candidate_list = list()
+    dummy_bleu_scores = list()
+    for test_batch in test_pairs:
+        batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4],
+                                               test_batch[5])
+        # test_res = evaluate_tree_ensemble(test_batch[0], test_batch[1], generate_num_ids,
+        #                                   [encoders[model_i], encoders[model_i]],
+        #                                   [decoders[model_i], decoders[model_i]],
+        #                                   [attention_decoders[model_i], attention_decoders[model_i]],
+        #                                   output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+
+        test_res = evaluate_tree_ensemble_beam_search(test_batch[0], test_batch[1], generate_num_ids,
+                                          [encoders[model_i], encoders[model_i]],
+                                          [decoders[model_i], decoders[model_i]],
+                                          [attention_decoders[model_i], attention_decoders[model_i]],
+                                          output_lang, test_batch[5], batch_graph, beam_size=beam_size)
+        reference = test_batch[2]
+        candidate = [int(c) for c in test_res]
+
+        reference = ref_flatten(reference, output_lang)
+
+        ref_str = convert_to_string(reference, output_lang)
+        cand_str = convert_to_string(candidate, output_lang)
+
+        reference_list.append(reference)
+        candidate_list.append(candidate)
+
+        bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
+        dummy_bleu_scores.append(bleu_score)
+    dummy_accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+    dummy_bleu_scores = np.mean(dummy_bleu_scores)
+
+    print("Model_{:02d} Acc: {:.5f}|Dummy Acc: {:.5f}".format(model_i + 1, accuracy, dummy_accuracy))
+    print("Model_{:02d} BLEU: {:.5f}|Dummy BLEU: {:.5f}".format(model_i + 1, bleu_scores, dummy_bleu_scores))
+
+    model_accuracies.append(accuracy)
+    model_blue_scores.append(bleu_scores)
 
 reference_list = list()
 candidate_list = list()
