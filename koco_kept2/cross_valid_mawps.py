@@ -60,9 +60,9 @@ opt = {
 }
 
 log_path = "logs/{}".format("NoSepAtt_Max_Bert")
-num_folds = 10
-# target_folds = [0, 1, 2, 3, 4]
-target_folds = list(range(num_folds))
+num_folds = 5
+target_folds = [0, 1, 2, 3, 4]
+# target_folds = list(range(num_folds))
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
 num_workers = 20
@@ -216,11 +216,11 @@ random.shuffle(pairs)
 
 fold_size = int(len(pairs) * (1.0 / num_folds))
 fold_pairs = []
-for split_fold in range(4):
+for split_fold in range(num_folds):
     fold_start = fold_size * split_fold
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
-fold_pairs.append(pairs[(fold_size * 4):])
+fold_pairs.append(pairs[(fold_size * num_folds):])
 
 best_accuracies = list()
 best_bleu_scores = list()
