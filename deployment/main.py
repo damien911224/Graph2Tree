@@ -14,7 +14,7 @@ DEBUG = False
 GENERATE_DUMMY_WEIGHTS = False
 
 weight_path = "weights/"
-problem_file = "../problemsheet.json"
+problem_file = "/home/agc2021/dataset/problemsheet.json"
 answer_file = "answersheet.json"
 
 
