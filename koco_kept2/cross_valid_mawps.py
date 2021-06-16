@@ -389,29 +389,19 @@ for fold in target_folds:
         reference_list = list()
         candidate_list = list()
         bleu_scores = list()
-        for test_batch in test_pairs[:10]:
-            #print(test_batch)
-            batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
-            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
-                                     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
-            reference = test_batch[2]
-            # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
-            # if val_ac:
-            #     value_ac += 1
-            # if equ_ac:
-            #     equation_ac += 1
-            # eval_total += 1
-            candidate = [int(c) for c in test_res]
+        for test_batch in test_pairs:
+            batch_graph = get_single_example_graph(test_batch[0], test_batch[1],
+                                                   test_batch[7], test_batch[4], test_batch[5])
+            # test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
+            #                          input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
+            test_res = evaluate_tree_ensemble_beam_search(
+                test_batch[0], test_batch[1], generate_num_ids,
+                [embedding], [encoder], [decoder], [attention_decoder],
+                input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
+                beam_size=beam_size)
 
-            # num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
-            # num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
-            # diff = num_left_paren - num_right_paren
-            #
-            # if diff > 0:
-            #     for i in range(diff):
-            #         candidate.append(output_lang.index2word[")"])
-            # elif diff < 0:
-            #     candidate = candidate[:diff]
+            reference = test_batch[2]
+            candidate = [int(c) for c in test_res]
 
             reference = ref_flatten(reference, output_lang)
 
@@ -424,11 +414,6 @@ for fold in target_folds:
             bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
             bleu_scores.append(bleu_score)
         candidate = [output_lang.index2word[x] for x in candidate]
-        print(candidate)
-        # print(equation_ac, value_ac, eval_total)
-        # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
-        # print("testing time", time_since(time.time() - start))
-        # print("------------------------------------------------------")
         accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
         bleu_scores = np.mean(bleu_scores)
 
