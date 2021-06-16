@@ -384,7 +384,7 @@ pairs_tested = test_fold
 pairs_trained = test_fold
 _, _, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums, copy_nums, tree=False)
 
-test_pairs = test_pairs[:20]
+test_pairs = test_pairs
 
 encoders = list()
 decoders = list()
