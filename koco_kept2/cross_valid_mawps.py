@@ -33,7 +33,7 @@ hidden_size = 512
 n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
-beam_size = 2
+beam_size = 5
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
@@ -59,8 +59,9 @@ opt = {
 }
 
 log_path = "logs/{}".format("NoSepAtt_Max")
-num_folds = 5
-target_folds = [0, 1, 2, 3, 4]
+num_folds = 10
+# target_folds = [0, 1, 2, 3, 4]
+target_folds = list(range(num_folds))
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
 num_workers = 20
@@ -271,7 +272,6 @@ for fold in target_folds:
 
     decoder = DecoderRNN(opt, output_lang.n_words)
     attention_decoder = AttnUnit(opt, output_lang.n_words)
-    # the embedding layer is  only for generated number embeddings, operators, and paddings
 
     embedding_optimizer = torch.optim.Adam(embedding.parameters(), lr=opt['bert_learningRate'], weight_decay=weight_decay)
     encoder_optimizer = torch.optim.AdamW(encoder.parameters(), lr=learning_rate, weight_decay=weight_decay)
@@ -279,12 +279,6 @@ for fold in target_folds:
     attention_decoder_optimizer = torch.optim.AdamW(attention_decoder.parameters(), lr=opt["learningRate"],
                                                     weight_decay=weight_decay)
 
-    # encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
-    # decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
-    # attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
-
-    # ===============changed=================
-    # embedding_scheduler = torch.optim.lr_scheduler.StepLR(embedding_optimizer, step_size=20, gamma=0.5)
     embedding_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(embedding_optimizer, 'min', patience=optimizer_patience)
 
     encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer,
@@ -313,24 +307,11 @@ for fold in target_folds:
 
         start = time.time()
 
-        train_loss_total = 0
-        # input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-        # num_stack_batches, num_pos_batches, num_size_batches, \
-        # num_value_batches, graph_batches = prepare_train_batch(train_pairs, batch_size)
-
         dataset = TrainDataset(train_pairs, input_lang, output_lang, USE_CUDA)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
                                 collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
 
-        # for idx in range(len(input_lengths)):
-        #     train_loss = train_tree(
-        #         input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-        #         num_stack_batches[idx], num_size_batches[idx], num_value_batches[idx], generate_num_ids, embedding, encoder, decoder, attention_decoder,
-        #         embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-        #         input_lang, output_lang, num_pos_batches[idx], graph_batches[idx])
-        #     train_loss_total += train_loss.detach().cpu().numpy()
-        # train_loss_total = train_loss_total / len(input_lengths)
-
+        train_loss_total = 0
         for idx, batch_items in enumerate(dataloader):
             input_batch, input_length, output_batch, output_length, \
             num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
@@ -346,26 +327,11 @@ for fold in target_folds:
             train_loss_total += train_loss.detach().cpu().numpy()
         train_loss_total = train_loss_total / len(dataloader)
 
-        val_loss_total = 0
-
-        # input_batches, input_lengths, output_batches, output_lengths, nums_batches, \
-        # num_stack_batches, num_pos_batches, num_size_batches, \
-        # num_value_batches, graph_batches = prepare_train_batch(test_pairs, batch_size)
-
         dataset = TrainDataset(test_pairs, input_lang, output_lang, USE_CUDA)
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
                                 collate_fn=my_collate, pin_memory=True, num_workers=num_workers)
 
-        # for idx in range(len(input_lengths)):
-        #     val_loss = val_tree(
-        #         input_batches[idx], input_lengths[idx], output_batches[idx], output_lengths[idx],
-        #         num_stack_batches[idx], num_size_batches[idx], num_value_batches[idx], generate_num_ids, embedding,
-        #         encoder, decoder, attention_decoder,
-        #         embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-        #         input_lang, output_lang, num_pos_batches[idx], graph_batches[idx])
-        #     val_loss_total += val_loss.detach().cpu().numpy()
-        # val_loss_total = val_loss_total / len(input_lengths)
-
+        val_loss_total = 0
         for idx, batch_items in enumerate(dataloader):
             input_batch, input_length, output_batch, output_length, \
             num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \
@@ -381,80 +347,75 @@ for fold in target_folds:
             val_loss_total += val_loss.detach().cpu().numpy()
         val_loss_total = val_loss_total / len(dataloader)
 
-        # if epoch % 2 == 0 or epoch > n_epochs - 5:
-        # value_ac = 0
-        # equation_ac = 0
-        # eval_total = 0
-        # start = time.time()
-        reference_list = list()
-        candidate_list = list()
-        bleu_scores = list()
-        if epoch <= n_epochs // 4:
-            sample_population = int(round(len(test_pairs) * 0.05))
-            these_test_pairs = random.sample(test_pairs, sample_population)
-        else:
-            these_test_pairs = test_pairs
-        for test_batch in these_test_pairs:
-            batch_graph = get_single_example_graph(test_batch[0], test_batch[1],
-                                                   test_batch[7], test_batch[4], test_batch[5])
-            # test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
-            #                          input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
-            test_res = evaluate_tree_ensemble_beam_search(
-                test_batch[0], test_batch[1], generate_num_ids,
-                [embedding], [encoder], [decoder], [attention_decoder],
-                input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
-                beam_size=beam_size)
-
-            reference = test_batch[2]
-            candidate = [int(c) for c in test_res]
-
-            reference = ref_flatten(reference, output_lang)
-
-            ref_str = convert_to_string(reference, output_lang)
-            cand_str = convert_to_string(candidate, output_lang)
-
-            reference_list.append(reference)
-            candidate_list.append(candidate)
-
-            bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
-            bleu_scores.append(bleu_score)
-        candidate = [output_lang.index2word[x] for x in candidate]
-        accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-        bleu_scores = np.mean(bleu_scores)
-
         encoder_scheduler.step(val_loss_total)
         decoder_scheduler.step(val_loss_total)
         attention_decoder_scheduler.step(val_loss_total)
 
-        # torch.save(embedding.state_dict(), os.path.join(fold_weight_folder, "embedding-{}.pth".format(epoch + 1)))
         embedding.bert_layer.save_pretrained(os.path.join(fold_weight_folder, "embedding-{}".format(epoch + 1)))
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
         torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
         torch.save(attention_decoder.state_dict(),
                    os.path.join(fold_weight_folder, "attention_decoder-{}.pth".format(epoch + 1)))
-        # if epoch == n_epochs - 1:
-        #     best_acc_fold.append(accuracy)
 
-        if accuracy >= fold_best_accuracy:
-            fold_best_accuracy = accuracy
-
-        if bleu_scores >= fold_best_bleu:
-            fold_best_bleu = bleu_scores
+        # if accuracy >= fold_best_accuracy:
+        #     fold_best_accuracy = accuracy
+        #
+        # if bleu_scores >= fold_best_bleu:
+        #     fold_best_bleu = bleu_scores
 
         current_lr = encoder_optimizer.param_groups[0]['lr']
         writer.add_scalars("Loss", {"train": train_loss_total}, epoch + 1)
         writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
-        writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
-        writer.add_scalars("BLEU Score", {"val": bleu_scores}, epoch + 1)
+        # writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
+        # writer.add_scalars("BLEU Score", {"val": bleu_scores}, epoch + 1)
         writer.add_scalar("Learning Rate", current_lr, epoch + 1)
 
         print("train_loss:", train_loss_total)
         print("validation_loss:", val_loss_total)
-        print("validation_accuracy:", accuracy)
-        print("validation_bleu_score:", bleu_scores)
+        # print("validation_accuracy:", accuracy)
+        # print("validation_bleu_score:", bleu_scores)
         print("current_learning_rate:", current_lr)
         print("training time:", time_since(time.time() - start))
         print("--------------------------------")
+
+    reference_list = list()
+    candidate_list = list()
+    bleu_scores = list()
+    # if epoch <= n_epochs // 4:
+    #     sample_population = int(round(len(test_pairs) * 0.05))
+    #     these_test_pairs = random.sample(test_pairs, sample_population)
+    # else:
+    #     these_test_pairs = test_pairs
+    for test_batch in test_pairs:
+        batch_graph = get_single_example_graph(test_batch[0], test_batch[1],
+                                               test_batch[7], test_batch[4], test_batch[5])
+        # test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
+        #                          input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
+        test_res = evaluate_tree_ensemble_beam_search(
+            test_batch[0], test_batch[1], generate_num_ids,
+            [embedding], [encoder], [decoder], [attention_decoder],
+            input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
+            beam_size=beam_size)
+
+        reference = test_batch[2]
+        candidate = [int(c) for c in test_res]
+
+        reference = ref_flatten(reference, output_lang)
+
+        ref_str = convert_to_string(reference, output_lang)
+        cand_str = convert_to_string(candidate, output_lang)
+
+        reference_list.append(reference)
+        candidate_list.append(candidate)
+
+        bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
+        bleu_scores.append(bleu_score)
+    candidate = [output_lang.index2word[x] for x in candidate]
+    accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+    bleu_scores = np.mean(bleu_scores)
+    fold_best_accuracy = accuracy
+    fold_best_bleu = bleu_scores
+
     best_accuracies.append(fold_best_accuracy)
     best_bleu_scores.append(fold_best_bleu)
 
