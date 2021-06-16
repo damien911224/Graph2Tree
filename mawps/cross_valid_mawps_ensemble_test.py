@@ -453,7 +453,6 @@ for model_i in range(len(encoders)):
         #                                   [decoders[model_i], decoders[model_i]],
         #                                   [attention_decoders[model_i], attention_decoders[model_i]],
         #                                   output_lang, test_batch[5], batch_graph, beam_size=beam_size)
-        print(t_i)
         reference = test_batch[2]
         candidate = [int(c) for c in test_res]
 
