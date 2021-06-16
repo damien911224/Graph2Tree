@@ -1806,9 +1806,10 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
 
                     if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
                         new_b["head"] = head + 1
-                        new_b["child"] = 1
                         if new_b["head"] > len(new_b["q"]) or new_b["head"] > max_length:
                             new_b["head_done"] = True
+                        else:
+                            new_b["child"] = 1
                     elif int(prev_word[0]) == output_lang.word2index['<IE>']:
                         queue_decode.append(
                             {"s": [(ss[0].clone(), ss[1].clone()) for ss in s],
