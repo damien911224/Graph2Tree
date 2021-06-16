@@ -44,7 +44,7 @@ opt = {
 }
 
 log_path = "logs/{}".format("NoSepAtt_Max")
-num_folds = 2
+num_folds = 5
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
 random_seed = 777
