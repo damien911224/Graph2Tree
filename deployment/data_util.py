@@ -100,7 +100,7 @@ def read_json_mac(path):
 
 
 def read_json(path):
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf8') as f:
         file = json.load(f)
     return file
 
@@ -281,7 +281,7 @@ def extract(input_name):
         tmp_obj['NL'] = nl
 
         ql = []
-        p = "[-+]?\\d+(\\.\\d+)?"
+        p = "[-+]?\\d+(\\.\\d+)?(\\/\\d+)?"
         if re.search(p, sent) is not None:
             for catch in re.finditer(p, sent):
                 if catch[0] != '0':
