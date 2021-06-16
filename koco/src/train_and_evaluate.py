@@ -796,9 +796,10 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                     temp_mask = temp_mask.sum(dim=0)
 
                 if tp_mask_batch[int(m_id)][w_id] is None:
-                    tp_mask_batch[int(m_id)][w_id] = torch.zeros(len(mask_batch), output_lang.n_words)
+                    tp_mask_batch[int(m_id)][w_id] = torch.ones(len(mask_batch), output_lang.n_words)
 
                 tp_mask_batch[int(m_id)][w_id][b_id] = temp_mask
+                assert dec_batch[int(m_id)+1][b_id,w_id+1].item() in temp_mask.nonzero().flatten().tolist()
 
     # graph_cell_state = torch.zeros((opt.batch_size, opt.rnn_size), dtype=torch.float, requires_grad=True)
     # graph_hidden_state = torch.zeros((opt.batch_size, opt.rnn_size), dtype=torch.float, requires_grad=True)
@@ -874,11 +875,6 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             mask = tp_mask_batch[cur_index-1][i]
             pred = attention_decoder(attention_inputs[0], dec_s[cur_index][i + 1][2], attention_inputs[1], mask)
             gt = dec_batch[cur_index][:, i + 1]
-
-            """
-            for gt_ele, mask_ele in zip(gt, mask):
-                assert (int(gt_ele) in mask_ele.nonzero().flatten())
-            """
 
             if using_gpu:
                 gt = gt.cuda()
@@ -1388,7 +1384,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
         while True:
 
             mask = reducer.reduce_out([parent_gt], [child_idx], [prev_word_list])
-            if len(prev_word_list) > 8 and output_lang.word2index["<E>"] in mask[0]:
+            if len(prev_word_list) > 4 and output_lang.word2index["<E>"] in mask[0]:
                 mask = [[output_lang.word2index["<E>"]]]
 
             one_hot_mask = f.one_hot(torch.tensor(mask[0]), num_classes=output_lang.n_words).sum(dim=0).unsqueeze(0)

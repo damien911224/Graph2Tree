@@ -58,7 +58,7 @@ class Lang:
         if trim_min_count > 0:
             self.trim(trim_min_count)
             self.index2word = ["PAD", "NUM", "UNK"] + self.index2word
-        else:
+        else: 
             self.index2word = ["PAD", "NUM"] + self.index2word
         self.word2index = {}
         self.n_words = len(self.index2word)

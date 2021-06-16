@@ -62,6 +62,7 @@ class Reducer():
 
 		self.hard_except_label = ["BaseString", "BaseNumber", "BaseDict", "BaseSet", "ClassDef", "FunctionDef", "With", "BaseFormattedStringContent", "Try"]
 		self.hard_except_label = [self.cst_class_tree.subtree(x).leaves() for x in self.hard_except_label]
+		self.has_child = lambda x: '__annotations__' in getattr(cst, x).__dict__
 		temp_label = []
 		for x in self.hard_except_label:
 			for node in x:
@@ -151,7 +152,10 @@ class Reducer():
 
 		if hasattr(cst, curr_latest_label):
 			# 2. If curr_latest_label is CST Node, check if it has sufficient child
-			if len(self.get_child_node(curr_latest_label)) > curr_latest_label_child_num:
+			
+			if not self.has_child(curr_latest_label):
+				seq_label = [self.reverse_label_dict["<E>"]]
+			elif len(self.get_child_node(curr_latest_label)) > curr_latest_label_child_num:
 				#3. has insufficient child
 				seq_label = [self.reverse_label_dict["<IE>"]]
 			elif self.sequence_test(direct_attr):
@@ -163,6 +167,7 @@ class Reducer():
 		
 		seq_label = self.remove_hmn(seq_label)
 
+		assert len(seq_label) > 0
 		return seq_label
 	
 	def remove_hmn(self, candidate_list):
@@ -198,6 +203,9 @@ class Reducer():
 				direct_attr_list.append(cst.Module)
 				continue
 			assert pci is not None
+			if not self.has_child(p_label):
+				direct_attr_list.append(None)
+				continue
 			curr_child_node = self.get_child_node(p_label)
 			for v in sorted(curr_child_node, key=lambda x:x[0]):
 				if cnt == pci:
@@ -216,8 +224,8 @@ class Reducer():
 		return candidate
 
 	def test_label_mask(self, label_seq, parent_label=None, child_idx=None, queue_id=0):
-		label_seq.insert(0, self.reverse_label_dict["<S>" if queue_id == 0 else "<IS>"])
-		label_seq.append(self.reverse_label_dict["<E>"])
+		label_seq.insert(0, "<S>" if queue_id == 0 else "<IS>")
+		label_seq.append("<E>")
 		parent_label_list = []
 		prev_pred_list = []
 		child_idx_list = []
@@ -225,9 +233,9 @@ class Reducer():
 		for id, node in enumerate(label_seq):
 			if id == 0:
 				continue
-			parent_label_list.append(parent_label if parent_label is not None else "None")
+			parent_label_list.append(self.reverse_label_dict[parent_label] if parent_label is not None else "None")
 			child_idx_list.append(child_idx)
-			prev_pred_list.append([x if type(x) is not list else self.reverse_label_dict["<IE>"] for x in label_seq[:id]])
+			prev_pred_list.append([self.reverse_label_dict[x] if type(x) is not list else self.reverse_label_dict["<IE>"] for x in label_seq[:id]])
 		
 		
 		mask = self.reduce_out(parent_label_list, child_idx_list, prev_pred_list)
@@ -235,10 +243,10 @@ class Reducer():
 		for id, node in enumerate(label_seq):
 			if id == 0:
 				continue
-			node_label = node if type(node) is not list else self.reverse_label_dict["<IE>"]
+			node_label = node if type(node) is not list else "<IE>"
 			temp_mask = [self.id_to_block_label(x) for x in mask[id-1]]
-			print(self.id_to_block_label(node_label), temp_mask)
-			if node_label not in mask[id-1]:
+			#print(self.id_to_block_label(node_label), temp_mask)
+			if self.reverse_label_dict[node_label] not in mask[id-1]:
 				raise Exception("Non predictable node from mask")
 		
 		next_list = []
@@ -248,7 +256,7 @@ class Reducer():
 		for id, node in enumerate(label_seq):
 			if type(node) == list:
 				next_list.append([node, latest_label, latest_label_diff-1])
-			elif hasattr(cst, self.label_dict[str(node)]):
+			elif hasattr(cst, node):
 				latest_label_diff = 0
 				latest_label = node
 			latest_label_diff += 1

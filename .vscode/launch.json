@@ -19,6 +19,22 @@
 			"program": "cross_valid_mawps.py",
 			"console": "integratedTerminal",
 			"cwd": "${workspaceFolder}/koco"
+		},
+		{
+			"name": "Python: Current File /koco",
+			"type": "python",
+			"request": "launch",
+			"program": "${file}",
+			"console": "integratedTerminal",
+			"cwd": "${workspaceFolder}/koco"
+		},
+		{
+			"name": "koco kept 2",
+			"type": "python",
+			"request": "launch",
+			"program": "cross_valid_mawps.py",
+			"console": "integratedTerminal",
+			"cwd": "${workspaceFolder}/koco_kept2"
 		}
 	]
 }

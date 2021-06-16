@@ -205,8 +205,15 @@ group_data = read_json("data/new_MAWPS_processed.json")
 mask_data_ele = read_json("data/mask_processed.json")
 # dummy data has same Ground truth code, so repeat mask_data
 mask_data = []
+processed_data = {}
+processed_group_data = []
 for i in range(len(data)):
-    mask_data.append(copy.deepcopy(mask_data_ele))
+    if str(i) in mask_data_ele:
+        mask_data.append(mask_data_ele[str(i)])
+        processed_data[str(i)] = data[str(i)]
+        processed_group_data.append(group_data[i])
+data = processed_data
+group_data = processed_group_data
 
 reducer = Reducer(label_root_path="data")
 
@@ -398,7 +405,7 @@ for fold in target_folds:
         reference_list = list()
         candidate_list = list()
         bleu_scores = list()
-        for test_batch in test_pairs:
+        for test_batch in test_pairs[:10]:
             #print(test_batch)
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
             test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder, reducer,
