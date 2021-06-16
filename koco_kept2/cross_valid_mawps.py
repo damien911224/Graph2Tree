@@ -58,7 +58,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_Max")
+log_path = "logs/{}".format("NoSepAtt_Max_NoBeam")
 num_folds = 5
 target_folds = [0, 1, 2, 3, 4]
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -397,14 +397,14 @@ for fold in target_folds:
         for test_batch in these_test_pairs:
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1],
                                                    test_batch[7], test_batch[4], test_batch[5])
-            # test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
-            #                          input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
-            test_res = evaluate_tree_ensemble_beam_search(
-                test_batch[0], test_batch[1], generate_num_ids,
-                [embedding, embedding], [encoder, encoder],
-                [decoder, decoder], [attention_decoder, attention_decoder],
-                input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
-                beam_size=beam_size)
+            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
+                                     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
+            # test_res = evaluate_tree_ensemble_beam_search(
+            #     test_batch[0], test_batch[1], generate_num_ids,
+            #     [embedding, embedding], [encoder, encoder],
+            #     [decoder, decoder], [attention_decoder, attention_decoder],
+            #     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
+            #     beam_size=beam_size)
 
             reference = test_batch[2]
             candidate = [int(c) for c in test_res]
