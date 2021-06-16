@@ -1786,7 +1786,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                 prediction = torch.mean(torch.stack(predictions, dim=0), dim=0)
 
                 s = cur_s
-                b["q"]["s"] = s
+                b["q"][head - 1]["s"] = s
                 b["sibling_state"] = sibling_state
                 b["parent_h"] = parent_h
                 b["prev_word"] = prev_word
