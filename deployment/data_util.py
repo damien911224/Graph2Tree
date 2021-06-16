@@ -92,6 +92,7 @@ def decode(korean_num):
 
     return result
 
+
 def read_json_mac(path):
     # this is for mac
     with codecs.open(path, 'r', encoding="utf-8-sig") as f:
@@ -128,11 +129,10 @@ def transfer_num_n_equation(data):
         for i, j in enumerate(input_seq):
             if "NUM" in j:
                 num_pos.append(i)
-        if len(nums) != 0:
 
             # output format of original code is
             # pairs[key] = (input_seq, output_seg, nums, num_pos)
-            pairs[key] = (input_seq, None, nums, num_pos, names)
+        pairs[key] = (input_seq, None, nums, num_pos, names)
 
     return pairs, copy_nums
 
@@ -151,8 +151,10 @@ def prepare_infer_data(pairs, trim_min_count):
     for idx in pairs:
         pair = pairs[idx]
         input_cell = indexes_from_sentence(input_lang, pair[0])
+
+        # inputcell, length_of_input, num_list, number_position, NL list
         test_pairs.append((input_cell, len(input_cell),
-                          pair[2], pair[3], pair[4]))
+                          pair[2], pair[3], pair[4], str(idx)))
 
     return input_lang, output_lang, test_pairs
 
@@ -164,7 +166,6 @@ def load_data(filename):
 def h2i(hangeul):
     hangeul = hangeul.strip()
     result = decode(hangeul)
-
 
     return result
 
@@ -178,6 +179,24 @@ def QL2Str(QL):
     result += ']'
     return result
 
+def diff_num_list(q_num, a, b):
+    import re
+    result = ''
+    p = "\\d+\/\\d+"
+    p = re.compile(p)
+    if len(a) is not len(b):
+        result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
+        return result
+    for i in range(len(a)):
+        A = p.match(str(a[i]))
+        B = p.match(str(b[i]))
+        if str(a[i]) != str(b[i]):
+            if A is None and B is None:
+                if float(a[i]) != float(b[i]):
+                    result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
+            else:
+                result = str(q_num) + " -> auto : " + str(a) + " user-define : " + str(list(map(str, b))) + '\n'
+    return result
 
 def extract(input_name):
     from konlp.kma.klt2000 import klt2000
@@ -193,15 +212,6 @@ def extract(input_name):
     for q_num in obj:
         sent = obj[q_num]['question']
         sent = sent.replace(',', '')
-        # sent = change_hangeul(sent)
-        '''
-        ql_candi = k.pos(sent)
-        for ql_c in ql_candi:
-            for idx in range(len(change_list)):
-                if change_list[idx] == ql_c[:-2] and (ql_c[-1] == 'K' or ql_c[-1] == 'N' or ql_c[-1] == 'W'):
-                    sent = sent.replace(ql_c[:-2], target_list[idx])
-        ql_candi = k.pos(sent)
-        '''
         for kw in range(len(change_list1)):
             p = "\s" + change_list1[kw] + "\s"
             sent = re.sub(p, ' ' + target_list1[kw] + ' ', sent)
@@ -250,12 +260,17 @@ def extract(input_name):
                     cl3.append(catch[0])
         # case4 : 첫째, 둘째 -> 1, 2로 치환
         cl4 = []
-        fw8 = "[" + "".join(change_list8) + "]"
+        fw8 = "(" + "|".join(change_list8) + ")"
         p = fw8 + "째"
         if re.search(p, sent) is not None:
             for catch in re.finditer(p, sent):
                 if len(catch[0]) > 1:
                     cl4.append(catch[0])
+        # case5 : 한으로 시작하는 경우
+        fw9 = "^[한]\s"
+        p = fw9
+        sent = re.sub(fw9, "1 ", sent)
+
         p = '0+'
         p = re.compile(p)
         for i in cl:
@@ -277,18 +292,35 @@ def extract(input_name):
                     if change_list8[j] in i:
                         sent = sent.replace(i, target_list2[j] + '째')
 
-        nl = k.nouns(sent)
+        nl = []
+        p = "^(" + "|".join(NL_list) + "|" + "|".join(name_list) + ")(" + "|".join(josa_list) + ")"
+        p2 = "\s(" + "|".join(NL_list) + "|" + "|".join(name_list) + ")(" + "|".join(josa_list) + ")"
+        pn = "(" + "|".join(NL_list) + ")"
+        if re.search(p, sent) is not None:
+            for catch in re.finditer(p, sent):
+                for catch2 in re.finditer(pn, catch[0]):
+                    nl.append(catch2[0])
+        if re.search(p2, sent) is not None:
+            for catch in re.finditer(p2, sent):
+                for catch2 in re.finditer(pn, catch[0]):
+                    nl.append(catch2[0])
+
         tmp_obj = {}
         tmp_obj['NL'] = nl
 
         ql = []
-        p = "[-+]?\\d+(\\.\\d+)?(\\/\\d+)?"
+        p = "\\d+(\\.\\d+)?(\\/\\d+)?"
         if re.search(p, sent) is not None:
             for catch in re.finditer(p, sent):
-                if catch[0] != '0':
-                    ql.append(catch[0])
+                ql.append(catch[0])
 
         tmp_obj['QL'] = ql
         tmp_obj['question'] = re.sub(p, "NUM", sent).split()
+        try:
+            tmp_obj['answer'] = obj[q_num]['lequation']
+        except:
+            pass
         list_obj[str(q_num)] = tmp_obj
+
+
     return list_obj

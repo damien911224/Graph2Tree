@@ -239,14 +239,16 @@ class Converter:
 			else:
 				arg_dict[child_arg_name] = self.tree_to_cst(ann_tree.subtree(child_node.identifier))
 
-		try:
-			return curr_class(**arg_dict)
+		# try:
+		# 	return curr_class(**arg_dict)
+		#
+		# except:
+		# 	x = child_arg_name
+		# 	print(hasattr(curr_class.__dict__['__annotations__'][x], '_name'))
+		#
+		# 	print(type(curr_class.__dict__['__annotations__'][x]))
 
-		except:
-			x = child_arg_name
-			print(hasattr(curr_class.__dict__['__annotations__'][x], '_name'))
-
-			print(type(curr_class.__dict__['__annotations__'][x]))
+		return curr_class(**arg_dict)
 
 
 	def label_ele(self, ann_ele, ann_tree=None, debug=False):

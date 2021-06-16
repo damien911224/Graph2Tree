@@ -13,9 +13,7 @@ DEBUG = True
 GENERATE_DUMMY_WEIGHTS = False
 
 weight_path = "weights/"
-data_path = ""
 problem_file = "problemsheet.json"
-# problem_file = "/home/agc2021/dataset/problemsheet.json"
 answer_file = "answersheet.json"
 
 
@@ -58,10 +56,10 @@ if __name__ == "__main__":
 
     USE_CUDA = True
 
-    data = extract(problem_file)
+    # data = extract(problem_file)
+    data = extract("dummy.json")
     pairs, copy_nums = transfer_num_n_equation(data)
     input_lang, output_lang, test_pairs = prepare_infer_data(pairs, 1)
-
 
     converter = Converter(DefaultCfg, debug=True)
 
@@ -118,42 +116,49 @@ if __name__ == "__main__":
 
     total = len(test_pairs)
     wrong_count = 0
-    for i, test_batch in enumerate(test_pairs):
-        # sent = index_batch_to_words([test_batch[0]], [test_batch[1]], input_lang)
-        # test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder,
-        #                          attention_decoder, input_lang, test_batch[2])
+    correct = 0
 
+    inferrence_error = []
+    wrong_answer = []
+    for test_batch in test_pairs:
+        idx = test_batch[-1]
+        answers[idx] = {}
         # input_batch, input_length, operate_nums(n), embedding, encoder, decoder, attention_decoder, reducer,
         # input_lang, output_lang, num_value, num_pos(n), batch_graph(n), beam_size(n), max_length=MAX_OUTPUT_LENGTH
-        test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder, attention_decoder, reducer,
-                                 input_lang, output_lang, test_batch[2], beam_size=beam_size, num_pos=test_batch[3])
+        try:
+            test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder, attention_decoder, reducer,
+                                     input_lang, output_lang, test_batch[2], beam_size=beam_size, num_pos=test_batch[3])
+        except:
+            inferrence_error.append(idx)
+
         QL = test_batch[2]
         NL = test_batch[4]
+
 
         QL = [eval(s) for s in QL]
 
         str_quality_list = 'QL=' + str(QL) +"\nNL=" + str(NL)
         converter.quality_list = cst.parse_module(str_quality_list)
 
-        # token_output = [output_lang.index2word[tk] for tk in test_res]
-
-        # for i in range(len(test_res)):
-
         # print(token_output)
-        print(test_res)
+        # print(test_res == target_data[str(i)]['lequation'])
+        if test_res == data[idx]['answer']:
+            correct += 1
+        else:
+            wrong_answer.append(idx)
 
-        # try:
-        dec_seq = converter.decode(test_res)
+        try:
+            dec_seq = converter.decode(test_res)
+        except:
+            if DEBUG:
+                wrong_count += 1
+                print("wrong input {}/{}".format(wrong_count, total))
+            continue
 
-        answers[str(i)] = {
-            "answer": "",
-            "eqation": dec_seq
-        }
-        # except:
-        #     if DEBUG:
-        #         wrong_count += 1
-        #         print("wrong input {}/{}".format(wrong_count, total))
-        #     continue
-    print(answers)
+    print(correct / total)
+
+    with open("results/result.txt", "w", encoding="utf-8") as f:
+        f.write(str(inferrence_error))
+        f.write(str(wrong_answer))
 
     # with open()

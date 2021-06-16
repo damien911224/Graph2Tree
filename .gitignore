@@ -9,5 +9,6 @@ config*
 .vscode
 deployment/pyaichtools/.git
 logs
+weights
 .vscode
-
+results
