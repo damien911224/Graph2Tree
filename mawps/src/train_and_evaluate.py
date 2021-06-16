@@ -1823,6 +1823,8 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
         beams = new_beams
         beams = sorted(beams, key=lambda x: x["score"] / x["score_length"], reverse=True)[:beam_size]
 
+    print("Done")
+
     queue_decode = beams[0]["q"]
     for i in range(len(queue_decode) - 1, 0, -1):
         cur = queue_decode[i]
