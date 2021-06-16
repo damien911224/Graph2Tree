@@ -33,7 +33,7 @@ hidden_size = 512
 n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
-beam_size = 1
+beam_size = 2
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
@@ -401,8 +401,7 @@ for fold in target_folds:
             #                          input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
             test_res = evaluate_tree_ensemble_beam_search(
                 test_batch[0], test_batch[1], generate_num_ids,
-                [embedding, embedding], [encoder, encoder],
-                [decoder, decoder], [attention_decoder, attention_decoder],
+                [embedding], [encoder], [decoder], [attention_decoder],
                 input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
                 beam_size=beam_size)
 
