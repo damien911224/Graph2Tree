@@ -300,7 +300,7 @@ class Converter:
 
 		recovered_cst = self.tree_to_cst(recovered_tree)
 		recovered_cst = self.attach_gen_file(recovered_cst)
-		recovered_module = cst.Module(body=self.attach_code(recovered_cst.body))		
+		recovered_module = cst.Module(body=self.attach_code(recovered_cst.body))
 
 		generated_code = cst.Module([]).code_for_node(recovered_module)
 

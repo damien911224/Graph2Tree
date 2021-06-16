@@ -7,9 +7,10 @@ from pyaichtools.pyaichtools import Converter
 from pyaichtools.pyaichtools import DefaultCfg
 import libcst as cst
 import os
+import json
 
 
-DEBUG = True
+DEBUG = False
 GENERATE_DUMMY_WEIGHTS = False
 
 weight_path = "weights/"
@@ -56,12 +57,11 @@ if __name__ == "__main__":
 
     USE_CUDA = True
 
-    # data = extract(problem_file)
-    data = extract("dummy.json")
+    data = extract(problem_file)
+    # data = extract("dummy.json")
     pairs, copy_nums = transfer_num_n_equation(data)
     input_lang, output_lang, test_pairs = prepare_infer_data(pairs, 1)
 
-    converter = Converter(DefaultCfg, debug=True)
 
     if DEBUG:
         print("testing sample {} has been loaded".format(len(test_pairs)))
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     wrong_answer = []
     for test_batch in test_pairs:
         idx = test_batch[-1]
-        answers[idx] = {}
+        one_answer = {}
         # input_batch, input_length, operate_nums(n), embedding, encoder, decoder, attention_decoder, reducer,
         # input_lang, output_lang, num_value, num_pos(n), batch_graph(n), beam_size(n), max_length=MAX_OUTPUT_LENGTH
         try:
@@ -134,31 +134,50 @@ if __name__ == "__main__":
         QL = test_batch[2]
         NL = test_batch[4]
 
-
         QL = [eval(s) for s in QL]
 
+        converter = Converter(DefaultCfg, debug=True)
         str_quality_list = 'QL=' + str(QL) +"\nNL=" + str(NL)
         converter.quality_list = cst.parse_module(str_quality_list)
 
-        # print(token_output)
-        # print(test_res == target_data[str(i)]['lequation'])
-        if test_res == data[idx]['answer']:
-            correct += 1
-        else:
-            wrong_answer.append(idx)
+        # if test_res == data[idx]['answer']:
+        #     correct += 1
+        #     # print(correct)
+        # else:
+        #     wrong_answer.append(idx)
 
         try:
             dec_seq = converter.decode(test_res)
+            with open("results/ans_{}.py".format(idx), "w", encoding="utf-8") as f:
+                f.write(dec_seq)
+
+            result = os.popen('python3 results/ans_{}.py'.format(idx), 'r', 1)
+            answer = copy.deepcopy(result.read())
+            result.close()
+            if len(answer) == 0 or "Error" in answer:
+                answer = 0
+            one_answer = {
+                "answer": answer,
+                "equation": dec_seq
+            }
+            # print(idx)
+            # print("result=" , answer)
         except:
+            one_answer = {
+                "answer": "WRONG",
+                "equation": "WRONG",
+            }
             if DEBUG:
                 wrong_count += 1
-                print("wrong input {}/{}".format(wrong_count, total))
-            continue
+                # print("wrong input {}/{}".format(idx, wrong_count))
+        answers[idx] = one_answer
 
-    print(correct / total)
+    if DEBUG:
+        with open("results/result.txt", "w", encoding="utf-8") as f:
+            f.write(str(inferrence_error))
+            f.write(str(wrong_answer))
 
-    with open("results/result.txt", "w", encoding="utf-8") as f:
-        f.write(str(inferrence_error))
-        f.write(str(wrong_answer))
+    with open("answersheet.json", "w", encoding="utf-8") as f:
+        f.write(json.dumps(answers, indent=4))
 
     # with open()
