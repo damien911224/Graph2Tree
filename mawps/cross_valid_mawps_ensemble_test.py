@@ -25,7 +25,7 @@ hidden_size = 512
 n_epochs = 1
 learning_rate = 1e-3
 weight_decay = 1e-5
-beam_size = 1
+beam_size = 2
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
@@ -384,6 +384,8 @@ pairs_tested = test_fold
 pairs_trained = test_fold
 _, _, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 5, generate_nums, copy_nums, tree=False)
 
+test_pairs = test_pairs[:20]
+
 encoders = list()
 decoders = list()
 attention_decoders = list()
@@ -437,7 +439,6 @@ for model_i in range(len(encoders)):
     reference_list = list()
     candidate_list = list()
     dummy_bleu_scores = list()
-    test_pairs = test_pairs[:20]
     for t_i, test_batch in enumerate(test_pairs):
         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4],
                                                test_batch[5])
