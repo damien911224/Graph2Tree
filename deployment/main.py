@@ -148,10 +148,10 @@ if __name__ == "__main__":
 
         try:
             dec_seq = converter.decode(test_res)
-            with open("results/ans_{}.py".format(idx), "w", encoding="utf-8") as f:
+            with open("dummy.py".format(idx), "w", encoding="utf-8") as f:
                 f.write(dec_seq)
 
-            result = os.popen('python3 results/ans_{}.py'.format(idx), 'r', 1)
+            result = os.popen('python dummy.py'.format(idx), 'r', 1)
             answer = copy.deepcopy(result.read())
             result.close()
             if len(answer) == 0 or "Error" in answer:
@@ -162,6 +162,7 @@ if __name__ == "__main__":
             }
             # print(idx)
             # print("result=" , answer)
+            os.system("rm -rf dummy.py")
         except:
             one_answer = {
                 "answer": "WRONG",
