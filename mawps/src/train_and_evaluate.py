@@ -1795,15 +1795,15 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     predictions.append(nn.functional.softmax(prediction, dim=1))
                 prediction = torch.mean(torch.stack(predictions, dim=0), dim=0)
 
+                b["s"] = cur_s
+
                 topk_v, topk_i = torch.topk(prediction[0], beam_size)
                 for value, index in zip(topk_v, topk_i):
-                    s = cur_s
-                    new_b["s"] = s
+                    new_b = beam_copy(b)
                     prev_word = [index.detach().cpu().numpy().item()]
                     new_b["prev_word"] = torch.LongTensor(prev_word).clone()
                     new_b["score"] += value.detach().cpu().numpy()
                     new_b["score_length"] += 1.0
-                    new_b = beam_copy(b)
 
                     queue_decode = new_b["q"]
                     t = new_b["t"]
