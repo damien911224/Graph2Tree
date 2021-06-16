@@ -1,21 +1,12 @@
-import json
-import torch
-import os
-import codecs
 from data_util import read_json_mac, extract, transfer_num_n_equation, prepare_infer_data
-from model_util import load_model
-from src.pre_data import transfer_num
-from src.helper import index_batch_to_words, sentence_from_indexes
 from src.train_and_evaluate import evaluate_tree
 from src.contextual_embeddings import *
 from src.models import *
 from pyaichtools.pyaichtools import Reducer
-from yacs.config import CfgNode as CN
 from pyaichtools.pyaichtools import Converter
 from pyaichtools.pyaichtools import DefaultCfg
 import libcst as cst
-import sys
-# sys.setrecursionlimit(10000)
+
 
 DEBUG = True
 GENERATE_DUMMY_WEIGHTS = False

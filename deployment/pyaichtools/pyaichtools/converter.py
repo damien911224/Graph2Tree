@@ -232,7 +232,10 @@ class Converter:
 				arg_dict[child_arg_name].append(self.tree_to_cst(ann_tree.subtree(child_node.identifier)))
 			else:
 				arg_dict[child_arg_name] = self.tree_to_cst(ann_tree.subtree(child_node.identifier))
-		return curr_class(**arg_dict)
+		try:
+			return curr_class(**arg_dict)
+		except:
+			raise Exception(curr_class, arg_dict)
 
 	def label_ele(self, ann_ele, ann_tree=None, debug=False):
 		if ann_ele in self.hard_code_label:
@@ -280,7 +283,7 @@ class Converter:
 		elif mode=="seq":
 			decoded_seq = self.unlabel_seq(labeled_seq, problem_info)
 			recovered_tree = self.seq_to_tree(decoded_seq, Tree())
-		
+
 		recovered_cst = self.tree_to_cst(recovered_tree)
 		recovered_cst = self.attach_gen_file(recovered_cst)
 		recovered_module = cst.Module(body=self.attach_code(recovered_cst.body))		
