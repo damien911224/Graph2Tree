@@ -1401,7 +1401,7 @@ def evaluate_tree(input_batch, input_length, embedding, encoder, decoder, attent
         queue_decode[cur["parent"] - 1]["t"].children[cur["child_index"] - 1] = cur["t"]
 
     return queue_decode[0]["t"].flatten(output_lang)
-
+    # return queue_decode
 
 def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings, encoders, decoders, attention_decoders,
                            input_lang, output_lang, num_value, num_pos, batch_graph, beam_size=5, english=False,

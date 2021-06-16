@@ -119,6 +119,7 @@ def transfer_num_n_equation(data):
         d = data[key]
         input_seq = d['question']
         nums = d['QL']
+        names = d['NL']
 
         if copy_nums < len(nums):
             copy_nums = len(nums)
@@ -131,7 +132,7 @@ def transfer_num_n_equation(data):
 
             # output format of original code is
             # pairs[key] = (input_seq, output_seg, nums, num_pos)
-            pairs[key] = (input_seq, None, nums, num_pos)
+            pairs[key] = (input_seq, None, nums, num_pos, names)
 
     return pairs, copy_nums
 
@@ -151,7 +152,7 @@ def prepare_infer_data(pairs, trim_min_count):
         pair = pairs[idx]
         input_cell = indexes_from_sentence(input_lang, pair[0])
         test_pairs.append((input_cell, len(input_cell),
-                          pair[2], pair[3]))
+                          pair[2], pair[3], pair[4]))
 
     return input_lang, output_lang, test_pairs
 
