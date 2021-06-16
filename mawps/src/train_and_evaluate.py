@@ -1758,7 +1758,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                             flag_sibling = True
                             sibling_index = q_index
                     if flag_sibling:
-                        sibling_state = queue_decode[sibling_index]["s"][1]
+                        sibling_state = [s[1] for s in queue_decode[sibling_index]["s"]]
 
                     if head == 1:
                         prev_word = torch.tensor([output_lang.word2index['<S>']], dtype=torch.long)
