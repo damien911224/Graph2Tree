@@ -1728,7 +1728,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
     # graph_embedding = torch.mean(encoder_outputs, 0)
     # graph_embedding = torch.mean(encoder_outputs, 0)
 
-    s = [(out[1], out[1]) for out in all_encoder_outputs]
+    s = [(out[1].clone(), out[1].clone()) for out in all_encoder_outputs]
 
     beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]),
               "score": 0.0, "score_length": 0.0,
