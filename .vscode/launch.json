@@ -8,6 +8,14 @@
 			"name": "Python: Current File",
 			"type": "python",
 			"request": "launch",
+			"program": "${file}",
+			"console": "integratedTerminal",
+			"cwd": "${workspaceFolder}/pyaichtools"
+		},
+		{
+			"name": "koco",
+			"type": "python",
+			"request": "launch",
 			"program": "cross_valid_mawps.py",
 			"console": "integratedTerminal",
 			"cwd": "${workspaceFolder}/koco"

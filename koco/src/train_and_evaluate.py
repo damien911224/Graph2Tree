@@ -1422,8 +1422,7 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
 
     return queue_decode[0]["t"].flatten(output_lang)
 
-
-def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings, encoders, decoders, attention_decoders,
+def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings, encoders, decoders, attention_decoders, reducer,
                            input_lang, output_lang, num_value, num_pos, batch_graph, beam_size=5, english=False,
                            max_length=MAX_OUTPUT_LENGTH):
 
@@ -1623,16 +1622,42 @@ def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings,
             prev_word = torch.tensor([output_lang.word2index['<IS>']], dtype=torch.long)
         if USE_CUDA:
             prev_word = prev_word.cuda()
-        i_child = 1
+
+        t.add_child(int(prev_word[0]))
+
+        if head != 1:
+            parent_word_list = queue_decode[queue_decode[head - 1]["parent"]-1]['t'].children
+            child_idx = 0
+            for chnode in parent_word_list[:queue_decode[head-1]["child_index"]+1][::-1]:
+                if output_lang.index2word[chnode] == "<IE>":
+                    child_idx+=1
+                else:
+                    parent_gt = chnode
+                    break
+        else:
+            parent_gt = None
+            child_idx = None
+
+        i_child = 0
+        prev_word_list = []
+        prev_word_list.append(prev_word.item())
+
         while True:
             cur_s = list()
             predictions = list()
+
+            mask = reducer.reduce_out([parent_gt], [child_idx], [prev_word_list])
+            if len(prev_word_list) > 8 and output_lang.word2index["<E>"] in mask[0]:
+                mask = [[output_lang.word2index["<E>"]]]
+
+            one_hot_mask = f.one_hot(torch.tensor(mask[0]), num_classes=output_lang.n_words).sum(dim=0).unsqueeze(0)
+
             for model_i in range(num_models):
                 curr_c, curr_h = decoders[model_i](prev_word, s[model_i][0], s[model_i][1],
                                                    parent_h[model_i], sibling_state[model_i])
                 cur_s.append((curr_c, curr_h))
                 attention_inputs = all_encoder_outputs[model_i][2]
-                prediction = attention_decoders[model_i](attention_inputs[0], curr_h, attention_inputs[1])
+                prediction = attention_decoders[model_i](attention_inputs[0], curr_h, attention_inputs[1], one_hot_mask)
                 predictions.append(nn.functional.softmax(prediction, dim=1))
             prediction = torch.mean(torch.stack(predictions, dim=0), dim=0)
 
@@ -1641,23 +1666,26 @@ def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings,
             _, _prev_word = prediction.max(1)
             prev_word = _prev_word
 
-            if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
+            if int(prev_word[0]) == output_lang.word2index['<E>'] or \
+                    t.num_children >= max_length:
+                if head == 1:
+                    t.add_child(int(prev_word[0]))
                 break
             elif int(prev_word[0]) == output_lang.word2index['<IE>']:
                 queue_decode.append(
-                    {"s": [(ss[0].clone(), ss[1].clone()) for ss in s],
-                     "parent": head, "child_index": i_child, "t": Tree()})
+                    {"s": (s[0].clone(), s[1].clone()), "parent": head, "child_index": i_child, "t": Tree()})
                 t.add_child(int(prev_word[0]))
             else:
                 t.add_child(int(prev_word[0]))
             i_child = i_child + 1
+            prev_word_list.append(int(prev_word[0]))
         head = head + 1
+
     for i in range(len(queue_decode) - 1, 0, -1):
         cur = queue_decode[i]
         queue_decode[cur["parent"] - 1]["t"].children[cur["child_index"] - 1] = cur["t"]
 
     return queue_decode[0]["t"].flatten(output_lang)
-
 
 def topdown_train_tree(input_batch, input_length, target_batch, target_length, nums_stack_batch, num_size_batch,
                        generate_nums, encoder, predict, generate, encoder_optimizer, predict_optimizer,
