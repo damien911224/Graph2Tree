@@ -107,6 +107,7 @@ class OutputLang:
         self.add_to_vocab("<IS>")
         self.add_to_vocab("<IE>")
         """
+        self.add_to_vocab("UNK")
 
         self.n_words = len(self.word2index)
 
@@ -495,8 +496,11 @@ def transfer_english_num(data):  # transfer num into "NUM"
     for d in data:
         nums = []
         input_seq = []
-        seg = d["sQuestion"].strip().split(" ")
-        equations = d["lEquations"]
+        # seg = d["sQuestion"].strip().split(" ")
+        seg = d["question"].strip().split(" ")
+        # equations = d["lEquations"]
+        equations = d["equation"]
+
 
         for s in seg:
             pos = re.search(pattern, s)
