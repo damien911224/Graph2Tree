@@ -1733,13 +1733,13 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
 
     beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]),
               "score": 0.0, "score_length": 0.0,
-              "head": 1, "child": 1, "depth_done": False, "child_done": False}]
+              "head": 1, "child": 1, "depth_done": False}]
     # depth level
-    while (False in [b["depth_done"] for b in beams]) or (False in [b["child_done"] for b in beams]):
+    while (False in [b["depth_done"] for b in beams]):
         # while head <= len(queue_decode) and head <= max_length:
         new_beams = list()
         for b in beams:
-            if not b["depth_done"] and not b["child_done"]:
+            if not b["depth_done"]:
                 head = b["head"]
                 i_child = b["child"]
                 queue_decode = b["q"]
@@ -1809,7 +1809,10 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     t = new_b["t"]
 
                     if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
-                        new_b["child_done"] = True
+                        new_b["head"] += 1
+                        new_b["child"] = 1
+                        if new_b["head"] > len(new_b["q"]) or new_b["head"] > max_length:
+                            new_b["depth_done"] = True
                     elif int(prev_word[0]) == output_lang.word2index['<IE>']:
                         queue_decode.append(
                             {"s": [(ss[0].clone(), ss[1].clone()) for ss in s],
@@ -1819,11 +1822,6 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     else:
                         t.add_child(int(prev_word[0]))
                         new_b["child"] = i_child + 1
-
-                    if not new_b["depth_done"]:
-                        new_b["head"] += 1
-                        if new_b["head"] > len(new_b["q"]) or new_b["head"] > max_length:
-                            new_b["depth_done"] = True
 
                     new_beams.append(new_b)
             else:
