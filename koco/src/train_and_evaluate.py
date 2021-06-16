@@ -786,9 +786,14 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             dec_s[i][j] = {}
             tp_mask_batch[i][j] = None
     
+    cnt = 0
     for b_id, m_batch in enumerate(mask_batch):
         for m_id, m_list in m_batch.items():
             for w_id, w_list in enumerate(m_list):
+
+                if not dec_batch[int(m_id)+1][b_id,w_id+1].item() in w_list:
+                    cnt+=1
+                    continue
 
                 temp_mask = f.one_hot(torch.tensor(w_list), num_classes = output_lang.n_words)
 
@@ -799,7 +804,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                     tp_mask_batch[int(m_id)][w_id] = torch.ones(len(mask_batch), output_lang.n_words)
 
                 tp_mask_batch[int(m_id)][w_id][b_id] = temp_mask
-                assert dec_batch[int(m_id)+1][b_id,w_id+1].item() in temp_mask.nonzero().flatten().tolist()
+    print(cnt)
 
     # graph_cell_state = torch.zeros((opt.batch_size, opt.rnn_size), dtype=torch.float, requires_grad=True)
     # graph_hidden_state = torch.zeros((opt.batch_size, opt.rnn_size), dtype=torch.float, requires_grad=True)

@@ -1038,7 +1038,7 @@ def get_single_example_graph(input_batch, input_length,group,num_value,num_pos):
     batch_graph = np.array(batch_graph)
     return batch_graph
 
-def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
+def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang, mask_batch):
     queue_tree = {}
     for i in range(1, batch_size + 1):
         queue_tree[i] = []
@@ -1059,11 +1059,13 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
                 for ic in range(t.num_children):
                     if isinstance(t.children[ic], Tree):
                         # 4가 n?
+                        assert output_lang.word2index["<IE>"] in mask_batch[i-1][str(cur_index-1)][ic]
                         w_list.append(output_lang.word2index['<IE>'])
                         queue_tree[i].append({"tree": t.children[ic],
                                               "parent": cur_index,
                                               "child_index": ic + 1})
                     else:
+                        assert t.children[ic] in mask_batch[i-1][str(cur_index-1)][ic]
                         w_list.append(t.children[ic])
                 if len(queue_tree[i]) > max_index:
                     max_index = len(queue_tree[i])
@@ -1200,7 +1202,7 @@ def my_collate(batch):
     output_batch = [list_to_tree(l) for l in output_batch]
 
     contextual_input = index_batch_to_words(input_batch, input_length, input_lang)
-    dec_batch, queue_tree, max_index = get_dec_batch(output_batch, batch_size, USE_CUDA, output_lang)
+    dec_batch, queue_tree, max_index, mask_batch = get_dec_batch(output_batch, batch_size, USE_CUDA, output_lang, mask_batch)
 
     return input_batch, input_length, output_batch, output_length, \
            num_batch, num_stack_batch, num_pos_batch, num_size_batch, num_value_batch, graph_batch, \

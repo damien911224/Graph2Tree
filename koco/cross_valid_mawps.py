@@ -80,7 +80,7 @@ if not os.path.exists("logs"):
 
 def get_new_fold(data,pairs,group,mask):
     new_fold = []
-    for item,pair,g,mask_ele in zip(data, pairs, group, mask):
+    for item,pair,g,mask_ele in zip(data, pairs, group, list(mask.values())):
         pair = list(pair)
         pair.append(g['group_num'])
         pair.append(mask_ele)
@@ -204,12 +204,12 @@ data = load_mawps_data("data/dummy.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 mask_data_ele = read_json("data/mask_processed.json")
 # dummy data has same Ground truth code, so repeat mask_data
-mask_data = []
+mask_data = {}
 processed_data = {}
 processed_group_data = []
 for i in range(len(data)):
     if str(i) in mask_data_ele:
-        mask_data.append(mask_data_ele[str(i)])
+        mask_data[str(i)] = mask_data_ele[str(i)]
         processed_data[str(i)] = data[str(i)]
         processed_group_data.append(group_data[i])
 data = processed_data
