@@ -199,7 +199,8 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/custom_dummy.json")
+# data = load_mawps_data("data/custom_dummy.json")
+data = load_mawps_data("data/dummy.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 mask_data_ele = read_json("data/mask_processed.json")
 # dummy data has same Ground truth code, so repeat mask_data

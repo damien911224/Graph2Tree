@@ -6,6 +6,40 @@ import math
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
 
+class Embedding(nn.Module):
+    def __init__(self, config, input_lang, input_size, embedding_size, dropout=0.5):
+        super(Embedding, self).__init__()
+
+        self.config = config
+        self.input_lang = input_lang
+        self.input_size = input_size
+        self.embedding_size = embedding_size
+
+        # if self.config.embedding == 'word2vec':
+        # 	self.config.embedding_size = 300
+        # 	self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(self._form_embeddings(self.config.word2vec_bin)), freeze = self.config.freeze_emb)
+        # else:
+
+        self.embedding = nn.Embedding(input_size, embedding_size, padding_idx=0)
+        self.em_dropout = nn.Dropout(dropout)
+
+    # def _form_embeddings(self, file_path):
+    #     weights_all = models.KeyedVectors.load_word2vec_format(file_path, limit=200000, binary=True)
+    #     weight_req  = torch.randn(self.input_size, self.config.embedding_size)
+    #     for temp_ind in range(len(self.input_lang.index2word)):
+    #         value = self.input_lang.index2word[temp_ind]
+    #         if value in weights_all:
+    #             weight_req[temp_ind] = torch.FloatTensor(weights_all[value])
+    #     # for key, value in self.voc1.id2w.items():
+    #     # 	if value in weights_all:
+    #     # 		weight_req[key] = torch.FloatTensor(weights_all[value])
+    #
+    #     return weight_req
+
+    def forward(self, input_seqs):
+        embedded = self.embedding(input_seqs)  # S x B x E
+        embedded = self.em_dropout(embedded)
+        return embedded
 
 class EncoderRNN(nn.Module):
     def __init__(self, input_size, embedding_size, hidden_size, n_layers=2, dropout=0.5):
@@ -161,41 +195,100 @@ class TreeAttn(nn.Module):
         attn_energies = nn.functional.softmax(attn_energies, dim=1)  # B x S
 
         return attn_energies.unsqueeze(1)
-
+#
+#
+# class EncoderSeq(nn.Module):
+#     def __init__(self, input_size, embedding_size, hidden_size, n_layers=2, dropout=0.5):
+#         super(EncoderSeq, self).__init__()
+#
+#         self.input_size = input_size
+#         self.embedding_size = embedding_size
+#         self.hidden_size = hidden_size
+#         self.n_layers = n_layers
+#         self.dropout = dropout
+#
+#         self.embedding = nn.Embedding(input_size, embedding_size, padding_idx=0)
+#         self.em_dropout = nn.Dropout(dropout)
+#         self.gru_pade = nn.GRU(embedding_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
+#         self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
+#
+#     def forward(self, input_seqs, input_lengths, batch_graph, hidden=None):
+#         # Note: we run this all at once (over multiple batches of multiple sequences)
+#         embedded = self.embedding(input_seqs)  # S x B x E
+#         embedded = self.em_dropout(embedded)
+#         packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths)
+#         pade_hidden = hidden
+#         pade_outputs, pade_hidden = self.gru_pade(packed, pade_hidden)
+#         # max_len, N, 2C
+#         pade_outputs, _ = torch.nn.utils.rnn.pad_packed_sequence(pade_outputs)
+#
+#         # N, C
+#         problem_output = pade_outputs[-1, :, :self.hidden_size] + pade_outputs[0, :, self.hidden_size:]
+#         # max_len, N, C
+#         pade_outputs = pade_outputs[:, :, :self.hidden_size] + pade_outputs[:, :, self.hidden_size:]  # S x B x H
+#         BiGRU_outputs = pade_outputs
+#         _, pade_outputs = self.gcn(pade_outputs, batch_graph)
+#         pade_outputs = pade_outputs.transpose(0, 1)
+#         return pade_outputs, problem_output, BiGRU_outputs
 
 class EncoderSeq(nn.Module):
-    def __init__(self, input_size, embedding_size, hidden_size, n_layers=2, dropout=0.5):
+    # def __init__(self, input_size, embedding_size, hidden_size, n_layers=2, dropout=0.5):
+    def __init__(self, cell_type, embedding_size, hidden_size, n_layers=2, dropout=0.5):
         super(EncoderSeq, self).__init__()
 
-        self.input_size = input_size
+        # self.input_size = input_size
         self.embedding_size = embedding_size
         self.hidden_size = hidden_size
         self.n_layers = n_layers
         self.dropout = dropout
 
-        self.embedding = nn.Embedding(input_size, embedding_size, padding_idx=0)
-        self.em_dropout = nn.Dropout(dropout)
-        self.gru_pade = nn.GRU(embedding_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
-        self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
+        if cell_type == 'lstm':
+            self.rnn = nn.LSTM(self.embedding_size, self.hidden_size,
+                               num_layers=self.n_layers,
+                               dropout=(0 if self.n_layers == 1 else self.dropout),
+                               bidirectional=True)
+        elif cell_type == 'gru':
+            self.rnn = nn.GRU(embedding_size, hidden_size, n_layers, dropout=dropout, bidirectional=True)
+        else:
+            self.rnn = nn.RNN(self.embedding_size, self.hidden_size,
+                              num_layers=self.n_layers,
+                              nonlinearity='tanh',							# ['relu', 'tanh']
+                              dropout=(0 if self.n_layers == 1 else self.dropout),
+                              bidirectional=True)
 
-    def forward(self, input_seqs, input_lengths, batch_graph, hidden=None):
+        self.gcn = Graph_Module(hidden_size, hidden_size, hidden_size)
+        self.graph_embedding = nn.Linear(hidden_size * 2, hidden_size)
+
+    def forward(self, embedded, input_lengths, orig_idx, batch_graph, hidden=None):
         # Note: we run this all at once (over multiple batches of multiple sequences)
-        embedded = self.embedding(input_seqs)  # S x B x E
-        embedded = self.em_dropout(embedded)
+        # embedded = self.embedding(input_seqs)  # S x B x E
+        # embedded = self.em_dropout(embedded)
         packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths)
         pade_hidden = hidden
-        pade_outputs, pade_hidden = self.gru_pade(packed, pade_hidden)
-        # max_len, N, 2C
+        # pade_outputs, pade_hidden = self.gru_pade(packed, pade_hidden)
+        pade_outputs, pade_hidden = self.rnn(packed, pade_hidden)
         pade_outputs, _ = torch.nn.utils.rnn.pad_packed_sequence(pade_outputs)
 
-        # N, C
+        if orig_idx is not None:
+            pade_outputs = pade_outputs.index_select(1, orig_idx)
+
         problem_output = pade_outputs[-1, :, :self.hidden_size] + pade_outputs[0, :, self.hidden_size:]
-        # max_len, N, C
         pade_outputs = pade_outputs[:, :, :self.hidden_size] + pade_outputs[:, :, self.hidden_size:]  # S x B x H
-        BiGRU_outputs = pade_outputs
+        # pdb.set_trace()
         _, pade_outputs = self.gcn(pade_outputs, batch_graph)
         pade_outputs = pade_outputs.transpose(0, 1)
-        return pade_outputs, problem_output, BiGRU_outputs
+
+        max_pooled, _ = torch.max(pade_outputs, dim=0)
+        avg_pooled = torch.mean(pade_outputs, dim=0)
+        graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
+
+        # graph_embedding = max_pooled
+
+        # graph_01 = self.linear_01(self.norm_01(attention_inputs[0]))
+        # graph_02 = self.linear_02(self.norm_02(attention_inputs[1]))
+        graph_01, graph_02 = pade_outputs.transpose(0, 1), pade_outputs.transpose(0, 1)
+
+        return pade_outputs, problem_output, graph_embedding, (graph_01, graph_02)
 
 
 class Prediction(nn.Module):
@@ -607,8 +700,8 @@ class AttnUnit(nn.Module):
         self.hidden_size = opt["rnn_size"]
         self.separate_attention = self.opt["separate_attention"]
         if self.separate_attention:
-            self.linear_in_01 = nn.Linear(self.hidden_size // 2, self.hidden_size)
-            self.linear_in_02 = nn.Linear(self.hidden_size // 2, self.hidden_size)
+            # self.linear_in_01 = nn.Linear(self.hidden_size // 2, self.hidden_size)
+            # self.linear_in_02 = nn.Linear(self.hidden_size // 2, self.hidden_size)
             self.linear_att = nn.Linear(3*self.hidden_size, self.hidden_size)
         else:
             self.linear_att = nn.Linear(2*self.hidden_size, self.hidden_size)
@@ -620,20 +713,20 @@ class AttnUnit(nn.Module):
         self.softmax = nn.Softmax(dim=1)
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, enc_s_top, dec_s_top, enc_2):
-        if self.separate_attention:
-            N, L, C = enc_s_top.shape
-            encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
-            enc_s_top = encoder_splits[0]
-            enc_2 = encoder_splits[1]
-        if self.separate_attention:
-            enc_s_top = self.linear_in_01(enc_s_top)
+    def forward(self, enc_s_top, dec_s_top, enc_2, mask=None):
+        # if self.separate_attention:
+        #     N, L, C = enc_s_top.shape
+        #     encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
+        #     enc_s_top = encoder_splits[0]
+        #     enc_2 = encoder_splits[1]
+        # if self.separate_attention:
+        #     enc_s_top = self.linear_in_01(enc_s_top)
         dot = torch.bmm(enc_s_top, dec_s_top.unsqueeze(2))
         attention = self.softmax(dot.squeeze(2)).unsqueeze(2)
         enc_attention = torch.bmm(enc_s_top.permute(0,2,1), attention)
 
         if self.separate_attention:
-            enc_2 = self.linear_in_02(enc_2)
+            # enc_2 = self.linear_in_02(enc_2)
             dot_2 = torch.bmm(enc_2, dec_s_top.unsqueeze(2))
             attention_2 = self.softmax(dot_2.squeeze(2)).unsqueeze(2)
             enc_attention_2 = torch.bmm(enc_2.permute(0,2,1), attention_2)
@@ -645,7 +738,12 @@ class AttnUnit(nn.Module):
         h2y_in = hid
         if self.opt["dropout_for_predict"] > 0:
             h2y_in = self.dropout(h2y_in)
+        
         h2y = self.linear_out(h2y_in)
-        pred = self.logsoftmax(h2y)
+        if mask is None:
+            pred = self.logsoftmax(h2y)
+        else:
+            assert mask.shape == h2y.shape
+            pred = self.logsoftmax(h2y * mask.cuda())
 
         return pred

@@ -1,5 +1,7 @@
-*.pyc
+.idea
 __pycache__
+.DS_Store
+*.pyc
 events*
 *.pth
 *.bin
