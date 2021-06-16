@@ -1082,8 +1082,6 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
         #     dec_batch[cur_index] = dec_batch[cur_index].cuda()
         cur_index += 1
 
-    print(dec_batch)
-
     return dec_batch, queue_tree, max_index
 
 def list_to_tree(r_list, initial=False, depth=0):
