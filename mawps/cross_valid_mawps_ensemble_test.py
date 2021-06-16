@@ -437,6 +437,7 @@ for model_i in range(len(encoders)):
     reference_list = list()
     candidate_list = list()
     dummy_bleu_scores = list()
+    test_pairs = test_pairs[:20]
     for t_i, test_batch in enumerate(test_pairs):
         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4],
                                                test_batch[5])
