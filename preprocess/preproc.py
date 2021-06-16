@@ -263,15 +263,6 @@ def extract(input_name, ans_name, output_name):
         for q_num in obj:
             sent = obj[q_num]['question']
             sent = sent.replace(',', '')
-            #sent = change_hangeul(sent)
-            '''
-            ql_candi = k.pos(sent)
-            for ql_c in ql_candi:
-                for idx in range(len(change_list)):
-                    if change_list[idx] == ql_c[:-2] and (ql_c[-1] == 'K' or ql_c[-1] == 'N' or ql_c[-1] == 'W'):
-                        sent = sent.replace(ql_c[:-2], target_list[idx])
-            ql_candi = k.pos(sent)
-            '''
             for kw in range(len(change_list1)):
                 p = "\s" + change_list1[kw] + "\s"
                 sent = re.sub(p, ' ' + target_list1[kw] + ' ', sent)
@@ -410,6 +401,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Input File Name')
     parser.add_argument('--prob', required=True, default='problem.json', help='Problem File Name')
     parser.add_argument('--ans', required=True, default='', help='Answer File Name')
+    parser.add_argument('--data', required=False, default='data/output.json', help='Output File Name')
     output_name = "output.json"
     args = parser.parse_args()
-    extract(args.prob, args.ans, output_name)
+    extract(args.prob, args.ans, args.data)
