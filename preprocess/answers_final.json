@@ -191,7 +191,7 @@
     },
     "21": {
         "answer": 325,
-        "equation": "result=QL[2]/(QL[6]-QL[4])",
+        "equation": "result=QL[3]/(QL[6]-QL[4])",
         "QL": [
             2,
             1,
@@ -304,7 +304,7 @@
     },
     "33": {
         "answer": 120,
-        "equation": "result=QL[0]*2*QL[1]",
+        "equation": "result=QL[0]*const2*QL[1]",
         "QL": [
             30,
             2
@@ -567,14 +567,14 @@
         ]
     },
     "63": {
-        "answer": 8.5,
-        "equation": "result=QL[1]/(QL[0]-QL[2])*QL[3]+QL[2]",
-        "QL": [
-            48,
-            442,
-            40,
-            1.5
-        ]
+           "answer": 8.5,
+           "equation": "result=QL[1]/(QL[2]+(QL[0]-QL[2])*QL[3])",
+           "QL": [
+               48,
+               442,
+               40,
+               1.5
+           ]
     },
     "64": {
         "answer": 15,
@@ -803,7 +803,7 @@
     },
     "90": {
         "answer": 7,
-        "equation": "result=(QL[2]4-QL[1])/QL[0]",
+        "equation": "result=(QL[2]-QL[1])/QL[0]",
         "QL": [
             2,
             10,
@@ -880,8 +880,8 @@
         ]
     },
     "99": {
-        "answer": 0.16666666666666666,
-        "equation": "QL[0]-QL[1]",
+        "answer": 0.16,
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             0.6666666666666666,
             0.5
@@ -897,7 +897,7 @@
     },
     "101": {
         "answer": 1100,
-        "equation": "result=QL[1]-QL[3]",
+        "equation": "result=QL[3]-QL[1]",
         "QL": [
             1,
             4400,
@@ -951,7 +951,7 @@
     },
     "107": {
         "answer": 40,
-        "equation": "result=(QL[3]/QL[4])*QL[6]-(QL[5]/QL[4])*QL[6])/((QL[5]/QL[4])-(QL[1]/QL[0]))",
+        "equation": "result=(QL[3]*QL[6]-QL[5]*QL[6])/(QL[5]-QL[1])",
         "QL": [
             0.25,
             1.2,
@@ -968,16 +968,6 @@
         "QL": [
             5,
             86
-        ]
-    },
-    "109": {
-        "answer": -3,
-        "equation": "result=(-QL[3]-QL[2])/(QL[0]+QL[1]+const1)",
-        "QL": [
-            3,
-            2,
-            7,
-            -11
         ]
     },
     "110": {
@@ -1240,7 +1230,7 @@
     },
     "139": {
         "answer": 36,
-        "equation": "result=QL[0]*QL[1]",
+        "equation": "result=QL[1]*QL[2]",
         "QL": [
             1,
             9,
@@ -1248,8 +1238,8 @@
         ]
     },
     "140": {
-        "answer": 69.4,
-        "equation": "result=(QL[1]-QL[0])/QL[0] * const100",
+        "answer": 5320,
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             7670,
             12990
@@ -1554,7 +1544,7 @@
     },
     "175": {
         "answer": 1,
-        "equation": "result=Q[2]/Q[1]-Q[0]",
+        "equation": "result=QL[2]/QL[1]-QL[0]",
         "QL": [
             8,
             5,
@@ -1754,7 +1744,7 @@
     },
     "198": {
         "answer": 4700,
-        "equation": "result=QL[0]-QL[1]",
+        "equation": "result=QL[0]-QL[2]",
         "QL": [
             7900,
             9,
@@ -1820,7 +1810,7 @@
     },
     "206": {
         "answer": 5000,
-        "equation": "result=(QL[4]-QL[1])/(QL[3]/const100",
+        "equation": "result=(QL[4]-QL[1])/(QL[3]/const100)",
         "QL": [
             1,
             1250,
@@ -1956,8 +1946,8 @@
         ]
     },
     "221": {
-        "answer": 95,
-        "equation": "result=QL[5]*const5-(QL[0]+QL[1]+QL[2]+QL[3]+QL[4])",
+        "answer": 97,
+        "equation": "result=QL[5]*const5-(QL[0]+QL[1]+QL[2]+QL[3])",
         "QL": [
             73,
             75,
@@ -1977,7 +1967,7 @@
     },
     "223": {
         "answer": 1,
-        "equation": "result=QL[01]+QL[3]-QL[4]",
+        "equation": "result=QL[1]+QL[3]-QL[4]",
         "QL": [
             1,
             16,
@@ -2019,7 +2009,7 @@
     },
     "227": {
         "answer": 9,
-        "equation": "result=QL[0]-QL[1]+QL[2]",
+        "equation": "result=QL[0]-(QL[1]+QL[2])",
         "QL": [
             21,
             4,
@@ -2045,7 +2035,7 @@
         ]
     },
     "230": {
-        "answer": 480,
+        "answer": 40,
         "equation": "result=QL[0]*QL[1]",
         "QL": [
             8,
@@ -2330,7 +2320,7 @@
     },
     "262": {
         "answer": 15,
-        "equation": "result=(QL[0]*(QL[6]+QL[3])-(QL[5]*QL[6])-(QL[2]*QL[3]))/(QL[9]-QL[0])",
+        "equation": "result=(QL[0]*(QL[6]+QL[3])-(QL[5]*QL[6])-(QL[2]*QL[3]))/(QL[8]-QL[0])",
         "QL": [
             115,
             1,
@@ -2470,7 +2460,7 @@
     },
     "278": {
         "answer": 224,
-        "equation": "result=(QL[0]+QL[1]+QL[2])*QL[4]",
+        "equation": "result=(QL[0]+QL[1]+QL[2])*QL[3]",
         "QL": [
             10,
             1,
@@ -2490,7 +2480,7 @@
     },
     "280": {
         "answer": 8,
-        "equation": "result=(QL[0]+QL[1])/QL[2])",
+        "equation": "result=(QL[0]+QL[1])/QL[2]",
         "QL": [
             4,
             44,
@@ -2578,7 +2568,7 @@
     },
     "290": {
         "answer": 72,
-        "equation": "QL[0]/((QL[0]/QL[3])+(QL[0]/QL[5]))",
+        "equation": "result=QL[0]/((QL[0]/QL[3])+(QL[0]/QL[5]))",
         "QL": [
             5400000,
             2,
@@ -2744,7 +2734,7 @@
     },
     "309": {
         "answer": 0.75,
-        "equation": "QL[0]+QL[1]+QL[2]",
+        "equation": "result=QL[0]+QL[1]+QL[2]",
         "QL": [
             0.333333333,
             0.333333333,
@@ -3123,12 +3113,12 @@
         "equation": "result=QL[0]/QL[1]",
         "QL": [
             40,
-            7
+            8
         ]
     },
     "352": {
         "answer": 84.6,
-        "equation": "result=QL[1]/(const1-(QL[2]/const100))",
+        "equation": "result=QL[2]/(const1-(QL[0]/const100))",
         "QL": [
             35,
             1,
@@ -3721,7 +3711,7 @@
     },
     "420": {
         "answer": 20000,
-        "equation": "result=QL[0]/(QL[1]/const100))",
+        "equation": "result=QL[0]/(QL[1]/const100)",
         "QL": [
             16000,
             80
@@ -4066,7 +4056,7 @@
     },
     "459": {
         "answer": 3426,
-        "equation": "result=QL[2]QL[3]-QL[QL[3]]QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             1426,
             2000
@@ -4189,7 +4179,7 @@
         ]
     },
     "473": {
-        "answer": 4.4,
+        "answer": 4.3,
         "equation": "result=QL[0]-QL[1]",
         "QL": [
             7.6,
@@ -4379,7 +4369,7 @@
     },
     "493": {
         "answer": 46,
-        "equation": "result=(QL[0]*QL[0]3)",
+        "equation": "result=(QL[0]*QL[1])",
         "QL": [
             2,
             23
@@ -4746,7 +4736,7 @@
     },
     "535": {
         "answer": 500,
-        "equation": "result=(QL[1]-QL[3])/(QL[4]/const100-QL[2]/const100)*const100",
+        "equation": "result=(QL[1]-QL[3])/(QL[4]/const100-QL[2]/const100)",
         "QL": [
             1,
             25,
@@ -4951,14 +4941,14 @@
     },
     "558": {
         "answer": 1110,
-        "equation": "result=QL[1]-QL[1]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             1400,
             290
         ]
     },
     "559": {
-        "answer": 28,
+        "answer": 25,
         "equation": "result=QL[0]+QL[1]+QL[2]",
         "QL": [
             13,
@@ -5019,7 +5009,7 @@
         ]
     },
     "566": {
-        "answer": "11",
+        "answer": "17",
         "equation": "result=QL[0]-QL[1]",
         "QL": [
             20,
@@ -5304,7 +5294,7 @@
         ]
     },
     "599": {
-        "answer": 0.3,
+        "answer": 6,
         "equation": "result=(QL[1]-QL[0])*QL[2]",
         "QL": [
             4,
@@ -5738,7 +5728,7 @@
     },
     "649": {
         "answer": 35,
-        "equation": "result=((QL[0]+QL[1])-QL[1])",
+        "equation": "result=((QL[0]+QL[1])-QL[2])",
         "QL": [
             45,
             9,
@@ -5756,7 +5746,7 @@
     },
     "651": {
         "answer": 4,
-        "equation": "result=QL[0]*QL[7]-(QL[3]+QL[4]+QL[5]+QL[6])",
+        "equation": "result=QL[1]*const5-(QL[3]+QL[4]+QL[5]+QL[6])",
         "QL": [
             4,
             3,
@@ -5831,7 +5821,7 @@
         ]
     },
     "659": {
-        "answer": 11,
+        "answer": 12,
         "equation": "result=(QL[0]/QL[1])+(QL[2]+QL[4])/QL[3]",
         "QL": [
             2,
@@ -6107,7 +6097,7 @@
     },
     "690": {
         "answer": 5,
-        "equation": "X=X=((QL[0]-QL[1])/QL[2])",
+        "equation": "result=((QL[0]-QL[1])/QL[2])",
         "QL": [
             81,
             41,
@@ -6116,7 +6106,7 @@
     },
     "691": {
         "answer": 64,
-        "equation": "X=(QL[0]-QL[1])",
+        "equation": "result=(QL[0]-QL[1])",
         "QL": [
             142,
             78
@@ -6124,7 +6114,7 @@
     },
     "692": {
         "answer": 94,
-        "equation": "X=(QL[0]/QL[1])",
+        "equation": "result=(QL[0]/QL[1])",
         "QL": [
             9306,
             99
@@ -6132,7 +6122,7 @@
     },
     "693": {
         "answer": 15,
-        "equation": "x=(QL[2]+QL[1])/QL[0]",
+        "equation": "result=(QL[2]+QL[1])/QL[0]",
         "QL": [
             3,
             40,
@@ -6141,7 +6131,7 @@
     },
     "694": {
         "answer": 3,
-        "equation": "X=((QL[0]+QL[1])/const1000)",
+        "equation": "result=((QL[0]+QL[1])/const1000)",
         "QL": [
             1200,
             1800
@@ -6149,7 +6139,7 @@
     },
     "695": {
         "answer": "25.62",
-        "equation": "X=QL[0]+QL[1]+QL[2]",
+        "equation": "result=QL[0]+QL[1]+QL[2]",
         "QL": [
             14.88,
             4.88,
@@ -6160,7 +6150,7 @@
     },
     "696": {
         "answer": 3,
-        "equation": "X=((QL[0]-QL[1])/QL[2])",
+        "equation": "result=((QL[0]-QL[1])/QL[2])",
         "QL": [
             20,
             11,
@@ -6169,7 +6159,7 @@
     },
     "697": {
         "answer": 0.83,
-        "equation": "x=QL[1]+QL[2]+QL[3]",
+        "equation": "result=QL[1]+QL[2]+QL[3]",
         "QL": [
             1,
             0.16,
@@ -6180,7 +6170,7 @@
     },
     "698": {
         "answer": 25,
-        "equation": "X=(QL[0]/QL[1])",
+        "equation": "result=(QL[0]/QL[1])",
         "QL": [
             75,
             3
@@ -6188,7 +6178,7 @@
     },
     "699": {
         "answer": "11",
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             2,
             9
@@ -6196,7 +6186,7 @@
     },
     "700": {
         "answer": 2,
-        "equation": "X=((QL[0]+QL[1])/QL[2])",
+        "equation": "result=((QL[0]+QL[1])/QL[2])",
         "QL": [
             2,
             6,
@@ -6205,7 +6195,7 @@
     },
     "701": {
         "answer": 2,
-        "equation": "x=((QL[0]+QL[1])+QL[2])-(QL[3]+QL[4])",
+        "equation": "result=((QL[0]+QL[1])+QL[2])-(QL[3]+QL[4])",
         "QL": [
             20,
             26,
@@ -6216,7 +6206,7 @@
     },
     "702": {
         "answer": 310,
-        "equation": "X=(QL[0]-QL[1])",
+        "equation": "result=(QL[0]-QL[1])",
         "QL": [
             873,
             563
@@ -6224,7 +6214,7 @@
     },
     "703": {
         "answer": 18,
-        "equation": "X=(QL[0]*(QL[1]-QL[2]))",
+        "equation": "result=(QL[0]*(QL[1]-QL[2]))",
         "QL": [
             2,
             13,
@@ -6233,7 +6223,7 @@
     },
     "704": {
         "answer": 4,
-        "equation": "X=((QL[0]-QL[1])/QL[2])",
+        "equation": "result=((QL[0]-QL[1])/QL[3])",
         "QL": [
             39,
             19,
@@ -6243,7 +6233,7 @@
     },
     "705": {
         "answer": 24,
-        "equation": "X=(QL[0]*QL[1])",
+        "equation": "result=(QL[0]*QL[1])",
         "QL": [
             8,
             3
@@ -6251,7 +6241,7 @@
     },
     "706": {
         "answer": 4,
-        "equation": "x=(QL[2]-QL[1])/(QL[1]-QL[0])",
+        "equation": "result=(QL[2]-QL[1])/(QL[1]-QL[0])",
         "QL": [
             1,
             3,
@@ -6260,7 +6250,7 @@
     },
     "707": {
         "answer": 60,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             28,
             4,
@@ -6268,8 +6258,8 @@
         ]
     },
     "708": {
-        "answer": 134,
-        "equation": "x=QL[0]*QL[1]",
+        "answer": 136,
+        "equation": "result=QL[1]*QL[2]",
         "QL": [
             1,
             34,
@@ -6278,7 +6268,7 @@
     },
     "709": {
         "answer": 18,
-        "equation": "X=(QL[0]-QL[1])",
+        "equation": "result=(QL[0]-QL[1])",
         "QL": [
             88,
             70
@@ -6286,7 +6276,7 @@
     },
     "710": {
         "answer": 58,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             30,
             7,
@@ -6295,7 +6285,7 @@
     },
     "711": {
         "answer": 3,
-        "equation": "X=((QL[0]-QL[1])/QL[2])",
+        "equation": "result=((QL[0]-QL[1])/QL[2])",
         "QL": [
             54,
             33,
@@ -6304,7 +6294,7 @@
     },
     "712": {
         "answer": 3,
-        "equation": "x=(QL[2]-QL[1])/QL[0]",
+        "equation": "result=(QL[2]-QL[1])/QL[0]",
         "QL": [
             5,
             4,
@@ -6313,7 +6303,7 @@
     },
     "713": {
         "answer": 43,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             2,
             41
@@ -6321,7 +6311,7 @@
     },
     "714": {
         "answer": 30,
-        "equation": "X=((QL[0]+QL[1])-QL[2])",
+        "equation": "result=((QL[0]+QL[1])-QL[2])",
         "QL": [
             10,
             25,
@@ -6330,7 +6320,7 @@
     },
     "715": {
         "answer": 6,
-        "equation": "X=((QL[0]-QL[1])/QL[2])",
+        "equation": "result=((QL[0]-QL[1])/QL[2])",
         "QL": [
             58,
             10,
@@ -6339,7 +6329,7 @@
     },
     "716": {
         "answer": 3,
-        "equation": "X=((QL[1]+QL[2])/QL[0])",
+        "equation": "result=((QL[1]+QL[2])/QL[0])",
         "QL": [
             8,
             22,
@@ -6348,7 +6338,7 @@
     },
     "717": {
         "answer": "5935",
-        "equation": "X=QL[1]-QL[0]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             2647,
             8582
@@ -6356,7 +6346,7 @@
     },
     "718": {
         "answer": 273,
-        "equation": "X=(QL[0]-QL[1])",
+        "equation": "result=(QL[0]-QL[1])",
         "QL": [
             600,
             327
@@ -6364,7 +6354,7 @@
     },
     "719": {
         "answer": 24,
-        "equation": "X=(QL[1]*(QL[0]-QL[2]))",
+        "equation": "result=(QL[1]*(QL[0]-QL[2]))",
         "QL": [
             15,
             3,
@@ -6373,7 +6363,7 @@
     },
     "720": {
         "answer": 37,
-        "equation": "X=((QL[1]+QL[3])-QL[2])",
+        "equation": "result=((QL[1]+QL[3])-QL[2])",
         "QL": [
             4,
             31,
@@ -6384,7 +6374,7 @@
     },
     "721": {
         "answer": 9,
-        "equation": "X=((QL[1]-QL[2])/QL[3])",
+        "equation": "result=((QL[1]-QL[2])/QL[3])",
         "QL": [
             1,
             102,
@@ -6394,7 +6384,7 @@
     },
     "722": {
         "answer": 22,
-        "equation": "x=QL[0]-QL[1]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             47,
             25
@@ -6402,7 +6392,7 @@
     },
     "723": {
         "answer": 18,
-        "equation": "X=(QL[1]*QL[2])",
+        "equation": "result=(QL[1]*QL[2])",
         "QL": [
             1,
             2,
@@ -6411,7 +6401,7 @@
     },
     "724": {
         "answer": 35.0,
-        "equation": "x=5*7",
+        "equation": "result=QL[0]*QL[1]",
         "QL": [
             5,
             7
@@ -6419,7 +6409,7 @@
     },
     "725": {
         "answer": 42,
-        "equation": "X=(QL[2]*(QL[0]+QL[1]))",
+        "equation": "result=(QL[2]*(QL[0]+QL[1]))",
         "QL": [
             4,
             3,
@@ -6428,7 +6418,7 @@
     },
     "726": {
         "answer": 4,
-        "equation": "X=(QL[1]/QL[0])",
+        "equation": "result=(QL[1]/QL[0])",
         "QL": [
             6,
             24
@@ -6436,7 +6426,7 @@
     },
     "727": {
         "answer": 3.67,
-        "equation": "x=QL[0]-QL[1]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             3.83,
             0.16,
@@ -6445,15 +6435,15 @@
     },
     "728": {
         "answer": "42",
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             22,
             20
         ]
     },
     "729": {
-        "answer": 8,
-        "equation": "X=(QL[0]+QL[1])+QL[2]",
+        "answer": 17,
+        "equation": "result=(QL[0]+QL[1])+QL[2]",
         "QL": [
             5,
             3,
@@ -6462,7 +6452,7 @@
     },
     "730": {
         "answer": "2515",
-        "equation": "X=QL[0]-QL[1]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             9437,
             6922
@@ -6470,7 +6460,7 @@
     },
     "731": {
         "answer": 61,
-        "equation": "X=((QL[0]+QL[4])-QL[3])",
+        "equation": "result=((QL[1]+QL[4])-QL[3])",
         "QL": [
             1,
             33,
@@ -6481,7 +6471,7 @@
     },
     "732": {
         "answer": 70,
-        "equation": "X=(QL[2]*(QL[0]+QL[1]))",
+        "equation": "result=(QL[2]*(QL[0]+QL[1]))",
         "QL": [
             3,
             7,
@@ -6490,7 +6480,7 @@
     },
     "733": {
         "answer": 72,
-        "equation": "X=(QL[2]*(QL[0]+QL[1]))",
+        "equation": "result=(QL[2]*(QL[0]+QL[1]))",
         "QL": [
             6,
             3,
@@ -6499,7 +6489,7 @@
     },
     "734": {
         "answer": 5,
-        "equation": "X=((QL[0]-QL[1])/QL[2])",
+        "equation": "result=((QL[0]-QL[1])/QL[2])",
         "QL": [
             47,
             27,
@@ -6508,7 +6498,7 @@
     },
     "735": {
         "answer": 47,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             42,
             25,
@@ -6517,7 +6507,7 @@
     },
     "736": {
         "answer": 5,
-        "equation": "X=(QL[0]-QL[2])",
+        "equation": "result=(QL[0]-QL[2])",
         "QL": [
             47,
             6,
@@ -6526,7 +6516,7 @@
     },
     "737": {
         "answer": "0.6",
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[1]+QL[2]",
         "QL": [
             1,
             0.2,
@@ -6536,7 +6526,7 @@
     },
     "738": {
         "answer": 70,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             47,
             23,
@@ -6545,7 +6535,7 @@
     },
     "739": {
         "answer": "58",
-        "equation": "X=QL[1]+QL[0]",
+        "equation": "result=QL[1]+QL[0]",
         "QL": [
             6,
             52,
@@ -6554,7 +6544,7 @@
     },
     "740": {
         "answer": "9.8",
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             1,
             8.8,
@@ -6563,7 +6553,7 @@
     },
     "741": {
         "answer": 92,
-        "equation": "X=(QL[0]-QL[1])",
+        "equation": "result=(QL[0]-QL[1])",
         "QL": [
             99,
             7
@@ -6571,7 +6561,7 @@
     },
     "742": {
         "answer": 33,
-        "equation": "X=((QL[1]+QL[3])-QL[2])",
+        "equation": "result=((QL[1]+QL[3])-QL[2])",
         "QL": [
             3,
             8,
@@ -6582,7 +6572,7 @@
     },
     "743": {
         "answer": 63,
-        "equation": "X=(QL[0]*(QL[1]+QL[2]))",
+        "equation": "result=(QL[0]*(QL[1]+QL[2]))",
         "QL": [
             9,
             4,
@@ -6591,7 +6581,7 @@
     },
     "744": {
         "answer": 101,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             2,
             99
@@ -6599,7 +6589,7 @@
     },
     "745": {
         "answer": 0.65,
-        "equation": "x=QL[0]+QL[1]+QL[2]",
+        "equation": "result=QL[0]+QL[1]+QL[2]",
         "QL": [
             0.16,
             0.16,
@@ -6609,7 +6599,7 @@
     },
     "746": {
         "answer": 0.33,
-        "equation": "x=QL[0]*QL[1]",
+        "equation": "result=QL[0]/QL[1]",
         "QL": [
             0.66,
             2,
@@ -6618,7 +6608,7 @@
     },
     "747": {
         "answer": 64,
-        "equation": "X=(QL[0]*(QL[1]+QL[2]))",
+        "equation": "result=(QL[0]*(QL[1]+QL[2]))",
         "QL": [
             8,
             3,
@@ -6627,7 +6617,7 @@
     },
     "748": {
         "answer": "15",
-        "equation": "X=QL[1]+QL[2]",
+        "equation": "result=QL[1]+QL[2]",
         "QL": [
             1,
             9,
@@ -6636,7 +6626,7 @@
     },
     "749": {
         "answer": 40,
-        "equation": "X=(QL[0]*(QL[2]+QL[1]))",
+        "equation": "result=(QL[0]*(QL[2]+QL[1]))",
         "QL": [
             5,
             3,
@@ -6645,7 +6635,7 @@
     },
     "750": {
         "answer": 49,
-        "equation": "X=((QL[1]+QL[3])-QL[2])",
+        "equation": "result=((QL[1]+QL[3])-QL[2])",
         "QL": [
             1,
             38,
@@ -6655,7 +6645,7 @@
     },
     "751": {
         "answer": 63,
-        "equation": "X=(QL[0]*QL[1])",
+        "equation": "result=(QL[0]*QL[1])",
         "QL": [
             21,
             3
@@ -6663,7 +6653,7 @@
     },
     "752": {
         "answer": 28,
-        "equation": "x=QL[0]*QL[1]",
+        "equation": "result=QL[0]*QL[1]",
         "QL": [
             7,
             4
@@ -6671,7 +6661,7 @@
     },
     "753": {
         "answer": 9.43,
-        "equation": "x=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             5.2,
             4.23,
@@ -6680,7 +6670,7 @@
     },
     "754": {
         "answer": "1970",
-        "equation": "X=QL[0]+QL[1]+QL[2]+QL[3]",
+        "equation": "result=QL[0]+QL[1]+QL[2]+QL[3]",
         "QL": [
             1000,
             150,
@@ -6690,7 +6680,7 @@
     },
     "755": {
         "answer": 63,
-        "equation": "X=(QL[2]*(QL[0]-QL[1]))",
+        "equation": "result=(QL[2]*(QL[0]-QL[1]))",
         "QL": [
             15,
             6,
@@ -6699,7 +6689,7 @@
     },
     "756": {
         "answer": 53,
-        "equation": "X=(QL[1]-QL[0])",
+        "equation": "result=(QL[1]-QL[0])",
         "QL": [
             134,
             187
@@ -6707,7 +6697,7 @@
     },
     "757": {
         "answer": 488,
-        "equation": "x=QL[2]*QL[1]",
+        "equation": "result=QL[2]*QL[1]",
         "QL": [
             4,
             122,
@@ -6716,7 +6706,7 @@
     },
     "758": {
         "answer": 95,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             58,
             37
@@ -6724,7 +6714,7 @@
     },
     "759": {
         "answer": "21",
-        "equation": "X=QL[1]-QL[0]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             35,
             56
@@ -6732,7 +6722,7 @@
     },
     "760": {
         "answer": 0.72,
-        "equation": "X=(QL[1]-QL[0])",
+        "equation": "result=(QL[1]-QL[0])",
         "QL": [
             4.28,
             5,
@@ -6741,7 +6731,7 @@
     },
     "761": {
         "answer": 45,
-        "equation": "X=(QL[0]*(QL[1]-QL[2]))",
+        "equation": "result=(QL[0]*(QL[1]-QL[2]))",
         "QL": [
             5,
             14,
@@ -6750,7 +6740,7 @@
     },
     "762": {
         "answer": 0.75,
-        "equation": "x=QL[0]+QL[1]+QL[2]",
+        "equation": "result=QL[0]+QL[1]+QL[2]",
         "QL": [
             0.25,
             0.375,
@@ -6760,7 +6750,7 @@
     },
     "763": {
         "answer": 4,
-        "equation": "x=QL[0]*QL[1] / const100",
+        "equation": "result=QL[0]*QL[1] / const100",
         "QL": [
             8,
             50
@@ -6768,7 +6758,7 @@
     },
     "764": {
         "answer": 80,
-        "equation": "X=(QL[0]/QL[1])",
+        "equation": "result=(QL[0]/QL[1])",
         "QL": [
             3840,
             48
@@ -6776,7 +6766,7 @@
     },
     "765": {
         "answer": 15,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             11,
             4
@@ -6784,7 +6774,7 @@
     },
     "766": {
         "answer": 23,
-        "equation": "X=((QL[1]+QL[3])-QL[4])",
+        "equation": "result=((QL[2]+QL[4])-QL[5])",
         "QL": [
             2,
             1,
@@ -6796,7 +6786,7 @@
     },
     "767": {
         "answer": 64,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             39,
             25
@@ -6804,7 +6794,7 @@
     },
     "768": {
         "answer": 18,
-        "equation": "X=(QL[0]*(QL[1]-QL[2]))",
+        "equation": "result=(QL[0]*(QL[1]-QL[2]))",
         "QL": [
             3,
             9,
@@ -6813,7 +6803,7 @@
     },
     "769": {
         "answer": 32,
-        "equation": "X=(QL[0]/QL[2])",
+        "equation": "result=(QL[0]/QL[2])",
         "QL": [
             256,
             1,
@@ -6821,21 +6811,19 @@
         ]
     },
     "770": {
-        "answer": 36.78,
-        "equation": "x=(QL[0]*(QL[1] * const100 + QL[2]))+QL[3]+(QL[4] * const100 + QL[5])",
+        "answer":38,
+        "equation": "result=QL[1]+QL[2]+QL[3]",
         "QL": [
             2,
             10,
-            62,
-            1.59,
+            15,
             13,
-            95,
             3
         ]
     },
     "771": {
         "answer": 33.56,
-        "equation": "x=QL[0]+QL[1]+QL[2]",
+        "equation": "result=QL[0]+QL[1]+QL[2]",
         "QL": [
             13.99,
             12.14,
@@ -6845,7 +6833,7 @@
     },
     "772": {
         "answer": 43,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             2,
             41
@@ -6853,7 +6841,7 @@
     },
     "773": {
         "answer": 3,
-        "equation": "X=(QL[0]/(QL[2]))",
+        "equation": "result=(QL[0]/(QL[2]))",
         "QL": [
             9,
             12,
@@ -6862,7 +6850,7 @@
     },
     "774": {
         "answer": 42,
-        "equation": "x=QL[1]-QL[0]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             13,
             55
@@ -6870,7 +6858,7 @@
     },
     "775": {
         "answer": 688,
-        "equation": "x=QL[0]-QL[1]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             813,
             125
@@ -6878,7 +6866,7 @@
     },
     "776": {
         "answer": 28,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             33,
             31,
@@ -6887,7 +6875,7 @@
     },
     "777": {
         "answer": 25,
-        "equation": "X=(QL[0]*QL[1])",
+        "equation": "result=(QL[0]*QL[1])",
         "QL": [
             5,
             5
@@ -6895,7 +6883,7 @@
     },
     "778": {
         "answer": "0.1",
-        "equation": "X=QL[0]-QL[1]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             0.7,
             0.6,
@@ -6904,7 +6892,7 @@
     },
     "779": {
         "answer": 0.63,
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             0.25,
             0.375,
@@ -6912,8 +6900,8 @@
         ]
     },
     "780": {
-        "answer": "8",
-        "equation": "X=QL[0]-QL[1]",
+        "answer": "6",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             8,
             2
@@ -6921,7 +6909,7 @@
     },
     "781": {
         "answer": "18",
-        "equation": "X=QL[0]-QL[1]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             40,
             22
@@ -6929,7 +6917,7 @@
     },
     "782": {
         "answer": 19,
-        "equation": "X=((QL[0]+QL[1])-QL[2])",
+        "equation": "result=((QL[0]+QL[1])-QL[2])",
         "QL": [
             49,
             8,
@@ -6938,7 +6926,7 @@
     },
     "783": {
         "answer": 6,
-        "equation": "X=(QL[1]-QL[0])",
+        "equation": "result=(QL[1]-QL[0])",
         "QL": [
             18,
             24
@@ -6946,7 +6934,7 @@
     },
     "784": {
         "answer": 4,
-        "equation": "x=(QL[2]+QL[1])/QL[0]",
+        "equation": "result=(QL[2]+QL[1])/QL[0]",
         "QL": [
             4,
             1,
@@ -6955,7 +6943,7 @@
     },
     "785": {
         "answer": 9,
-        "equation": "X=((QL[0]+QL[1])/QL[2])",
+        "equation": "result=((QL[0]+QL[1])/QL[2])",
         "QL": [
             30,
             51,
@@ -6964,7 +6952,7 @@
     },
     "786": {
         "answer": "60",
-        "equation": "X=QL[0]+QL[2]",
+        "equation": "result=QL[0]+QL[2]",
         "QL": [
             33,
             44,
@@ -6974,7 +6962,7 @@
     },
     "787": {
         "answer": "11",
-        "equation": "X=QL[0]+QL[2]",
+        "equation": "result=QL[0]+QL[2]",
         "QL": [
             2,
             5,
@@ -6983,7 +6971,7 @@
     },
     "788": {
         "answer": 0,
-        "equation": "x=(QL[0]-QL[1])+QL[2]",
+        "equation": "result=(QL[1]-QL[2])+QL[3]",
         "QL": [
             3,
             7,
@@ -6993,7 +6981,7 @@
     },
     "789": {
         "answer": 12,
-        "equation": "x=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             7,
             5
@@ -7001,7 +6989,7 @@
     },
     "790": {
         "answer": "96",
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             44,
             52
@@ -7009,7 +6997,7 @@
     },
     "791": {
         "answer": 3,
-        "equation": "X=(QL[1]/QL[0])",
+        "equation": "result=(QL[1]/QL[0])",
         "QL": [
             4,
             12
@@ -7017,7 +7005,7 @@
     },
     "792": {
         "answer": 120,
-        "equation": "X=(QL[0]*QL[1]*const2)",
+        "equation": "result=(QL[0]*QL[1]*const2)",
         "QL": [
             30,
             2
@@ -7025,7 +7013,7 @@
     },
     "793": {
         "answer": 33,
-        "equation": "x=QL[0]-QL[1]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             66,
             33
@@ -7033,7 +7021,7 @@
     },
     "794": {
         "answer": 55,
-        "equation": "x=(QL[0]/QL[1])/const2",
+        "equation": "result=(QL[0]/QL[1])/const2",
         "QL": [
             880,
             8,
@@ -7042,7 +7030,7 @@
     },
     "795": {
         "answer": 14,
-        "equation": "x=(QL[1]-QL[0])*const2",
+        "equation": "result=(QL[1]-QL[0])*const2",
         "QL": [
             6,
             13
@@ -7050,7 +7038,7 @@
     },
     "796": {
         "answer": 72,
-        "equation": "X=(QL[0]*(QL[1]-QL[2]))",
+        "equation": "result=(QL[0]*(QL[1]-QL[2]))",
         "QL": [
             8,
             11,
@@ -7059,7 +7047,7 @@
     },
     "797": {
         "answer": 79,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             34,
             3,
@@ -7068,7 +7056,7 @@
     },
     "798": {
         "answer": 2750,
-        "equation": "x=(QL[5]-QL[1])/QL[4] + QL[2]",
+        "equation": "result=(QL[6]-QL[2])/QL[5] + QL[3]",
         "QL": [
             1,
             1,
@@ -7081,7 +7069,7 @@
     },
     "799": {
         "answer": 5,
-        "equation": "X=(QL[0]/QL[1])",
+        "equation": "result=(QL[0]/QL[1])",
         "QL": [
             40,
             8
@@ -7089,7 +7077,7 @@
     },
     "800": {
         "answer": 57,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             51,
             6
@@ -7097,7 +7085,7 @@
     },
     "801": {
         "answer": 22,
-        "equation": "X=(QL[1]-QL[0])",
+        "equation": "result=(QL[1]-QL[0])",
         "QL": [
             39,
             61
@@ -7105,15 +7093,15 @@
     },
     "802": {
         "answer": 1,
-        "equation": "x=QL[0]/QL[1] + QL[2]/QL[3]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
-            0.3333333333333333,
-            0.6666666666666666
+            "1/3",
+            "2/3"
         ]
     },
     "803": {
         "answer": 77,
-        "equation": "X=QL[1]-QL[0]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             40,
             117
@@ -7121,7 +7109,7 @@
     },
     "804": {
         "answer": 4072,
-        "equation": "x=QL[2]/(QL[4]-QL[3])",
+        "equation": "result=QL[2]/(QL[7]-QL[4])",
         "QL": [
             1,
             1,
@@ -7135,7 +7123,7 @@
     },
     "805": {
         "answer": 12,
-        "equation": "x=QL[1]-QL[0]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             74,
             86
@@ -7143,7 +7131,7 @@
     },
     "806": {
         "answer": "12",
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             9,
             3
@@ -7151,7 +7139,7 @@
     },
     "807": {
         "answer": "141.54",
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             130.3,
             11.24,
@@ -7161,7 +7149,7 @@
     },
     "808": {
         "answer": 1.49,
-        "equation": "x=QL[0] + QL[1] + QL[2]",
+        "equation": "result=QL[0] + QL[1] + QL[2]",
         "QL": [
             1,
             0.16,
@@ -7171,7 +7159,7 @@
     },
     "809": {
         "answer": 8,
-        "equation": "X=(QL[0]/QL[2])",
+        "equation": "result=(QL[0]/QL[2])",
         "QL": [
             72,
             17,
@@ -7180,7 +7168,7 @@
     },
     "810": {
         "answer": 90,
-        "equation": "x=QL[5]*const5-(((QL[1]+QL[2])+QL[3])+QL[4])",
+        "equation": "result=QL[6]*const5-(QL[2]+QL[3]+QL[4]+QL[5])",
         "QL": [
             1,
             4,
@@ -7192,8 +7180,8 @@
         ]
     },
     "811": {
-        "answer": "40,000",
-        "equation": "X=QL[0]-QL[1]",
+        "answer": "40000",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             70000,
             30000
@@ -7201,7 +7189,7 @@
     },
     "812": {
         "answer": "342",
-        "equation": "X=(QL[0]-QL[1])/QL[2]",
+        "equation": "result=(QL[0]-QL[1])/QL[2]",
         "QL": [
             760000,
             418000,
@@ -7210,7 +7198,7 @@
     },
     "813": {
         "answer": 32,
-        "equation": "X=(QL[0]-QL[1])",
+        "equation": "result=(QL[0]-QL[1])",
         "QL": [
             43,
             11
@@ -7218,7 +7206,7 @@
     },
     "814": {
         "answer": 14760.87,
-        "equation": "x=QL[0]/(const1-(QL[1]/const100))",
+        "equation": "result=QL[0]/(const1-(QL[2]/const100))",
         "QL": [
             13580,
             2,
@@ -7228,7 +7216,7 @@
     },
     "815": {
         "answer": 1.25,
-        "equation": "x=QL[1]/QL[0]",
+        "equation": "result=QL[1]/QL[0]",
         "QL": [
             3,
             3.75,
@@ -7238,7 +7226,7 @@
     },
     "816": {
         "answer": 79,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             3,
             76
@@ -7246,7 +7234,7 @@
     },
     "817": {
         "answer": 27,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             33,
             19,
@@ -7255,7 +7243,7 @@
     },
     "818": {
         "answer": "3220",
-        "equation": "X=QL[0]-QL[1]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             1416,
             4636
@@ -7263,7 +7251,7 @@
     },
     "819": {
         "answer": 33,
-        "equation": "x=QL[1]-QL[0]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             22,
             55
@@ -7271,7 +7259,7 @@
     },
     "820": {
         "answer": 25,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             13,
             12
@@ -7279,7 +7267,7 @@
     },
     "821": {
         "answer": 34,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             25,
             21,
@@ -7288,7 +7276,7 @@
     },
     "822": {
         "answer": 1705,
-        "equation": "x=QL[1]+QL[0]",
+        "equation": "result=QL[1]+QL[0]",
         "QL": [
             218,
             1487
@@ -7296,7 +7284,7 @@
     },
     "823": {
         "answer": 55,
-        "equation": "x=(QL[2]-QL[1]*QL[4])/QL[0]",
+        "equation": "result=(QL[2]-QL[1]*QL[4])/QL[0]",
         "QL": [
             4,
             5,
@@ -7307,7 +7295,7 @@
     },
     "824": {
         "answer": 105,
-        "equation": "X=(QL[0]+QL[1])",
+        "equation": "result=(QL[0]+QL[1])",
         "QL": [
             41,
             64
@@ -7315,7 +7303,7 @@
     },
     "825": {
         "answer": "523",
-        "equation": "X=QL[1]-QL[0]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             816,
             1339
@@ -7323,7 +7311,7 @@
     },
     "826": {
         "answer": 180,
-        "equation": "x=QL[0]*QL[1]",
+        "equation": "result=QL[0]*QL[1]",
         "QL": [
             15,
             12
@@ -7331,7 +7319,7 @@
     },
     "827": {
         "answer": 15737.5,
-        "equation": "x=QL[0]/(const1-(QL[1]/const100))",
+        "equation": "result=QL[1]/(const1-(QL[2]/const100))",
         "QL": [
             1,
             12590,
@@ -7340,7 +7328,7 @@
     },
     "828": {
         "answer": 12,
-        "equation": "x=(QL[0] - QL[2])",
+        "equation": "result=(QL[0] - QL[2])",
         "QL": [
             16,
             8,
@@ -7350,7 +7338,7 @@
     },
     "829": {
         "answer": 2,
-        "equation": "X=((QL[0]-QL[1])/QL[2])",
+        "equation": "result=((QL[0]-QL[1])/QL[2])",
         "QL": [
             57,
             49,
@@ -7359,7 +7347,7 @@
     },
     "830": {
         "answer": 72,
-        "equation": "X=(QL[1]*(QL[2]+QL[3]))",
+        "equation": "result=(QL[1]*(QL[2]+QL[3]))",
         "QL": [
             1,
             9,
@@ -7369,7 +7357,7 @@
     },
     "831": {
         "answer": 30,
-        "equation": "X=(QL[2]*(QL[0]+QL[1]))",
+        "equation": "result=(QL[2]*(QL[0]+QL[1]))",
         "QL": [
             6,
             4,
@@ -7378,7 +7366,7 @@
     },
     "832": {
         "answer": 108,
-        "equation": "x=QL[1]*QL[0]",
+        "equation": "result=QL[1]*QL[2]",
         "QL": [
             1,
             12,
@@ -7387,7 +7375,7 @@
     },
     "833": {
         "answer": 35,
-        "equation": "X=((QL[0]+QL[1])-QL[2])",
+        "equation": "result=((QL[0]+QL[1])-QL[2])",
         "QL": [
             33,
             23,
@@ -7396,7 +7384,7 @@
     },
     "834": {
         "answer": 32,
-        "equation": "X=(QL[0]*(QL[1]+QL[2]))",
+        "equation": "result=(QL[1]*(QL[2]+QL[3]))",
         "QL": [
             1,
             4,
@@ -7406,15 +7394,15 @@
     },
     "835": {
         "answer": 426,
-        "equation": "x=QL[0]*QL[1]",
+        "equation": "result=QL[0]*QL[1]",
         "QL": [
             6,
             71
         ]
     },
     "836": {
-        "answer": 153,
-        "equation": "x=(QL[4]-QL[3]*QL[1])/QL[2]",
+        "answer": 153.57,
+        "equation": "result=(QL[6]-QL[5]*QL[1])/QL[2]",
         "QL": [
             1,
             24.95,
@@ -7427,7 +7415,7 @@
     },
     "837": {
         "answer": 12,
-        "equation": "x=QL[1]*QL[0]",
+        "equation": "result=QL[1]*QL[0]",
         "QL": [
             3,
             4
@@ -7435,7 +7423,7 @@
     },
     "838": {
         "answer": 10,
-        "equation": "x=QL[0]/QL[1]",
+        "equation": "result=QL[0]/QL[1]",
         "QL": [
             80,
             8
@@ -7443,7 +7431,7 @@
     },
     "839": {
         "answer": 25.11,
-        "equation": "x=(const1-QL[1]/const100)*QL[0]",
+        "equation": "result=(const1-QL[1]/const100)*QL[0]",
         "QL": [
             27.9,
             10,
@@ -7452,7 +7440,7 @@
     },
     "840": {
         "answer": 92,
-        "equation": "x=QL[7]*QL[0]-(QL[3]+QL[4]+QL[5]+QL[6])",
+        "equation": "result=QL[7]*QL[0]-(QL[3]+QL[4]+QL[5]+QL[6])",
         "QL": [
             5,
             4,
@@ -7467,7 +7455,7 @@
     },
     "841": {
         "answer": 25,
-        "equation": "X=(QL[1]*QL[2])",
+        "equation": "result=(QL[1]*QL[2])",
         "QL": [
             1,
             5,
@@ -7476,7 +7464,7 @@
     },
     "842": {
         "answer": "36",
-        "equation": "X=QL[0]-QL[2]",
+        "equation": "result=QL[0]-QL[2]",
         "QL": [
             49,
             48,
@@ -7485,7 +7473,7 @@
     },
     "843": {
         "answer": 135,
-        "equation": "x=QL[0]*const3",
+        "equation": "result=QL[1]*const3",
         "QL": [
             1,
             45
@@ -7493,7 +7481,7 @@
     },
     "844": {
         "answer": 1000,
-        "equation": "x=QL[0]/(QL[2]-QL[1])",
+        "equation": "result=QL[0]/(QL[2]-QL[1])",
         "QL": [
             5000,
             5.0,
@@ -7503,7 +7491,7 @@
     },
     "845": {
         "answer": 150,
-        "equation": "x=(QL[0]-QL[2])/(QL[3]-QL[1])",
+        "equation": "result=(QL[0]-QL[3])/(QL[4]-QL[1])",
         "QL": [
             41.95,
             0.29,
@@ -7514,7 +7502,7 @@
     },
     "846": {
         "answer": "15.1",
-        "equation": "X=QL[0]+QL[1]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             10,
             5.1
@@ -7522,7 +7510,7 @@
     },
     "847": {
         "answer": 60,
-        "equation": "X=(QL[0]*(QL[1]+QL[2]))",
+        "equation": "result=(QL[1]*(QL[2]+QL[3]))",
         "QL": [
             1,
             6,
@@ -7532,7 +7520,7 @@
     },
     "848": {
         "answer": 6,
-        "equation": "x=QL[1]/(QL[0]-const1)",
+        "equation": "result=QL[1]/(QL[0]-const1)",
         "QL": [
             4,
             18
@@ -7540,7 +7528,7 @@
     },
     "849": {
         "answer": 1,
-        "equation": "X=((QL[0]+QL[1])-QL[2])",
+        "equation": "result=((QL[0]+QL[1])-QL[2])",
         "QL": [
             35,
             50,
@@ -7549,7 +7537,7 @@
     },
     "850": {
         "answer": 24,
-        "equation": "X=((QL[0]+QL[2])-QL[1])",
+        "equation": "result=((QL[0]+QL[2])-QL[1])",
         "QL": [
             19,
             5,
@@ -7558,7 +7546,7 @@
     },
     "851": {
         "answer": 8,
-        "equation": "X=((QL[0]+QL[1])/QL[2])",
+        "equation": "result=((QL[0]+QL[1])/QL[2])",
         "QL": [
             35,
             5,
@@ -7914,7 +7902,7 @@
         ]
     },
     "892": {
-        "answer": 165,
+        "answer": 115,
         "equation": "result=QL[0]-QL[1]",
         "QL": [
             338,
@@ -8347,7 +8335,7 @@
     },
     "940": {
         "answer": 39,
-        "equation": "result=(QL[0]+QL[1])-QL[3]",
+        "equation": "result=(QL[0]+QL[1])-QL[2]",
         "QL": [
             42,
             32,
@@ -9859,7 +9847,7 @@
     },
     "1115": {
         "answer": "33",
-        "equation": "result=QL[2]-QL[0]",
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             22,
             55
@@ -10227,7 +10215,7 @@
     },
     "1157": {
         "answer": 5,
-        "equation": "result=((QL[0]-QL[1])/QL[2])",
+        "equation": "result=((QL[0]-QL[2])/QL[3])",
         "QL": [
             51,
             1,
@@ -10254,7 +10242,7 @@
     },
     "1160": {
         "answer": 0.25,
-        "equation": "result=QL[0]+QL[0]",
+        "equation": "result=QL[2]+QL[3]",
         "QL": [
             2,
             1,
@@ -10491,7 +10479,7 @@
     },
     "1187": {
         "answer": 18.42,
-        "equation": "result=(QL[0]*QL[1])+QL[2]+QL[3]",
+        "equation": "result=(QL[0]*QL[1])+QL[2]*QL[3]+QL[4]*QL[5]",
         "QL": [
             2,
             2.73,
@@ -10587,7 +10575,7 @@
     },
     "1198": {
         "answer": 14720,
-        "equation": "result=QL[0]QL[1]+QL[2]",
+        "equation": "result=QL[0]+QL[1]",
         "QL": [
             14507,
             213
@@ -10663,7 +10651,7 @@
     },
     "1207": {
         "answer": 3,
-        "equation": "result=((QL[1]-QL[0])/QL[2])",
+        "equation": "result=((QL[0]-QL[1])/QL[3])",
         "QL": [
             59,
             32,
@@ -11013,7 +11001,7 @@
     },
     "1247": {
         "answer": 27,
-        "equation": "result=(QL[1]*(QL[1]+QL[2]))",
+        "equation": "result=(QL[1]*(QL[2]+QL[3]))",
         "QL": [
             1,
             3,
@@ -11148,7 +11136,7 @@
         ]
     },
     "1263": {
-        "answer": 349,
+        "answer": 174,
         "equation": "result=QL[0]-QL[1]",
         "QL": [
             175,
@@ -12374,10 +12362,10 @@
     },
     "1403": {
         "answer": 6,
-        "equation": "result=(8/QL[0])*QL[2]",
+        "equation": "result=(QL[1]/QL[0])*QL[2]",
         "QL": [
             1,
-            8.0,
+            8,
             0.75
         ]
     },
@@ -12529,7 +12517,7 @@
     },
     "1421": {
         "answer": 20,
-        "equation": "result=((Q[1]-Q[2])/Q[1])*const100",
+        "equation": "result=((QL[1]-QL[2])/QL[1])*const100",
         "QL": [
             1,
             42.0,
@@ -12714,8 +12702,8 @@
         ]
     },
     "1443": {
-        "answer": "12",
-        "equation": "result=QL[3]+QL[7]",
+        "answer": 8,
+        "equation": "result=(QL[1]+QL[3])-(QL[5]+QL[7])",
         "QL": [
             500,
             7,
@@ -12973,7 +12961,7 @@
     },
     "1473": {
         "answer": 14.02,
-        "equation": "result=QL[0]+QL[1]",
+        "equation": "result=QL[1]+QL[2]",
         "QL": [
             1,
             5.91,
@@ -13274,7 +13262,7 @@
     },
     "1508": {
         "answer": 45,
-        "equation": "result=(((QL[1]*QL[5])/const100)-((QL[1]*QL[0])/const100))/(QL[2]/const100-QL[3]/const100)",
+        "equation": "result=((QL[1]*QL[5])-(QL[1]*QL[0]))/(QL[2]-QL[5])",
         "QL": [
             45,
             30,
@@ -13795,9 +13783,9 @@
         "answer": "0.67",
         "equation": "result=QL[0]+QL[1]+QL[2]",
         "QL": [
-            0.16666,
-            0.16666,
-            0.33333
+            "1/6",
+            "1/6",
+            "1/3"
         ]
     },
     "1569": {
@@ -14375,7 +14363,7 @@
     },
     "1636": {
         "answer": 25,
-        "equation": "result=QL[1]/(1-(QL[0]/const100))",
+        "equation": "result=QL[1]/(const1-(QL[0]/const100))",
         "QL": [
             20,
             20
@@ -14392,7 +14380,7 @@
     },
     "1638": {
         "answer": 101.25,
-        "equation": "result=QL[0]*(1-QL[1]/const100)",
+        "equation": "result=QL[0]*(const1-QL[1]/const100)",
         "QL": [
             135,
             25
@@ -14943,7 +14931,7 @@
     },
     "1701": {
         "answer": 0.38,
-        "equation": "result=round(QL[0]-QL[1], 2)",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             0.625,
             0.25
@@ -15176,7 +15164,7 @@
     },
     "1727": {
         "answer": 159,
-        "equation": "result=QL[3]-QL[0]-QL[1]-QL[2]",
+        "equation": "result=QL[4]-(QL[1]+QL[2]+QL[3])",
         "QL": [
             1,
             25,
@@ -15280,8 +15268,8 @@
         ]
     },
     "1739": {
-        "answer": -15,
-        "equation": "result=(QL[1] + QL[0]*QL[0])**(1/const2)",
+        "answer": 183,
+        "equation": "result=QL[1]-QL[0]",
         "QL": [
             6,
             189
@@ -15330,7 +15318,7 @@
         ]
     },
     "1745": {
-        "answer": 0.33,
+        "answer": 0.34,
         "equation": "result=QL[0]-QL[1]",
         "QL": [
             0.67,
@@ -15597,7 +15585,7 @@
         ]
     },
     "1776": {
-        "answer": 0.92,
+        "answer": 0.91,
         "equation": "result=QL[0]+QL[1]+QL[2]",
         "QL": [
             0.08,
@@ -15672,18 +15660,10 @@
     },
     "1784": {
         "answer": 2063,
-        "equation": "result=(QL[0]-QL[2])",
+        "equation": "result=(QL[0]-QL[1])",
         "QL": [
             2080,
             17
-        ]
-    },
-    "1785": {
-        "answer": -0.21,
-        "equation": "result=QL[1]/QL[0]",
-        "QL": [
-            -7,
-            1.48
         ]
     },
     "1786": {
@@ -15840,8 +15820,8 @@
         ]
     },
     "1803": {
-        "answer": 150,
-        "equation": "result=((QL[1]/QL[0])+QL[0]*QL[0])**(1/const2)",
+        "answer": 102,
+        "equation": "result=(QL[1]+(QL[0]*QL[2]))/ QL[2]",
         "QL": [
             30,
             720,
@@ -15877,13 +15857,13 @@
         ]
     },
     "1807": {
-        "answer": 150,
-        "equation": "result=((QL[1]/QL[0])+QL[0]*QL[0])**(1/const2)",
-        "QL": [
-            30,
-            720,
-            10
-        ]
+        "answer": 102,
+        "equation": "result=(QL[1]+(QL[0]*QL[2]))/ QL[2]",
+            "QL": [
+                30,
+                720,
+                10
+            ]
     },
     "1808": {
         "answer": 9,
@@ -16137,12 +16117,12 @@
         ]
     },
     "1836": {
-        "answer": -10,
-        "equation": "result=(-QL[1]-QL[2])/QL[0]",
+        "answer": 8,
+        "equation": "result=(QL[1]+QL[2])/QL[0]",
         "QL": [
             2,
-            -12,
-            -8
+            12,
+            4
         ]
     },
     "1837": {
@@ -16443,7 +16423,7 @@
     },
     "1871": {
         "answer": 6279,
-        "equation": "result=QL[0]-QL[1]",
+        "equation": "result=QL[1]-QL[2]",
         "QL": [
             2,
             9792,
@@ -16670,7 +16650,7 @@
     },
     "1897": {
         "answer": 6,
-        "equation": "result=(QL[2]+QL[1])/3",
+        "equation": "result=(QL[2]+QL[1])/QL[0]",
         "QL": [
             3,
             2,
@@ -16944,7 +16924,7 @@
     },
     "1927": {
         "answer": 480,
-        "equation": "x=QL[0]/(const1+(QL[1]/const100))",
+        "equation": "result=QL[0]/(const1+(QL[1]/const100))",
         "QL": [
             552,
             15
@@ -17021,7 +17001,7 @@
     },
     "1936": {
         "answer": 20,
-        "equation": "result=QL[3]/(QL[0]-QL[1])",
+        "equation": "result=QL[3]*(QL[0]-QL[1])",
         "QL": [
             7,
             2,
@@ -17065,7 +17045,7 @@
     },
     "1941": {
         "answer": 7,
-        "equation": "result=QL[0]+QL[3]-QL[4]",
+        "equation": "result=QL[1]+QL[3]-QL[4]",
         "QL": [
             1,
             17,
@@ -17095,7 +17075,7 @@
     },
     "1944": {
         "answer": 5.45,
-        "equation": "result=const1/(const1/QL[0])+const1/(const1/QL[1])",
+        "equation": "result=const1/((const1/QL[0])+(const1/QL[1]))",
         "QL": [
             12,
             10,
@@ -17141,7 +17121,7 @@
     },
     "1949": {
         "answer": 7,
-        "equation": "x=(QL[0]*QL[1]+QL[3])/(QL[2]-QL[0])",
+        "equation": "result=(QL[0]*QL[1]+QL[3])/(QL[2]-QL[0])",
         "QL": [
             5,
             2,
@@ -17159,7 +17139,7 @@
     },
     "1951": {
         "answer": 19,
-        "equation": "result=QL[3]/QL[1]",
+        "equation": "result=QL[1]/QL[3]",
         "QL": [
             1,
             323,
@@ -17282,7 +17262,7 @@
     },
     "1965": {
         "answer": 1080,
-        "equation": "x=QL[1]*(const1-QL[4]/const100)",
+        "equation": "result=QL[1]*(const1-QL[4]/const100)",
         "QL": [
             1986,
             1125,
@@ -17303,7 +17283,7 @@
         ]
     },
     "1967": {
-        "answer": 2,
+        "answer": 3,
         "equation": "result=(QL[0]-QL[2])-QL[3]",
         "QL": [
             33,
@@ -17365,7 +17345,7 @@
         ]
     },
     "1974": {
-        "answer": 2.5,
+        "answer": 10,
         "equation": "result=QL[1]*QL[0]",
         "QL": [
             2,
@@ -17376,7 +17356,7 @@
     },
     "1975": {
         "answer": 9,
-        "equation": "result=QL[1]*QL[0]",
+        "equation": "result=QL[1]/QL[0]",
         "QL": [
             5,
             45,
@@ -17384,7 +17364,7 @@
         ]
     },
     "1976": {
-        "answer": 60,
+        "answer": 1.62,
         "equation": "result=const1/((const1/QL[0])+(const1/QL[2])+(const1/QL[4]))",
         "QL": [
             4,
@@ -17430,7 +17410,7 @@
     },
     "1980": {
         "answer": 92,
-        "equation": "result=QL[1]-QL[0]",
+        "equation": "result=QL[0]-QL[1]",
         "QL": [
             95,
             3
