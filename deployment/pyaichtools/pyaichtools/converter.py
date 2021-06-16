@@ -223,8 +223,8 @@ class Converter:
 			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and \
 									   curr_class.__dict__['__annotations__'][x]._name is 'Sequence'
 		else:
-			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and type(
-				curr_class.__dict__['__annotations__'][x]) is typing.Sequence
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '__name__') and \
+				curr_class.__dict__['__annotations__'][x].__name__ is 'Sequence'
 
 		arg_dict = {
 			attr: [] if check_sequence(attr) else None
