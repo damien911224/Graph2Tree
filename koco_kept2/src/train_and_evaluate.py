@@ -645,6 +645,7 @@ class TreeEmbedding:  # the class save the tree
 
 
 class Tree():
+
     def __init__(self):
         self.parent = None
         self.num_children = 0
@@ -686,6 +687,15 @@ class Tree():
             else:
                 r_list.append(self.children[i])
         return r_list
+
+    def tree_to_list(self, output_lang):
+        list = []
+        for i in range(self.num_children):
+            if isinstance(self.children[i], type(self)):
+                list.append(self.tree_to_list(self.children[i]))
+            else:
+                list.append(self.children[i])
+        return list
 
 
 def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
