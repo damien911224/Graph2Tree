@@ -11,7 +11,7 @@ import time
 import random
 import copy
 
-MAX_OUTPUT_LENGTH = 10
+MAX_OUTPUT_LENGTH = 500
 MAX_INPUT_LENGTH = 500
 USE_CUDA = torch.cuda.is_available()
 
@@ -1577,7 +1577,8 @@ def beam_copy(beam):
     for qq in q:
         # {"s": s, "parent": 0, "child_index": 1, "t": Tree()}
         new_q.append({"s": [(qq_s[0].clone(), qq_s[1].clone()) for qq_s in qq["s"]],
-                      "parent": qq["parent"], "child_index": qq["child_index"], "t": copy.deepcopy(qq["t"])})
+                      "parent": qq["parent"], "child_index": qq["child_index"],
+                      "t": copy.deepcopy(qq["t"])})
     new_beam["q"] = new_q
     new_beam["parent_h"] = [p_h.clone() for p_h in beam["parent_h"]]
     new_beam["prev_word"] = beam["prev_word"].clone()
