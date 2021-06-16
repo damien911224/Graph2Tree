@@ -389,7 +389,7 @@ for fold in target_folds:
         reference_list = list()
         candidate_list = list()
         bleu_scores = list()
-        for test_batch in test_pairs:
+        for test_batch in test_pairs[:10]:
             #print(test_batch)
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
             test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
@@ -423,6 +423,8 @@ for fold in target_folds:
 
             bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
             bleu_scores.append(bleu_score)
+        candidate = [output_lang.index2word[x] for x in candidate]
+        print(candidate)
         # print(equation_ac, value_ac, eval_total)
         # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
         # print("testing time", time_since(time.time() - start))

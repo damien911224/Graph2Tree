@@ -500,7 +500,7 @@ def transfer_english_num(data):  # transfer num into "NUM"
         # seg = d["sQuestion"].strip().split(" ")
         seg = d["question"].strip().split(" ")
         # equations = d["lEquations"]
-        equations = d["equation"]
+        equations = d["lequation"]
 
 
         for s in seg:
@@ -1081,7 +1081,7 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
                     dec_batch[cur_index][i][0] = output_lang.word2index['<S>']
                 else:
                     dec_batch[cur_index][i][0] = output_lang.word2index['<IS>']
-                dec_batch[cur_index][i][len(w_list) + 1] = output_lang.word2index['<E>']
+                dec_batch[cur_index][i][len(w_list) + 1] = output_lang.word2index['<E>'] 
 
         # if using_gpu:
         #     dec_batch[cur_index] = dec_batch[cur_index].cuda()

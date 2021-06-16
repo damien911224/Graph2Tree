@@ -210,6 +210,36 @@ unit=['kg','g','L','ml','mL','cm','mm','m','t','쪽','권','개입','개','명',
 target_list4 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 target_list5 = [10, 100, 1000, 10000]
 
+NL_list = [ 
+    '\(가\)', '\\(나\)', '\(다\)', '\(라\)', '\(마\)', '\(바\)', '\(사\)', '\(아\)', '\(자\)', '\(차\)', '\(카\)', '\(타\)', '\(파\)', '\(하\)', \
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'S', 'U', 'V', 'W', 'X', 'Y', 'Z', \
+    '정국', '지민', '석진', '태형', '남준', '윤기', '호석', '민영', '유정', '은지', '유나', \
+    '꼴찌', \
+    '앞', '옆', '뒤', '가로', '세로', '왼쪽', '오른쪽', \
+    '오전', '오후', \
+    '월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일', \
+    '아버지', '어머니', '할아버지', '할머니', '손자', '손녀', '조카', '이모', '삼촌', '동생', '누나', '오빠', \
+    '손가락', '발가락', '팔', '다리', \
+    '암컷', '수컷', '암탉', '수탉', '여학생', '남학생', '여차', '남자', \
+    '흰색', '검은색', '파란색', '노란색', '초록색', '보라색', '빨간색', '주황색', '파란색', '남색', \
+    '오리', '닭', '토끼', '물고기', '고래', '거위', '달팽이', '개구리', '강아지', '고양이', '비둘기', '병아리', '하마' \
+    '연어', \
+    '장미', '백합', '튤립', '카네이션', '국화', '화분', '화단', '꽃병', \
+    '배구공', '농구공', '축구공', '탁구공', '줄넘기', '달리기', '수영', '시합', \
+    '사과', '배', '감', '귤', '포도', '수박', '바나나', \
+    '토마토', '무', '당근', '오이', '배추', \
+    '나무', \
+    '사탕', '김밥', '빵', '라면', '과자', '음료수', '주스', '우유', '달걀', '쌀', \
+    '연필', '색연필', '지우개', '공책', '도화지', '색종이', '풀', '테이프', '바둑돌', '구슬', '상자', '나무토막', '장난감', '책장', '책꽂이', \
+    '서점', '마트', '문구점', '집', '학교', '수영장', '교실', '도서관', '박물관', '운동장', '주차장', '정류장', '아파트', '농장', '강당', \
+    '비행기', '자동차', '트럭', '배', '자전거', '오토바이', '기차', '버스', '엘리베이터', \
+    '페인트', '벽', '천장', '문', '울타리'
+]
+name_list = ['정국이', '지민이', '석진이', '태형이', '남준이', '호석이', '민영이', '유정이']
+josa_list = [
+    '이', '가', '께서', '다', '을', '를', '의', '에' ,'로', '와', '과', '보다', '하고', '이랑', '랑', '이며', '며', '나', '만', '밖에', '뿐', '도', '조차', '마저', '까지', '이나', '나', \
+    '이든지', '든지', '이나마', '나마', '이라도', '라도', '\s', '은', '는'
+]
 def h2i(hangeul):
     hangeul = hangeul.strip()
     result = decode(hangeul)
@@ -249,7 +279,6 @@ def extract(input_name, ans_name, output_name):
     from konlp.kma.klt2000 import klt2000 
     import json
     import re
-    k = klt2000()
 
     ans_obj = {}
     with open(ans_name, 'r', encoding='utf8') as g:
@@ -343,12 +372,24 @@ def extract(input_name, ans_name, output_name):
                         if change_list8[j] in i:
                             sent = sent.replace(i, target_list2[j] + '째')
 
-            nl = k.nouns(sent)
+            nl = []
+            p = "^(" + "|".join(NL_list) + "|" + "|".join(name_list) + ")(" + "|".join(josa_list) + ")"
+            p2 = "\s(" + "|".join(NL_list) + "|" + "|".join(name_list) + ")(" + "|".join(josa_list) + ")"
+            pn = "(" + "|".join(NL_list) + ")"
+            if re.search(p, sent) is not None:
+                for catch in re.finditer(p, sent):
+                    for catch2 in re.finditer(pn, catch[0]):
+                        nl.append(catch2[0])
+            if re.search(p2, sent) is not None:
+                for catch in re.finditer(p2, sent):
+                    for catch2 in re.finditer(pn, catch[0]):
+                        nl.append(catch2[0])
+
             tmp_obj = {}
             tmp_obj['NL'] = nl
 
             ql = []
-            p = "[-+]?\\d+(\\.\\d+)?(\\/\\d+)?"
+            p = "\\d+(\\.\\d+)?(\\/\\d+)?"
             if re.search(p, sent) is not None:
                 for catch in re.finditer(p, sent):
                     ql.append(catch[0])
@@ -367,18 +408,18 @@ def extract(input_name, ans_name, output_name):
                     num_list = list_obj[str(q_num)]['QL']
                     ud_num_list = ans_obj[str(q_num)]['QL']
                     diff_txt += diff_num_list(str(q_num), num_list, ud_num_list)
-                    noun_list = list_obj[str(q_num)]['NL']
+                    #noun_list = list_obj[str(q_num)]['NL']
                     new_text = obj[q_num]['question']
                     new_equation = ans_obj[q_num]['equation']
                     solution = ans_obj[q_num]['answer']
                     
                     num_list_str = re.sub("\'", "", str(num_list))
                     QL = "QL = " + num_list_str
-                    NL = "NL = " + str(noun_list)
+                    #NL = "NL = " + str(noun_list)
 
                     tmp['id'] = id
                     tmp['QL_code'] = QL
-                    tmp['NL_code'] = NL
+                    #tmp['NL_code'] = NL
                     tmp['new_text'] = new_text
                     tmp['new_equation'] = new_equation
                     tmp['lSolution'] = solution
