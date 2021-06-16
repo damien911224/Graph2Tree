@@ -1506,7 +1506,8 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
 
     s = [(out[1], out[1]) for out in all_encoder_outputs]
 
-    beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]), "score": 0.0,
+    beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]),
+              "score": 0.0, "score_length": 0.0,
               "head": 1, "child": 1, "depth_done": False, "child_done": False}]
     # depth level
     while (False not in [b["depth_done"] for b in beams]) and (False not in [b["child_done"] for b in beams]):
@@ -1515,12 +1516,14 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
             head = b["head"]
             i_child = b["child"]
             queue_decode = b["q"]
-            score = b["score"]
 
             if i_child == 1:
                 s = queue_decode[head - 1]["s"]
                 parent_h = [ss[1] for ss in s]
                 t = queue_decode[head - 1]["t"]
+                b["s"] = s
+                b["t"] = t
+                b["parent_h"] = parent_h
 
                 sibling_state = [torch.zeros((1, encoders[0].hidden_size), dtype=torch.float, requires_grad=False)
                                  for _ in range(num_models)]
@@ -1544,6 +1547,14 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                 if USE_CUDA:
                     prev_word = prev_word.cuda()
 
+                b["sibling_state"] = sibling_state
+                b["prev_word"] = prev_word
+
+            s = b["s"]
+            parent_h = b["paraent_h"]
+            prev_word = b["prev_word"]
+            sibling_state = b["sibling_state"]
+
             cur_s = list()
             predictions = list()
             for model_i in range(num_models):
@@ -1557,13 +1568,19 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
 
             topk_v, topk_i = torch.topk(prediction, beam_size)
             for value, index in zip(topk_v, topk_i):
+                new_b = dict(b)
+                queue_decode = b["q"]
                 s = cur_s
-                # s = (curr_c, curr_h)
-                _, _prev_word = prediction.max(1)
-                prev_word = _prev_word
+                new_b["s"] = s
+                t = new_b["t"]
+                prev_word = index
+                new_b["prev_word"] = prev_word
+
+                new_b["score"] += value
+                new_b["score_length"] += 1.0
 
                 if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
-                    b["child_done"] = True
+                    new_b["child_done"] = True
                 elif int(prev_word[0]) == output_lang.word2index['<IE>']:
                     queue_decode.append(
                         {"s": [(ss[0].clone(), ss[1].clone()) for ss in s],
@@ -1571,13 +1588,14 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     t.add_child(int(prev_word[0]))
                 else:
                     t.add_child(int(prev_word[0]))
-                i_child = i_child + 1
+                new_b["child"] = i_child + 1
 
-            for b in beams:
-                if not b["depth_done"]:
-                    b["head"] += 1
-                    if b["head"] > len(b["q"]) or b["head"] > max_length:
-                        b["depth_done"] = True
+                if not new_b["depth_done"]:
+                    new_b["head"] += 1
+                    if new_b["head"] > len(new_b["q"]) or new_b["head"] > max_length:
+                        new_b["depth_done"] = True
+
+        beams = sorted(beams, key=lambda x:x["score"] / x["score_length"], reverse=True)[:beam_size]
 
     for i in range(len(queue_decode) - 1, 0, -1):
         cur = queue_decode[i]
