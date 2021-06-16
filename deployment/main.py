@@ -9,11 +9,10 @@ from src.helper import index_batch_to_words, sentence_from_indexes
 from src.train_and_evaluate import evaluate_tree
 from src.contextual_embeddings import *
 from src.models import *
-from pyaichtools import Reducer
+from pyaichtools.pyaichtools import Reducer
 from yacs.config import CfgNode as CN
-from pyaichtools import Converter
-from pyaichtools import DefaultCfg
-
+from pyaichtools.pyaichtools import Converter
+from pyaichtools.pyaichtools import DefaultCfg
 
 DEBUG = True
 GENERATE_DUMMY_WEIGHTS = False
@@ -24,12 +23,6 @@ problem_file = "problemsheet.json"
 # problem_file = "/home/agc2021/dataset/problemsheet.json"
 answer_file = "answersheet.json"
 
-# ========== encdoing
-header_path = "test/src/header.py"
-footer_path = "test/src/footer.py"
-body_path = "test/src/body.py"
-ql_path = "test/src/ql.py"
-#=========================================
 
 MAX_OUTPUT_LENGTH = 100
 
@@ -76,24 +69,12 @@ if __name__ == "__main__":
     pairs, copy_nums = transfer_num_n_equation(data)
     input_lang, output_lang, test_pairs = prepare_infer_data(pairs, 1)
 
-    # converter initialize
-    # cfg = CN(new_allowed=True)
-    # cfg.header_path = header_path
-    # cfg.footer_path = footer_path
-    # cfg.ql_path = ql_path
-    # cfg.var_range = 10
-    # cfg.const_range = 20
-    # cfg.SPT = '/'
 
-    # converter = Converter(DefaultCfg, debug=True)
+    converter = Converter(DefaultCfg, debug=True)
 
     if DEBUG:
         print("testing sample {} has been loaded".format(len(test_pairs)))
 
-    # for d in data:
-    #     print(" ".join(data[d]['question']))
-    #     input()
-    # exit()
 
     embedding = BertEncoder(opt["pretrained_bert_path"], "cuda" if USE_CUDA else "cpu", False)
     encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
@@ -136,16 +117,16 @@ if __name__ == "__main__":
 
         # input_batch, input_length, operate_nums(n), embedding, encoder, decoder, attention_decoder, reducer,
         # input_lang, output_lang, num_value, num_pos(n), batch_graph(n), beam_size(n), max_length=MAX_OUTPUT_LENGTH
-        # test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder, attention_decoder, reducer,
-        #                          input_lang, output_lang, test_batch[2], beam_size=beam_size)
+        test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder, attention_decoder, reducer,
+                                 input_lang, output_lang, test_batch[2], beam_size=beam_size)
         print(test_batch[0])
         QL = test_batch[2]
         NL = test_batch[4]
         print(QL)
         print(NL)
 
-        # dec_seq = converter.decode(test_res)
-        #
+        dec_seq = converter.decode(test_res)
+
         # print(test_res)
         # answers[str(i)] = {
         #     "answer": None,
