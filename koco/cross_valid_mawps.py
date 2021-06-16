@@ -229,11 +229,11 @@ pairs = get_new_fold(data, pairs, group_data, mask_data)
 
 fold_size = int(len(pairs) * (1.0 / num_folds))
 fold_pairs = []
-for split_fold in range(4):
+for split_fold in range(num_folds):
     fold_start = fold_size * split_fold
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
-fold_pairs.append(pairs[(fold_size * 4):])
+fold_pairs.append(pairs[(fold_size * num_folds):])
 # whole_fold = fold_pairs
 # random.shuffle(whole_fold)
 
