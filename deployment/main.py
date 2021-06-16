@@ -13,6 +13,9 @@ from pyaichtools.pyaichtools import Reducer
 from yacs.config import CfgNode as CN
 from pyaichtools.pyaichtools import Converter
 from pyaichtools.pyaichtools import DefaultCfg
+import libcst as cst
+import sys
+# sys.setrecursionlimit(10000)
 
 DEBUG = True
 GENERATE_DUMMY_WEIGHTS = False
@@ -56,7 +59,7 @@ opt = {
     "embedding_size": 768,
     "dropout_input": 0.5,
     # "pretrained_bert_path": None
-    "pretrained_bert_path": './weights/embedding-69'
+    "pretrained_bert_path": './weights/embedding-80'
 }
 
 if __name__ == "__main__":
@@ -101,9 +104,9 @@ if __name__ == "__main__":
         torch.save(state_dict, "weights/state_dicts.pth")
 
     state_dicts = {
-        'encoder': torch.load("weights/encoder-69.pth"),
-        'decoder': torch.load("weights/decoder-69.pth"),
-        'attention_decoder': torch.load("weights/attention_decoder-69.pth"),
+        'encoder': torch.load("weights/encoder-80.pth"),
+        'decoder': torch.load("weights/decoder-80.pth"),
+        'attention_decoder': torch.load("weights/attention_decoder-80.pth"),
     }
 
     if DEBUG:
@@ -118,6 +121,11 @@ if __name__ == "__main__":
 
     answers = {}
 
+
+
+
+    total = len(test_pairs)
+    wrong_count = 0
     for i, test_batch in enumerate(test_pairs):
         # sent = index_batch_to_words([test_batch[0]], [test_batch[1]], input_lang)
         # test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder,
@@ -126,24 +134,34 @@ if __name__ == "__main__":
         # input_batch, input_length, operate_nums(n), embedding, encoder, decoder, attention_decoder, reducer,
         # input_lang, output_lang, num_value, num_pos(n), batch_graph(n), beam_size(n), max_length=MAX_OUTPUT_LENGTH
         test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder, attention_decoder, reducer,
-                                 input_lang, output_lang, test_batch[2], beam_size=beam_size)
-        print(test_batch[0])
+                                 input_lang, output_lang, test_batch[2], beam_size=beam_size, num_pos=test_batch[3])
         QL = test_batch[2]
         NL = test_batch[4]
 
         QL = [eval(s) for s in QL]
-        print(QL)
-        print(NL)
 
+        str_quality_list = 'QL=' + str(QL) +"\nNL=" + str(NL)
+        converter.quality_list = cst.parse_module(str_quality_list)
 
+        # token_output = [output_lang.index2word[tk] for tk in test_res]
+
+        # for i in range(len(test_res)):
+
+        # print(token_output)
         print(test_res)
 
+        # try:
         dec_seq = converter.decode(test_res)
 
         answers[str(i)] = {
             "answer": "",
             "eqation": dec_seq
         }
-        exit()
+        # except:
+        #     if DEBUG:
+        #         wrong_count += 1
+        #         print("wrong input {}/{}".format(wrong_count, total))
+        #     continue
+    print(answers)
 
     # with open()

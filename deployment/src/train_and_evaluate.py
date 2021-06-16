@@ -687,6 +687,15 @@ class Tree():
                 r_list.append(self.children[i])
         return r_list
 
+    def tree_to_list(self, output_lang):
+        list = []
+        for i in range(self.num_children):
+            if isinstance(self.children[i], type(self)):
+                list.append(self.children[i].tree_to_list(output_lang))
+            else:
+                list.append(output_lang.index2word[self.children[i]])
+        return list
+
 
 def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang):
     queue_tree = {}
@@ -1147,96 +1156,6 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
         encoder(embedded, input_length, orig_idx, batch_graph)
 
 
-    # Run words through encoder
-    # encoder_outputs, problem_output, bigru_outputs = encoder(input_var, input_length, batch_graph)
-    # Prepare input and output variables
-    # node_stacks = [[TreeNode(_)] for _ in problem_output.split(1, dim=0)]
-    #
-    # max_target_length = max(target_length)
-    #
-    # all_node_outputs = []
-    # all_leafs = []
-    #
-    # copy_num_len = [len(_) for _ in num_pos]
-    # num_size = max(copy_num_len)
-    # all_nums_encoder_outputs = get_all_number_encoder_outputs(encoder_outputs, num_pos, batch_size, num_size,
-    #                                                           encoder.hidden_size)
-
-    # num_start = output_lang.num_start
-    # embeddings_stacks = [[] for _ in range(batch_size)]
-    # left_childs = [None for _ in range(batch_size)]
-    # for t in range(max_target_length):
-    #     num_score, op, current_embeddings, current_context, current_nums_embeddings = predict(
-    #         node_stacks, left_childs, encoder_outputs, all_nums_encoder_outputs, padding_hidden, seq_mask, num_mask)
-    #
-    #     # all_leafs.append(p_leaf)
-    #     outputs = torch.cat((op, num_score), 1)
-    #     all_node_outputs.append(outputs)
-    #
-    #     target_t, generate_input = generate_tree_input(target[t].tolist(), outputs, nums_stack_batch, num_start, unk)
-    #     target[t] = target_t
-    #     if USE_CUDA:
-    #         generate_input = generate_input.cuda()
-    #     left_child, right_child, node_label = generate(current_embeddings, generate_input, current_context)
-    #     left_childs = []
-    #     for idx, l, r, node_stack, i, o in zip(range(batch_size), left_child.split(1), right_child.split(1),
-    #                                            node_stacks, target[t].tolist(), embeddings_stacks):
-    #         if len(node_stack) != 0:
-    #             node = node_stack.pop()
-    #         else:
-    #             left_childs.append(None)
-    #             continue
-    #
-    #         if i < num_start:
-    #             node_stack.append(TreeNode(r))
-    #             node_stack.append(TreeNode(l, left_flag=True))
-    #             o.append(TreeEmbedding(node_label[idx].unsqueeze(0), False))
-    #         else:
-    #             current_num = current_nums_embeddings[idx, i - num_start].unsqueeze(0)
-    #             while len(o) > 0 and o[-1].terminal:
-    #                 sub_stree = o.pop()
-    #                 op = o.pop()
-    #                 current_num = merge(op.embedding, sub_stree.embedding, current_num)
-    #             o.append(TreeEmbedding(current_num, True))
-    #         if len(o) > 0 and o[-1].terminal:
-    #             left_childs.append(o[-1].embedding)
-    #         else:
-    #             left_childs.append(None)
-
-    # all_leafs = torch.stack(all_leafs, dim=1)  # B x S x 2
-    # all_node_outputs = torch.stack(all_node_outputs, dim=1)  # B x S x N
-
-    # target = target.transpose(0, 1).contiguous()
-    # if USE_CUDA:
-    #     # all_leafs = all_leafs.cuda()
-    #     all_node_outputs = all_node_outputs.cuda()
-    #     target = target.cuda()
-    #
-    # # op_target = target < num_start
-    # # loss_0 = masked_cross_entropy_without_logit(all_leafs, op_target.long(), target_length)
-    # loss = masked_cross_entropy(all_node_outputs, target, target_length)
-    # # loss = loss_0 + loss_1
-    # loss.backward()
-    # # clip the grad
-    # loss = loss / opt.batch_size
-    # loss.backward()
-    # torch.nn.utils.clip_grad_value_(encoder.parameters(), opt.grad_clip)
-    # torch.nn.utils.clip_grad_value_(decoder.parameters(), opt.grad_clip)
-    # torch.nn.utils.clip_grad_value_(attention_decoder.parameters(), opt.grad_clip)
-    # encoder_optimizer.step()
-    # decoder_optimizer.step()
-    # attention_decoder_optimizer.step()
-    #
-    # # Update parameters with optimizers
-    # encoder_optimizer.step()
-    # predict_optimizer.step()
-    # generate_optimizer.step()
-    # merge_optimizer.step()
-
-    # target_batch = [list_to_tree(l) for l in target_batch]
-    #
-    # dec_batch, queue_tree, max_index = get_dec_batch(target_batch, batch_size, USE_CUDA, output_lang)
-
     loss = \
         recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                         dec_batch, queue_tree, max_index,
@@ -1244,13 +1163,6 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
                         decoder, attention_decoder, mask_batch, reducer, output_lang)
 
     loss = loss / batch_size
-    # loss.backward()
-    # torch.nn.utils.clip_grad_value_(encoder.parameters(), 5)
-    # torch.nn.utils.clip_grad_value_(decoder.parameters(), 5)
-    # torch.nn.utils.clip_grad_value_(attention_decoder.parameters(), 5)
-    # encoder_optimizer.step()
-    # decoder_optimizer.step()
-    # attention_decoder_optimizer.step()
 
     return loss
 
@@ -1268,6 +1180,137 @@ def extract_node_mask_eval(output_lang, parent_word_list, parent_i_child_list, i
 
 def evaluate_tree(input_batch, input_length, embedding, encoder, decoder, attention_decoder, reducer,
                   input_lang, output_lang, num_value, num_pos=None, batch_graph=None, beam_size=5, english=False, max_length=MAX_OUTPUT_LENGTH):
+    #
+    # # seq_mask = torch.ByteTensor(1, input_length).fill_(0)
+    # # Turn padded arrays into (batch_size x max_len) tensors, transpose into (max_len x batch_size)
+    # input_var = torch.LongTensor(input_batch).unsqueeze(1)
+    # # batch_graph = torch.LongTensor(batch_graph)
+    #
+    # # num_mask = torch.ByteTensor(1, len(num_pos) + len(generate_nums)).fill_(0)
+    #
+    # # Set to not-training mode to disable dropout
+    # embedding.eval()
+    # encoder.eval()
+    # decoder.eval()
+    # attention_decoder.eval()
+    #
+    # # padding_hidden = torch.FloatTensor([0.0 for _ in range(predict.hidden_size)]).unsqueeze(0)
+    #
+    # batch_size = 1
+    #
+    # if USE_CUDA:
+    #     input_var = input_var.cuda()
+    #     # seq_mask = seq_mask.cuda()
+    #     # padding_hidden = padding_hidden.cuda()
+    #     # num_mask = num_mask.cuda()
+    #     # batch_graph = batch_graph.cuda()
+    #
+    # orig_idx = None
+    # embedded = None
+    # # if config.embedding == 'bert' or config.embedding == 'roberta':
+    # if True:
+    #     contextual_input = index_batch_to_words([input_batch], [input_length], input_lang)
+    #     input_seq1, input_len1, token_ids, index_retrieve = embedding(contextual_input)
+    #     num_pos = index_retrieve.copy()[0]
+    #
+    #     new_group_batch = allocate_group_num(index_retrieve, input_len1)[0]
+    #     # print(new_group_batch, token_ids.cpu().tolist()[0],  input_len1[0], num_value, num_pos)
+    #     # new_group_batch = []
+    #     # for bat in range(len(group_batch)):
+    #     # 	try:
+    #     # 		new_group_batch.append([index_retrieve[bat][index1] for index1 in group_batch[bat] if index1 < len(index_retrieve[bat])])
+    #     # 	except:
+    #     # 		pdb.set_trace()
+    #
+    #     batch_graph = get_single_example_graph(token_ids.cpu().tolist()[0], input_len1[0], new_group_batch, num_value,
+    #                                          num_pos)
+    #     batch_graph = torch.LongTensor(batch_graph)
+    #
+    #     input_seq1 = input_seq1.transpose(0, 1)
+    #     embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
+    #     # input_length = input_length[0]
+    #     input_length = torch.IntTensor(input_length)
+    #
+    # if USE_CUDA:
+    #     batch_graph = batch_graph.cuda()
+    #
+    # # Run words through encoder
+    # encoder_outputs, problem_output, graph_embedding, attention_inputs = \
+    #     encoder(embedded, input_length, orig_idx, batch_graph)
+    #
+    # encoder_outputs = encoder_outputs.transpose(0, 1)
+    # prev_c = graph_embedding
+    # prev_h = graph_embedding
+    #
+    # queue_decode = []
+    # queue_decode.append({"s": (prev_c, prev_h), "parent": 0, "child_index": 1, "t": Tree()})
+    # head = 1
+    # while head <= len(queue_decode) and head <= MAX_OUTPUT_LENGTH:
+    #     s = queue_decode[head - 1]["s"]
+    #     parent_h = s[1]
+    #     t = queue_decode[head - 1]["t"]
+    #
+    #     sibling_state = torch.zeros((1, encoder.hidden_size), dtype=torch.float, requires_grad=False)
+    #
+    #     if USE_CUDA:
+    #         sibling_state = sibling_state.cuda()
+    #     flag_sibling = False
+    #     for q_index in range(len(queue_decode)):
+    #         if (head <= len(queue_decode)) and (q_index < head - 1) and (
+    #                 queue_decode[q_index]["parent"] == queue_decode[head - 1]["parent"]) and (
+    #                 queue_decode[q_index]["child_index"] < queue_decode[head - 1]["child_index"]):
+    #             flag_sibling = True
+    #             sibling_index = q_index
+    #     if flag_sibling:
+    #         sibling_state = queue_decode[sibling_index]["s"][1]
+    #
+    #     if head == 1:
+    #         prev_word = torch.tensor([output_lang.word2index['<S>']], dtype=torch.long)
+    #     else:
+    #         prev_word = torch.tensor([output_lang.word2index['<IS>']], dtype=torch.long)
+    #
+    #     if USE_CUDA:
+    #         prev_word = prev_word.cuda()
+    #
+    #     if head != 1:
+    #         parent_word_list = queue_decode[queue_decode[head - 1]["parent"]-1]['t'].children
+    #         child_idx = queue_decode[head - 1]["child_index"]-1
+    #         parent_gt = parent_word_list[:child_idx+2][::-1][child_idx+1]
+    #     else:
+    #         parent_gt = None
+    #         child_idx = None
+    #
+    #     i_child = 0
+    #     prev_word_list = []
+    #     prev_word_list.append(prev_word.item())
+    #
+    #     while True:
+    #         mask = reducer.reduce_out([parent_gt], [child_idx], [prev_word_list])
+    #         one_hot_mask = f.one_hot(torch.tensor(mask[0]), num_classes=output_lang.n_words).sum(dim=0).unsqueeze(0)
+    #         curr_c, curr_h = decoder(prev_word, s[0], s[1], parent_h, sibling_state)
+    #         #mask 생성 타이밍
+    #         one_hot_mask=None
+    #         prediction = attention_decoder(attention_inputs[0], curr_h, attention_inputs[1], one_hot_mask)
+    #
+    #         s = (curr_c, curr_h)
+    #         _, _prev_word = prediction.max(1)
+    #         prev_word = _prev_word
+    #
+    #         if int(prev_word[0]) == output_lang.word2index['<E>'] or \
+    #                 t.num_children >= max_length:
+    #             break
+    #         elif int(prev_word[0]) == output_lang.word2index['<IE>']:
+    #             queue_decode.append(
+    #                 {"s": (s[0].clone(), s[1].clone()), "parent": head, "child_index": i_child, "t": Tree()})
+    #             t.add_child(int(prev_word[0]))
+    #         else:
+    #             t.add_child(int(prev_word[0]))
+    #         i_child = i_child + 1
+    #         prev_word_list.append(prev_word.item())
+    #     head = head + 1
+    # for i in range(len(queue_decode) - 1, 0, -1):
+    #     cur = queue_decode[i]
+    #     queue_decode[cur["parent"] - 1]["t"].children[cur["child_index"] - 1] = cur["t"]
 
     # seq_mask = torch.ByteTensor(1, input_length).fill_(0)
     # Turn padded arrays into (batch_size x max_len) tensors, transpose into (max_len x batch_size)
@@ -1311,7 +1354,7 @@ def evaluate_tree(input_batch, input_length, embedding, encoder, decoder, attent
         # 		pdb.set_trace()
 
         batch_graph = get_single_example_graph(token_ids.cpu().tolist()[0], input_len1[0], new_group_batch, num_value,
-                                             num_pos)
+                                               num_pos)
         batch_graph = torch.LongTensor(batch_graph)
 
         input_seq1 = input_seq1.transpose(0, 1)
@@ -1333,7 +1376,7 @@ def evaluate_tree(input_batch, input_length, embedding, encoder, decoder, attent
     queue_decode = []
     queue_decode.append({"s": (prev_c, prev_h), "parent": 0, "child_index": 1, "t": Tree()})
     head = 1
-    while head <= len(queue_decode) and head <= MAX_OUTPUT_LENGTH:
+    while head <= len(queue_decode) and head <= 100:
         s = queue_decode[head - 1]["s"]
         parent_h = s[1]
         t = queue_decode[head - 1]["t"]
@@ -1356,29 +1399,12 @@ def evaluate_tree(input_batch, input_length, embedding, encoder, decoder, attent
             prev_word = torch.tensor([output_lang.word2index['<S>']], dtype=torch.long)
         else:
             prev_word = torch.tensor([output_lang.word2index['<IS>']], dtype=torch.long)
-
         if USE_CUDA:
             prev_word = prev_word.cuda()
-
-        if head != 1:
-            parent_word_list = queue_decode[queue_decode[head - 1]["parent"]-1]['t'].children
-            child_idx = queue_decode[head - 1]["child_index"]-1
-            parent_gt = parent_word_list[:child_idx+2][::-1][child_idx+1]
-        else:
-            parent_gt = None
-            child_idx = None
-
-        i_child = 0
-        prev_word_list = []
-        prev_word_list.append(prev_word.item())
-
+        i_child = 1
         while True:
-            mask = reducer.reduce_out([parent_gt], [child_idx], [prev_word_list])
-            one_hot_mask = f.one_hot(torch.tensor(mask[0]), num_classes=output_lang.n_words).sum(dim=0).unsqueeze(0)
             curr_c, curr_h = decoder(prev_word, s[0], s[1], parent_h, sibling_state)
-            #mask 생성 타이밍
-
-            prediction = attention_decoder(attention_inputs[0], curr_h, attention_inputs[1], one_hot_mask)
+            prediction = attention_decoder(attention_inputs[0], curr_h, attention_inputs[1])
 
             s = (curr_c, curr_h)
             _, _prev_word = prediction.max(1)
@@ -1394,13 +1420,13 @@ def evaluate_tree(input_batch, input_length, embedding, encoder, decoder, attent
             else:
                 t.add_child(int(prev_word[0]))
             i_child = i_child + 1
-            prev_word_list.append(prev_word.item())
         head = head + 1
     for i in range(len(queue_decode) - 1, 0, -1):
         cur = queue_decode[i]
         queue_decode[cur["parent"] - 1]["t"].children[cur["child_index"] - 1] = cur["t"]
 
-    return queue_decode[0]["t"].flatten(output_lang)
+    return queue_decode[0]["t"].tree_to_list(output_lang)
+    # return queue_decode[0]["t"]
     # return queue_decode
 
 def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings, encoders, decoders, attention_decoders,
