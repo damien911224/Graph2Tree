@@ -11,7 +11,7 @@ import time
 import random
 import copy
 
-MAX_OUTPUT_LENGTH = 500
+MAX_OUTPUT_LENGTH = 10
 MAX_INPUT_LENGTH = 500
 USE_CUDA = torch.cuda.is_available()
 
