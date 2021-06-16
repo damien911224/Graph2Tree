@@ -1579,11 +1579,9 @@ def beam_copy(beam):
         new_q.append({"s": [(qq_s[0].clone(), qq_s[1].clone()) for qq_s in qq["s"]],
                       "parent": qq["parent"], "child_index": qq["child_index"], "t": copy.deepcopy(qq["t"])})
     new_beam["q"] = new_q
-    new_beam["s"] = [(ss[0].clone(), ss[1].clone()) for ss in beam["s"]]
     new_beam["parent_h"] = [p_h.clone() for p_h in beam["parent_h"]]
     new_beam["prev_word"] = beam["prev_word"].clone()
     new_beam["sibling_state"] = [s.clone() for s in beam["sibling_state"]]
-    new_beam["t"] = copy.deepcopy(beam["t"])
 
     return new_beam
 
@@ -1733,25 +1731,19 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
 
     beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]),
               "score": 0.0, "score_length": 0.0,
-              "head": 1, "child": 1, "depth_done": False}]
+              "head": 1, "child": 1, "head_done": False}]
     # depth level
-    while (False in [b["depth_done"] for b in beams]):
+    while (False in [b["head_done"] for b in beams]):
         # while head <= len(queue_decode) and head <= max_length:
         new_beams = list()
         for b in beams:
-            if not b["depth_done"]:
+            if not b["head_done"]:
                 head = b["head"]
                 i_child = b["child"]
                 queue_decode = b["q"]
+                s = queue_decode[head - 1]["s"]
 
                 if i_child == 1:
-                    s = queue_decode[head - 1]["s"]
-                    parent_h = [ss[1] for ss in s]
-                    t = queue_decode[head - 1]["t"]
-                    b["s"] = s
-                    b["t"] = t
-                    b["parent_h"] = parent_h
-
                     sibling_state = [torch.zeros((1, encoders[0].hidden_size), dtype=torch.float, requires_grad=False)
                                      for _ in range(num_models)]
 
@@ -1774,15 +1766,13 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     if USE_CUDA:
                         prev_word = prev_word.cuda()
 
-                    b["sibling_state"] = sibling_state
-                    b["prev_word"] = prev_word
-
-                s = b["s"]
-                parent_h = b["parent_h"]
-                prev_word = b["prev_word"]
-                if USE_CUDA:
-                    prev_word = prev_word.cuda()
-                sibling_state = b["sibling_state"]
+                    parent_h = [ss[1] for ss in s]
+                else:
+                    sibling_state = b["sibling_state"]
+                    prev_word = b["prev_word"]
+                    if USE_CUDA:
+                        prev_word = prev_word.cuda()
+                    parent_h = b["parent_h"]
 
                 cur_s = list()
                 predictions = list()
@@ -1795,7 +1785,10 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     predictions.append(nn.functional.softmax(prediction, dim=1))
                 prediction = torch.mean(torch.stack(predictions, dim=0), dim=0)
 
-                b["s"] = cur_s
+                s = cur_s
+                b["sibling_state"] = sibling_state
+                b["parent_h"] = parent_h
+                b["prev_word"] = prev_word
 
                 topk_v, topk_i = torch.topk(prediction[0], beam_size)
                 for value, index in zip(topk_v, topk_i):
@@ -1806,13 +1799,13 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     new_b["score_length"] += 1.0
 
                     queue_decode = new_b["q"]
-                    t = new_b["t"]
+                    t = queue_decode[head - 1]["t"]
 
                     if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
                         new_b["head"] += 1
                         new_b["child"] = 1
                         if new_b["head"] > len(new_b["q"]) or new_b["head"] > max_length:
-                            new_b["depth_done"] = True
+                            new_b["head_done"] = True
                     elif int(prev_word[0]) == output_lang.word2index['<IE>']:
                         queue_decode.append(
                             {"s": [(ss[0].clone(), ss[1].clone()) for ss in s],
