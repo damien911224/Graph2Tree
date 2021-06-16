@@ -9,3 +9,5 @@ config*
 .vscode
 deployment/pyaichtools/.git
 logs
+.vscode
+
