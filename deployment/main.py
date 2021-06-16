@@ -37,8 +37,6 @@ learning_rate = 1e-3
 weight_decay = 1e-5
 beam_size = 5
 n_layers = 2
-ori_path = './data/'
-prefix = '23k_processed.json'
 num_workers = 20
 
 opt = {
@@ -57,8 +55,8 @@ opt = {
     "bert_learningRate": learning_rate * 1e-2,
     "embedding_size": 768,
     "dropout_input": 0.5,
-    "pretrained_bert_path": None
-    # "pretrained_bert_path": './electra_model'
+    # "pretrained_bert_path": None
+    "pretrained_bert_path": './weights/embedding-69'
 }
 
 if __name__ == "__main__":
@@ -74,7 +72,6 @@ if __name__ == "__main__":
 
     if DEBUG:
         print("testing sample {} has been loaded".format(len(test_pairs)))
-
 
     embedding = BertEncoder(opt["pretrained_bert_path"], "cuda" if USE_CUDA else "cpu", False)
     encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
@@ -103,14 +100,25 @@ if __name__ == "__main__":
         }
         torch.save(state_dict, "weights/state_dicts.pth")
 
-    state_dicts = torch.load("weights/state_dicts.pth")
+    state_dicts = {
+        'encoder': torch.load("weights/encoder-69.pth"),
+        'decoder': torch.load("weights/decoder-69.pth"),
+        'attention_decoder': torch.load("weights/attention_decoder-69.pth"),
+    }
+
     if DEBUG:
         print("state_dicts are successfully loaded")
+
+    encoder.load_state_dict(state_dicts['encoder'])
+    decoder.load_state_dict(state_dicts['decoder'])
+    attention_decoder.load_state_dict(state_dicts['attention_decoder'])
+
+    if DEBUG:
+        print("loading state_dict to model success")
 
     answers = {}
 
     for i, test_batch in enumerate(test_pairs):
-        print(test_batch)
         # sent = index_batch_to_words([test_batch[0]], [test_batch[1]], input_lang)
         # test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder,
         #                          attention_decoder, input_lang, test_batch[2])
@@ -122,16 +130,20 @@ if __name__ == "__main__":
         print(test_batch[0])
         QL = test_batch[2]
         NL = test_batch[4]
+
+        QL = [eval(s) for s in QL]
         print(QL)
         print(NL)
 
+
+        print(test_res)
+
         dec_seq = converter.decode(test_res)
 
-        # print(test_res)
-        # answers[str(i)] = {
-        #     "answer": None,
-        #     "eqation": None
-        # }
+        answers[str(i)] = {
+            "answer": "",
+            "eqation": dec_seq
+        }
         exit()
 
     # with open()
