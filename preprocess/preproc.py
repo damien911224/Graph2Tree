@@ -408,18 +408,18 @@ def extract(input_name, ans_name, output_name):
                     num_list = list_obj[str(q_num)]['QL']
                     ud_num_list = ans_obj[str(q_num)]['QL']
                     diff_txt += diff_num_list(str(q_num), num_list, ud_num_list)
-                    noun_list = list_obj[str(q_num)]['NL']
+                    #noun_list = list_obj[str(q_num)]['NL']
                     new_text = obj[q_num]['question']
                     new_equation = ans_obj[q_num]['equation']
                     solution = ans_obj[q_num]['answer']
                     
                     num_list_str = re.sub("\'", "", str(num_list))
                     QL = "QL = " + num_list_str
-                    NL = "NL = " + str(noun_list)
+                    #NL = "NL = " + str(noun_list)
 
                     tmp['id'] = id
                     tmp['QL_code'] = QL
-                    tmp['NL_code'] = NL
+                    #tmp['NL_code'] = NL
                     tmp['new_text'] = new_text
                     tmp['new_equation'] = new_equation
                     tmp['lSolution'] = solution
