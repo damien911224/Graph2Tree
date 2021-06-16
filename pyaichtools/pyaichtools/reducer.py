@@ -122,9 +122,9 @@ class Reducer():
 			for attr_ele in direct_attr.__args__:
 				if 'libcst' in attr_ele.__module__:
 					direct_label.extend([self.reverse_label_dict[node.tag] for node in self.cst_class_tree.leaves(attr_ele.__name__)])
-				if self.sequence_test(direct_attr) or self.union_test(direct_attr):
+				if self.sequence_test(attr_ele) or self.union_test(attr_ele):
 					direct_label.extend(self.flatten_cst_type(attr_ele))
-		else:
+		elif 'libcst' in attr_ele.__module__:
 			direct_label.extend([self.reverse_label_dict[node.tag] for node in self.cst_class_tree.leaves(direct_attr.__name__)])
 				
 		return list(set(direct_label))
