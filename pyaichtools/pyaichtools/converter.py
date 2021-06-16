@@ -5,6 +5,7 @@ import inspect
 import json
 from treelib import Tree, plugins
 from pyaichtools.utils import *
+import typing
 import re
 
 
@@ -231,7 +232,11 @@ class Converter:
 
 		curr_class = getattr(cst, class_name)
 
-		check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and curr_class.__dict__['__annotations__'][x]._name is 'Sequence'
+
+		if hasattr(typing, '_GenericAlias'):
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and curr_class.__dict__['__annotations__'][x]._name is 'Sequence'
+		else:
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and type(curr_class.__dict__['__annotations__'][x]) is typing.Sequence
 
 		arg_dict = {
 			attr: [] if check_sequence(attr) else None

@@ -35,6 +35,15 @@
 			"program": "cross_valid_mawps.py",
 			"console": "integratedTerminal",
 			"cwd": "${workspaceFolder}/koco_kept2"
+		},
+			{
+			"name": "check recovering",
+			"type": "python",
+			"request": "launch",
+			"program": "tools/check_recovering.py",
+			"justMyCode": false,
+			"console": "integratedTerminal",
+			"cwd": "${workspaceFolder}/pyaichtools"
 		}
 	]
 }
