@@ -678,7 +678,7 @@ class Tree():
         r_list = []
         for i in range(self.num_children):
             if isinstance(self.children[i], type(self)):
-                r_list.append(output_lang.word2index["<IS>"])
+                #r_list.append(output_lang.word2index["<IS>"])
                 cl = self.children[i].flatten(output_lang)
                 for k in range(len(cl)):
                     r_list.append(cl[k])
@@ -871,9 +871,15 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                                                                              sibling_state)
             # structural_info -> Bi-LSTM
 
-            mask = tp_mask_batch[cur_index][i]
+            mask = tp_mask_batch[cur_index-1][i]
             pred = attention_decoder(attention_inputs[0], dec_s[cur_index][i + 1][2], attention_inputs[1], mask)
             gt = dec_batch[cur_index][:, i + 1]
+
+            """
+            for gt_ele, mask_ele in zip(gt, mask):
+                assert (int(gt_ele) in mask_ele.nonzero().flatten())
+            """
+
             if using_gpu:
                 gt = gt.cuda()
             loss += criterion(pred, gt)
@@ -1359,11 +1365,18 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
 
         if USE_CUDA:
             prev_word = prev_word.cuda()
+        
+        t.add_child(int(prev_word[0]))
 
         if head != 1:
             parent_word_list = queue_decode[queue_decode[head - 1]["parent"]-1]['t'].children
-            child_idx = queue_decode[head - 1]["child_index"]-1
-            parent_gt = parent_word_list[:child_idx+2][::-1][child_idx+1]
+            child_idx = 0
+            for chnode in parent_word_list[:queue_decode[head-1]["child_index"]+1][::-1]:
+                if output_lang.index2word[chnode] == "<IE>":
+                    child_idx+=1
+                else:
+                    parent_gt = chnode
+                    break
         else:
             parent_gt = None
             child_idx = None
@@ -1373,19 +1386,26 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
         prev_word_list.append(prev_word.item())
 
         while True:
+
             mask = reducer.reduce_out([parent_gt], [child_idx], [prev_word_list])
+            if len(prev_word_list) > 8 and output_lang.word2index["<E>"] in mask[0]:
+                mask = [[output_lang.word2index["<E>"]]]
+
             one_hot_mask = f.one_hot(torch.tensor(mask[0]), num_classes=output_lang.n_words).sum(dim=0).unsqueeze(0)
-            curr_c, curr_h = decoder(prev_word, s[0], s[1], parent_h, sibling_state)
+            curr_c, curr_h = decoder(prev_word.cuda(), s[0], s[1], parent_h, sibling_state)
             #mask 생성 타이밍
 
             prediction = attention_decoder(attention_inputs[0], curr_h, attention_inputs[1], one_hot_mask)
 
             s = (curr_c, curr_h)
-            _, _prev_word = prediction.max(1)
-            prev_word = _prev_word
+            #0_, _prev_word = prediction.max(1)
+            prev_word = mask[0][prediction[one_hot_mask==1].argmax()]
+            prev_word = torch.tensor([prev_word], dtype=torch.long)
 
             if int(prev_word[0]) == output_lang.word2index['<E>'] or \
                     t.num_children >= max_length:
+                if head == 1:
+                    t.add_child(int(prev_word[0]))
                 break
             elif int(prev_word[0]) == output_lang.word2index['<IE>']:
                 queue_decode.append(
@@ -1394,11 +1414,11 @@ def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, 
             else:
                 t.add_child(int(prev_word[0]))
             i_child = i_child + 1
-            prev_word_list.append(prev_word.item())
+            prev_word_list.append(int(prev_word[0]))
         head = head + 1
     for i in range(len(queue_decode) - 1, 0, -1):
         cur = queue_decode[i]
-        queue_decode[cur["parent"] - 1]["t"].children[cur["child_index"] - 1] = cur["t"]
+        queue_decode[cur["parent"] - 1]["t"].children[cur["child_index"]+1] = cur["t"]
 
     return queue_decode[0]["t"].flatten(output_lang)
 

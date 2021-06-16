@@ -434,6 +434,7 @@ for fold in range(num_folds):
         # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
         # print("testing time", time_since(time.time() - start))
         # print("------------------------------------------------------")
+        print(cand_str)
         accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
         bleu_scores = np.mean(bleu_scores)
 

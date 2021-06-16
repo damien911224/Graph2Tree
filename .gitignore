@@ -3,3 +3,6 @@ __pycache__
 events*
 *.pth
 *.bin
+config*
+.vscode
+pyaichtools/.git
