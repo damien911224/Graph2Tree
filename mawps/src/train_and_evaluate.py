@@ -1781,7 +1781,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
 
                 s = b["s"]
                 parent_h = b["parent_h"]
-                prev_word = b["prev_word"]
+                prev_word = torch.LongTensor(b["prev_word"])
                 sibling_state = b["sibling_state"]
 
                 cur_s = list()
