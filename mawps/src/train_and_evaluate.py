@@ -1733,7 +1733,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
               "score": 0.0, "score_length": 0.0,
               "head": 1, "child": 1, "head_done": False}]
     # depth level
-    while (False in [b["head_done"] for b in beams]):
+    while False in [b["head_done"] for b in beams]:
         # while head <= len(queue_decode) and head <= max_length:
         new_beams = list()
         for b in beams:
