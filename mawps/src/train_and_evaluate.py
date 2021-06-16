@@ -1739,7 +1739,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
         # while head <= len(queue_decode) and head <= max_length:
         new_beams = list()
         for b in beams:
-            if not b["depth_done"] or not b["child_done"]:
+            if not b["depth_done"] and not b["child_done"]:
                 head = b["head"]
                 i_child = b["child"]
                 queue_decode = b["q"]
