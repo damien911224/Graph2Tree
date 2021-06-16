@@ -1574,8 +1574,6 @@ def beam_copy(beam):
     new_beam = dict(beam)
     q = beam["q"]
     new_q = list()
-    if len(beam["q"]) >= 2:
-        print()
     for qq in q:
         # {"s": s, "parent": 0, "child_index": 1, "t": Tree()}
         new_q.append({"s": [(qq_s[0].clone(), qq_s[1].clone()) for qq_s in qq["s"]],
@@ -1799,16 +1797,16 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
 
                 topk_v, topk_i = torch.topk(prediction[0], beam_size)
                 for value, index in zip(topk_v, topk_i):
-                    new_b = beam_copy(b)
-                    queue_decode = new_b["q"]
                     s = cur_s
                     new_b["s"] = s
-                    t = new_b["t"]
                     prev_word = [index.detach().cpu().numpy().item()]
                     new_b["prev_word"] = torch.LongTensor(prev_word).clone()
-
                     new_b["score"] += value.detach().cpu().numpy()
                     new_b["score_length"] += 1.0
+                    new_b = beam_copy(b)
+
+                    queue_decode = new_b["q"]
+                    t = new_b["t"]
 
                     if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
                         new_b["child_done"] = True
