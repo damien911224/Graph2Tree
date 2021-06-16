@@ -1266,8 +1266,8 @@ def extract_node_mask_eval(output_lang, parent_word_list, parent_i_child_list, i
 
     return parent_gt, child_idx
 
-def evaluate_tree(input_batch, input_length, generate_nums, embedding, encoder, decoder, attention_decoder, reducer, 
-                  input_lang, output_lang, num_value, num_pos, batch_graph, beam_size=5, english=False, max_length=MAX_OUTPUT_LENGTH):
+def evaluate_tree(input_batch, input_length, embedding, encoder, decoder, attention_decoder, reducer,
+                  input_lang, output_lang, num_value, num_pos=None, batch_graph=None, beam_size=5, english=False, max_length=MAX_OUTPUT_LENGTH):
 
     # seq_mask = torch.ByteTensor(1, input_length).fill_(0)
     # Turn padded arrays into (batch_size x max_len) tensors, transpose into (max_len x batch_size)

@@ -79,12 +79,20 @@ if __name__ == "__main__":
     decoder = DecoderRNN(opt, output_lang.n_words)
     attention_decoder = AttnUnit(opt, output_lang.n_words)
 
+    if USE_CUDA:
+        embedding.cuda()
+        encoder.cuda()
+        decoder.cuda()
+        attention_decoder.cuda()
+
     reducer = Reducer(label_root_path="data")
     if DEBUG:
         print("reducer loaded")
-    exit()
+
     if GENERATE_DUMMY_WEIGHTS:
         # -------- test code ---------- #
+        if DEBUG:
+            print("generate dummy weights")
         state_dict = {
             "encoder": encoder.state_dict(),
             "decoder": decoder.state_dict(),
@@ -103,5 +111,8 @@ if __name__ == "__main__":
 
         # input_batch, input_length, operate_nums(n), embedding, encoder, decoder, attention_decoder, reducer,
         # input_lang, output_lang, num_value, num_pos(n), batch_graph(n), beam_size(n), max_length=MAX_OUTPUT_LENGTH
-        evaluate_tree()
+        test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder, attention_decoder, reducer,
+                                 input_lang, output_lang, test_batch[2], beam_size=beam_size)
 
+        print(test_res)
+        exit()
