@@ -1799,6 +1799,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     new_b["prev_word"] = torch.LongTensor(prev_word).clone()
                     new_b["score"] += value.detach().cpu().numpy()
                     new_b["score_length"] += 1.0
+                    s = new_b["q"][head - 1]["s"]
 
                     queue_decode = new_b["q"]
                     t = queue_decode[head - 1]["t"]
