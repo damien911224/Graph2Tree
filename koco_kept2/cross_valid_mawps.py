@@ -390,7 +390,7 @@ for fold in target_folds:
         candidate_list = list()
         bleu_scores = list()
         if epoch <= n_epochs // 4:
-            sample_population = int(round(len(test_pairs) * 0.1))
+            sample_population = int(round(len(test_pairs) * 0.05))
             test_pairs = random.sample(test_pairs, sample_population)
         for test_batch in test_pairs:
             batch_graph = get_single_example_graph(test_batch[0], test_batch[1],
