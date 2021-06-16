@@ -1529,8 +1529,6 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
         # input_length = input_length[0]
         input_length = torch.IntTensor(input_length)
 
-        print(input_length)
-
         if USE_CUDA:
             batch_graph = batch_graph.cuda()
 
