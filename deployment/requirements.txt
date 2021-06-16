@@ -1,0 +1,15 @@
+gensim
+jieba
+nltk
+numpy
+scikit-learn
+scipy
+sklearn
+torch
+torchvision
+tqdm
+transformers==3.3.1
+libcst
+treelib
+git+https://github.com/JunhoPark0314/pyaichtools.git
+konlp
