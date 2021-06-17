@@ -1,12 +1,11 @@
 from yacs.config import CfgNode as CN
-import os
 
 cfg = CN(new_allowed=True)
 
-cfg.header_path = os.path.abspath('pyaichtools/test/src/header.py')
-cfg.gen_head_path = os.path.abspath('pyaichtools/test/src/gen_head.py')
-cfg.footer_path = os.path.abspath('pyaichtools/test/src/footer.py')
-cfg.ql_path = os.path.abspath('pyaichtools/test/src/ql.py')
+cfg.header_path = 'test/src/header.py'
+cfg.gen_head_path = 'test/src/gen_head.py'
+cfg.footer_path = 'test/src/footer.py'
+cfg.ql_path = 'test/src/ql.py'
 cfg.var_range = 20
 cfg.const_range = 20
 cfg.SPT = '/'

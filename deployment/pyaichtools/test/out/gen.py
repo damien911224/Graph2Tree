@@ -16,10 +16,13 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGALRM, signal_handler)
 signal.alarm(1)
 QL = [0.1, 0.2, 0.3, 0.4, 0.5]
-NL = ["11"]
+NL = ["정국"]
 try:
     result = 0
-    result = QL[1] * QL[1]
+    for (var1, var2) in itertools.combinations([QL[0], QL[1], QL[2], QL[3], QL[4]], const2):
+        if var1 > QL[2]:
+            var0 += math.acos(const1) + math.atan(var2)
+    result = var0
 except Exception:
     print("Timed out", sys.exc_info()[0])
     result = 0
