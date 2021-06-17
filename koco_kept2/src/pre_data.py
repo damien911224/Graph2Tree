@@ -516,6 +516,8 @@ def transfer_english_num(data):  # transfer num into "NUM"
         if "lequation" not in d:
             continue
         equations = d["lequation"]
+        if not len(equations):
+            continue
         # solution = d["answer"]
 
         for s in seg:
