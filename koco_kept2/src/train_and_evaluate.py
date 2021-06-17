@@ -1468,6 +1468,26 @@ def evaluate_tree_ensemble(input_batch, input_length, generate_nums, embeddings,
     return queue_decode[0]["t"].flatten(output_lang)
 
 
+def beam_copy(beam):
+    # beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]),
+    #           "score": 0.0, "score_length": 0.0,
+    #           "head": 1, "child": 1, "head_done": False}]
+    new_beam = dict(beam)
+    q = beam["q"]
+    new_q = list()
+    for qq in q:
+        # {"s": s, "parent": 0, "child_index": 1, "t": Tree()}
+        new_q.append({"s": [(qq_s[0].clone(), qq_s[1].clone()) for qq_s in qq["s"]],
+                      "parent": qq["parent"], "child_index": qq["child_index"],
+                      "t": copy.deepcopy(qq["t"])})
+    new_beam["q"] = new_q
+    new_beam["parent_h"] = [p_h.clone() for p_h in beam["parent_h"]]
+    new_beam["prev_word"] = beam["prev_word"].clone()
+    new_beam["sibling_state"] = [s.clone() for s in beam["sibling_state"]]
+
+    return new_beam
+
+
 def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                                        embeddings, encoders, decoders, attention_decoders,
                                        input_lang, output_lang, num_value, num_pos, batch_graph, beam_size=5,
@@ -1490,113 +1510,132 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
         contextual_input = index_batch_to_words([input_batch], [input_length], input_lang)
         input_seq1, input_len1, token_ids, index_retrieve = embeddings[model_i](contextual_input)
         num_pos = index_retrieve.copy()[0]
-        new_group_batch = allocate_group_num(index_retrieve, input_len1)[0]
 
-        batch_graph = get_single_example_graph(token_ids.cpu().tolist()[0], input_len1[0],
-                                               new_group_batch, num_value, num_pos)
+        new_group_batch = allocate_group_num(index_retrieve, input_len1)[0]
+        # print(new_group_batch, token_ids.cpu().tolist()[0],  input_len1[0], num_value, num_pos)
+        # new_group_batch = []
+        # for bat in range(len(group_batch)):
+        # 	try:
+        # 		new_group_batch.append([index_retrieve[bat][index1] for index1 in group_batch[bat] if index1 < len(index_retrieve[bat])])
+        # 	except:
+        # 		pdb.set_trace()
+
+        batch_graph = get_single_example_graph(token_ids.cpu().tolist()[0], input_len1[0], new_group_batch, num_value,
+                                               num_pos)
         batch_graph = torch.LongTensor(batch_graph)
 
         input_seq1 = input_seq1.transpose(0, 1)
         embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
+        # input_length = input_length[0]
         input_length = torch.IntTensor(input_length)
 
+        if USE_CUDA:
+            batch_graph = batch_graph.cuda()
+
         encoder_outputs, problem_output, graph_embedding, attention_inputs = \
-            encoders[model_i](embedded, input_var, input_length, batch_graph)
+            encoders[model_i](embedded, input_length, orig_idx, batch_graph)
+
         all_encoder_outputs.append((encoder_outputs.transpose(0, 1), graph_embedding, attention_inputs))
 
-    s = [(out[1], out[1]) for out in all_encoder_outputs]
+    s = [(out[1].clone(), out[1].clone()) for out in all_encoder_outputs]
 
     beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]),
               "score": 0.0, "score_length": 0.0,
-              "head": 1, "child": 1, "depth_done": False, "child_done": False}]
+              "head": 1, "child": 1, "head_done": False}]
     # depth level
-    while (False not in [b["depth_done"] for b in beams]) and (False not in [b["child_done"] for b in beams]):
-    # while head <= len(queue_decode) and head <= max_length:
+    while False in [b["head_done"] for b in beams]:
+        # while head <= len(queue_decode) and head <= max_length:
+        new_beams = list()
         for b in beams:
-            head = b["head"]
-            i_child = b["child"]
-            queue_decode = b["q"]
-
-            if i_child == 1:
+            if not b["head_done"]:
+                head = b["head"]
+                i_child = b["child"]
+                queue_decode = b["q"]
                 s = queue_decode[head - 1]["s"]
-                parent_h = [ss[1] for ss in s]
-                t = queue_decode[head - 1]["t"]
-                b["s"] = s
-                b["t"] = t
-                b["parent_h"] = parent_h
 
-                sibling_state = [torch.zeros((1, encoders[0].hidden_size), dtype=torch.float, requires_grad=False)
-                                 for _ in range(num_models)]
+                if i_child == 1:
+                    sibling_state = [torch.zeros((1, encoders[0].hidden_size), dtype=torch.float, requires_grad=False)
+                                     for _ in range(num_models)]
 
-                if USE_CUDA:
-                    sibling_state = [s.cuda() for s in sibling_state]
-                flag_sibling = False
-                for q_index in range(len(queue_decode)):
-                    if (head <= len(queue_decode)) and (q_index < head - 1) and (
-                            queue_decode[q_index]["parent"] == queue_decode[head - 1]["parent"]) and (
-                            queue_decode[q_index]["child_index"] < queue_decode[head - 1]["child_index"]):
-                        flag_sibling = True
-                        sibling_index = q_index
-                if flag_sibling:
-                    sibling_state = queue_decode[sibling_index]["s"][1]
+                    if USE_CUDA:
+                        sibling_state = [s.cuda() for s in sibling_state]
+                    flag_sibling = False
+                    for q_index in range(len(queue_decode)):
+                        if (head <= len(queue_decode)) and (q_index < head - 1) and (
+                                queue_decode[q_index]["parent"] == queue_decode[head - 1]["parent"]) and (
+                                queue_decode[q_index]["child_index"] < queue_decode[head - 1]["child_index"]):
+                            flag_sibling = True
+                            sibling_index = q_index
+                    if flag_sibling:
+                        sibling_state = [s[1] for s in queue_decode[sibling_index]["s"]]
 
-                if head == 1:
-                    prev_word = torch.tensor([output_lang.word2index['<S>']], dtype=torch.long)
+                    if head == 1:
+                        prev_word = torch.tensor([output_lang.word2index['<S>']], dtype=torch.long)
+                    else:
+                        prev_word = torch.tensor([output_lang.word2index['<IS>']], dtype=torch.long)
+                    if USE_CUDA:
+                        prev_word = prev_word.cuda()
+
+                    parent_h = [ss[1] for ss in s]
                 else:
-                    prev_word = torch.tensor([output_lang.word2index['<IS>']], dtype=torch.long)
-                if USE_CUDA:
-                    prev_word = prev_word.cuda()
+                    sibling_state = b["sibling_state"]
+                    prev_word = b["prev_word"]
+                    if USE_CUDA:
+                        prev_word = prev_word.cuda()
+                    parent_h = b["parent_h"]
 
+                cur_s = list()
+                predictions = list()
+                for model_i in range(num_models):
+                    curr_c, curr_h = decoders[model_i](prev_word, s[model_i][0], s[model_i][1],
+                                                       parent_h[model_i], sibling_state[model_i])
+                    cur_s.append((curr_c, curr_h))
+                    attention_inputs = all_encoder_outputs[model_i][2]
+                    prediction = attention_decoders[model_i](attention_inputs[0], curr_h, attention_inputs[1])
+                    predictions.append(nn.functional.softmax(prediction, dim=1))
+                prediction = torch.mean(torch.stack(predictions, dim=0), dim=0)
+
+                s = cur_s
+                b["q"][head - 1]["s"] = s
                 b["sibling_state"] = sibling_state
+                b["parent_h"] = parent_h
                 b["prev_word"] = prev_word
 
-            s = b["s"]
-            parent_h = b["paraent_h"]
-            prev_word = b["prev_word"]
-            sibling_state = b["sibling_state"]
+                topk_v, topk_i = torch.topk(prediction[0], beam_size)
+                for value, index in zip(topk_v, topk_i):
+                    new_b = beam_copy(b)
+                    prev_word = [index.detach().cpu().numpy().item()]
+                    new_b["prev_word"] = torch.LongTensor(prev_word).clone()
+                    new_b["score"] += value.detach().cpu().numpy()
+                    new_b["score_length"] += 1.0
+                    s = new_b["q"][head - 1]["s"]
 
-            cur_s = list()
-            predictions = list()
-            for model_i in range(num_models):
-                curr_c, curr_h = decoders[model_i](prev_word, s[model_i][0], s[model_i][1],
-                                                   parent_h[model_i], sibling_state[model_i])
-                cur_s.append((curr_c, curr_h))
-                attention_inputs = all_encoder_outputs[model_i][2]
-                prediction = attention_decoders[model_i](attention_inputs[0], curr_h, attention_inputs[1])
-                predictions.append(nn.functional.softmax(prediction, dim=1))
-            prediction = torch.mean(torch.stack(predictions, dim=0), dim=0)
+                    queue_decode = new_b["q"]
+                    t = queue_decode[head - 1]["t"]
 
-            topk_v, topk_i = torch.topk(prediction, beam_size)
-            for value, index in zip(topk_v, topk_i):
-                new_b = dict(b)
-                queue_decode = b["q"]
-                s = cur_s
-                new_b["s"] = s
-                t = new_b["t"]
-                prev_word = index
-                new_b["prev_word"] = prev_word
+                    if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
+                        new_b["head"] = head + 1
+                        if new_b["head"] > len(new_b["q"]) or new_b["head"] > max_length:
+                            new_b["head_done"] = True
+                        else:
+                            new_b["child"] = 1
+                    elif int(prev_word[0]) == output_lang.word2index['<IE>']:
+                        queue_decode.append(
+                            {"s": [(ss[0].clone(), ss[1].clone()) for ss in s],
+                             "parent": head, "child_index": i_child, "t": Tree()})
+                        t.add_child(int(prev_word[0]))
+                        new_b["child"] = i_child + 1
+                    else:
+                        t.add_child(int(prev_word[0]))
+                        new_b["child"] = i_child + 1
 
-                new_b["score"] += value
-                new_b["score_length"] += 1.0
+                    new_beams.append(new_b)
+            else:
+                new_beams.append(b)
 
-                if int(prev_word[0]) == output_lang.word2index['<E>'] or t.num_children >= max_length:
-                    new_b["child_done"] = True
-                elif int(prev_word[0]) == output_lang.word2index['<IE>']:
-                    queue_decode.append(
-                        {"s": [(ss[0].clone(), ss[1].clone()) for ss in s],
-                         "parent": head, "child_index": i_child, "t": Tree()})
-                    t.add_child(int(prev_word[0]))
-                else:
-                    t.add_child(int(prev_word[0]))
-                new_b["child"] = i_child + 1
+        beams = sorted(new_beams, key=lambda x: x["score"] / x["score_length"], reverse=True)[:beam_size]
 
-                if not new_b["depth_done"]:
-                    new_b["head"] += 1
-                    if new_b["head"] > len(new_b["q"]) or new_b["head"] > max_length:
-                        new_b["depth_done"] = True
-
-        beams = sorted(beams, key=lambda x:x["score"] / x["score_length"], reverse=True)[:beam_size]
-
+    queue_decode = beams[0]["q"]
     for i in range(len(queue_decode) - 1, 0, -1):
         cur = queue_decode[i]
         queue_decode[cur["parent"] - 1]["t"].children[cur["child_index"] - 1] = cur["t"]
