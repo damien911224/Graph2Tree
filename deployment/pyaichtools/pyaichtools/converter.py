@@ -5,7 +5,7 @@ import sys
 import inspect
 import json
 from treelib import Tree, plugins
-from pyaichtools.utils import *
+from .utils import *
 import typing
 import re
 

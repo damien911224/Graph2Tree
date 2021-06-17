@@ -2,9 +2,9 @@ from data.data_util import extract, transfer_num_n_equation, prepare_infer_data
 from src.train_and_evaluate import evaluate_tree
 from src.contextual_embeddings import *
 from src.models import *
-from pyaichtools import Reducer
-from pyaichtools import Converter
-from pyaichtools import DefaultCfg
+from pyaichtools.pyaichtools import Reducer
+from pyaichtools.pyaichtools import Converter
+from pyaichtools.pyaichtools import DefaultCfg
 import libcst as cst
 import os
 import json
@@ -17,8 +17,8 @@ DEBUG = False
 GENERATE_DUMMY_WEIGHTS = False
 
 weight_path = "weights/"
-# problem_file = "/home/agc2021/dataset/problemsheet.json"
-problem_file = "../problemsheet.json"
+problem_file = "/home/agc2021/dataset/problemsheet.json"
+# problem_file = "dataset/problemsheet.json"
 answer_file = "answersheet.json"
 
 MAX_OUTPUT_LENGTH = 500
