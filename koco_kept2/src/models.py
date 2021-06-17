@@ -279,10 +279,10 @@ class EncoderSeq(nn.Module):
         pade_outputs = pade_outputs.transpose(0, 1)
 
         max_pooled, _ = torch.max(pade_outputs, dim=0)
-        avg_pooled = torch.mean(pade_outputs, dim=0)
-        graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
+        # avg_pooled = torch.mean(pade_outputs, dim=0)
+        # graph_embedding = self.graph_embedding(torch.cat((max_pooled, avg_pooled), dim=-1))
 
-        # graph_embedding = max_pooled
+        graph_embedding = max_pooled
 
         # graph_01 = self.linear_01(self.norm_01(attention_inputs[0]))
         # graph_02 = self.linear_02(self.norm_02(attention_inputs[1]))
