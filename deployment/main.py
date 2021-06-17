@@ -14,8 +14,8 @@ from contextlib import redirect_stdout
 import pickle as pkl
 
 weight_path = "weights/"
-problem_file = "/home/agc2021/dataset/problemsheet.json"
-# problem_file = "dataset/problemsheet.json"
+# problem_file = "/home/agc2021/dataset/problemsheet.json"
+problem_file = "dataset/problemsheet.json"
 answer_file = "answersheet.json"
 
 MAX_OUTPUT_LENGTH = 500
