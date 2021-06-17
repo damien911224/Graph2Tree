@@ -18,6 +18,8 @@ class Reducer():
 		
 		with open(os.path.join(label_root_path, "reverse_label_dict.json")) as rld_file:
 			self.reverse_label_dict = json.load(rld_file)
+
+		self.label_dict = {str(v): k for k, v in self.reverse_label_dict.items()}
 		
 		self.label_dict["None"] = "None"
 		self.reverse_label_dict["None"] = "None"
