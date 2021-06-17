@@ -740,6 +740,7 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     ood = list()
     for pair in pairs_trained + pairs_tested:
         output = flatten_list(pair[1])
+        alive = True
         for oo in output:
             if oo not in output_lang.word2index:
                 ood.append(oo)
@@ -749,16 +750,26 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         elif pair[-1]:
             input_lang.add_sen_to_vocab(pair[0])
             # output_lang.add_sen_to_vocab(pair[1])
-    ood = list(set(ood))
-    print(ood)
     input_lang.build_input_lang(trim_min_count)
     # if tree:
     #     output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
     # else:
     #     output_lang.build_output_lang(generate_nums, copy_nums)
 
+    ood = list(set(ood))
+    print(ood)
 
+
+    ood = list()
     for pair in pairs_trained:
+        output = flatten_list(pair[1])
+        alive = True
+        for oo in output:
+            if oo not in output_lang.word2index:
+                ood.append(oo)
+                alive = False
+        if not alive:
+            continue
         num_stack = []
         # for word in pair[1]:
         #     temp_num = []
@@ -788,6 +799,14 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     print('Indexed %d words in input language, %d words in output' % (input_lang.n_words, output_lang.n_words))
     print('Number of training data %d' % (len(train_pairs)))
     for pair in pairs_tested:
+        output = flatten_list(pair[1])
+        alive = True
+        for oo in output:
+            if oo not in output_lang.word2index:
+                ood.append(oo)
+                alive = False
+        if not alive:
+            continue
         num_stack = []
         # for word in pair[1]:
         #     temp_num = []
@@ -813,6 +832,8 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         #                     pair[2], pair[3], num_stack, pair[4]))
         test_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
                            pair[2], pair[3], num_stack, pair[4]))
+    ood = list(set(ood))
+    print(ood)
 
     print('Number of testind data %d' % (len(test_pairs)))
     return input_lang, output_lang, train_pairs, test_pairs

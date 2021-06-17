@@ -59,6 +59,7 @@ opt = {
 }
 
 log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex_KoCo01_ReduceLR")
+log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_Dummy")
 num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
@@ -81,11 +82,11 @@ if not os.path.exists("logs"):
     except OSError:
         pass
 
-def get_new_fold(data,pairs,group):
+def get_new_fold(data,pairs):
     new_fold = []
-    for item,pair,g in zip(data, pairs, group):
+    for item,pair in zip(data, pairs):
         pair = list(pair)
-        pair.append(g['group_num'])
+        pair.append([1, 2])
         pair = tuple(pair)
         new_fold.append(pair)
     return new_fold
@@ -201,7 +202,7 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/koco_01.json")
+data = load_mawps_data("data/dummy.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
@@ -212,7 +213,7 @@ pairs, generate_nums, copy_nums = transfer_english_num(data)
 # pairs = temp_pairs
 
 #train_fold, test_fold, valid_fold = get_train_test_fold(ori_path,prefix,data,pairs,group_data)
-pairs = get_new_fold(data, pairs, group_data)
+pairs = get_new_fold(data, pairs)
 random.shuffle(pairs)
 
 fold_size = int(len(pairs) * (1.0 / num_folds))
