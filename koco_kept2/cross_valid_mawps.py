@@ -58,7 +58,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_Max_B64")
+log_path = "logs/{}".format("NoSepAtt_Max_B64_AttRelu")
 num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
