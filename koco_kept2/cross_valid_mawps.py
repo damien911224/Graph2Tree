@@ -201,7 +201,7 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/flatten_dummy_encoded.json")
+data = load_mawps_data("data/koco_01.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
