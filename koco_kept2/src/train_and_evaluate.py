@@ -683,7 +683,7 @@ class Tree():
                 cl = self.children[i].flatten(output_lang)
                 for k in range(len(cl)):
                     r_list.append(cl[k])
-                r_list.append(output_lang.word2index["<IE>"])
+                r_list.append(output_lang.word2index["<E>"])
             else:
                 r_list.append(self.children[i])
         return r_list
@@ -778,11 +778,9 @@ def list_to_tree(r_list, initial=False, depth=0):
 def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                     dec_batch, queue_tree, max_index,
                     dec_seq_length, using_gpu, batch_size, rnn_size,
-                    decoder, attention_decoder):
+                    decoder, attention_decoder, criterion):
 
     teacher_force_ratio = 1.0
-
-    criterion = torch.nn.NLLLoss(size_average=False, ignore_index=0)
 
     loss = 0
     cur_index = 1
@@ -867,14 +865,18 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             gt = dec_batch[cur_index][:, i + 1]
             if using_gpu:
                 gt = gt.cuda()
-            loss += criterion(pred, gt)
+            this_loss = criterion(pred, gt)
+            loss += this_loss
+            # print(torch.argmax(pred[0]).detach().cpu(), torch.argmax(gt[0]).detach().cpu(),
+            #       this_loss.detach().cpu(), loss.detach().cpu())
         cur_index = cur_index + 1
 
     return loss
 
 def train_tree(input_batch, input_length, target_batch, target_length, nums_stack_batch, num_size_batch, num_value_batch, generate_nums,
                embedding, encoder, decoder, attention_decoder, embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-               input_lang, output_lang, num_pos, batch_graph, contextual_input, dec_batch, queue_tree, max_index):
+               input_lang, output_lang, num_pos, batch_graph, contextual_input, dec_batch, queue_tree, max_index,
+               criterion):
     # sequence mask for attention
     # seq_mask = []
     # max_len = max(input_length)
@@ -1054,7 +1056,7 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
         recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                         dec_batch, queue_tree, max_index,
                         MAX_OUTPUT_LENGTH, USE_CUDA, batch_size, encoder.hidden_size,
-                        decoder, attention_decoder)
+                        decoder, attention_decoder, criterion)
 
     loss = loss / batch_size
     loss.backward()
@@ -1073,7 +1075,8 @@ def train_tree(input_batch, input_length, target_batch, target_length, nums_stac
 
 def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_batch, num_size_batch, num_value_batch, generate_nums,
                embedding, encoder, decoder, attention_decoder, embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
-               input_lang, output_lang, num_pos, batch_graph, contextual_input, dec_batch, queue_tree, max_index):
+               input_lang, output_lang, num_pos, batch_graph, contextual_input, dec_batch, queue_tree, max_index,
+             criterion):
     # sequence mask for attention
     # seq_mask = []
     # max_len = max(input_length)
@@ -1232,7 +1235,7 @@ def val_tree(input_batch, input_length, target_batch, target_length, nums_stack_
         recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                         dec_batch, queue_tree, max_index,
                         MAX_OUTPUT_LENGTH, USE_CUDA, batch_size, encoder.hidden_size,
-                        decoder, attention_decoder)
+                        decoder, attention_decoder, criterion)
 
     loss = loss / batch_size
     # loss.backward()

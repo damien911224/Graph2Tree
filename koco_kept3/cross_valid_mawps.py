@@ -60,7 +60,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_Max")
+log_path = "logs/{}".format("NoSepAtt_AvgMax_NoUNK")
 num_folds = 5
 target_folds = [0, 1, 2, 3, 4]
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
