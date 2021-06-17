@@ -565,6 +565,8 @@ def transfer_english_num(data):  # transfer num into "NUM"
                 num_pos.append(i)
         if len(nums) != 0:
             pairs.append((input_seq, eq_segs, nums, num_pos))
+        else:
+            print()
 
     temp_g = []
     for g in generate_nums:

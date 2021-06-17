@@ -221,7 +221,7 @@ for split_fold in range(num_folds):
     fold_start = fold_size * split_fold
     fold_end = fold_size * (split_fold + 1)
     fold_pairs.append(pairs[fold_start:fold_end])
-fold_pairs.append(pairs[(fold_size * (num_folds + 1)):])
+fold_pairs.append(pairs[(fold_size * (num_folds)):])
 
 best_accuracies = list()
 best_bleu_scores = list()
