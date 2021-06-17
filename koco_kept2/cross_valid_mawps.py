@@ -59,10 +59,10 @@ opt = {
 }
 
 # log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex_KoCo01_ReduceLR")
-log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_Dummy")
-num_folds = 10
-# target_folds = [0, 1, 2, 3, 4]
-target_folds = list(range(num_folds))
+log_path = "logs/{}".format("Final")
+num_folds = 12
+target_folds = [0, 1]
+# target_folds = list(range(num_folds))
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 20
 num_workers = 20
@@ -202,7 +202,7 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/dummy.json")
+data = load_mawps_data("data/koco_03.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)

@@ -107,7 +107,14 @@ class OutputLang:
         # self.add_to_vocab("<E>")
         # self.add_to_vocab("<IS>")
         # self.add_to_vocab("<IE>")
-        self.add_to_vocab("UNK")
+        # self.add_to_vocab("UNK")
+
+        s_index = self.word2index["<S>"]
+        s_value = self.index2word[0]
+        self.word2index[s_value] = s_index
+        self.index2word[s_index] = s_value
+        self.word2index["<S>"] = 0
+        self.index2word[0] = "<S>"
 
     def add_to_vocab(self, word):
         if word not in self.word2index:
@@ -506,6 +513,8 @@ def transfer_english_num(data):  # transfer num into "NUM"
         input_seq = []
         # seg = d["sQuestion"].strip().split(" ")
         seg = d["question"].strip().split(" ")
+        if "lequation" not in d:
+            continue
         equations = d["lequation"]
         # solution = d["answer"]
 
@@ -737,13 +746,12 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     test_pairs = []
 
     print("Indexing words...")
-    ood = list()
+    # ood = list()
     for pair in pairs_trained + pairs_tested:
-        output = flatten_list(pair[1])
-        alive = True
-        for oo in output:
-            if oo not in output_lang.word2index:
-                ood.append(oo)
+        # output = flatten_list(pair[1])
+        # for oo in output:
+        #     if oo not in output_lang.word2index:
+        #         ood.append(oo)
         if not tree:
             input_lang.add_sen_to_vocab(pair[0])
             # output_lang.add_sen_to_vocab(pair[1])
@@ -755,10 +763,9 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     #     output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
     # else:
     #     output_lang.build_output_lang(generate_nums, copy_nums)
-
-    ood = list(set(ood))
-    print(ood)
-
+    #
+    # ood = list(set(ood))
+    # print(ood)
 
     ood = list()
     for pair in pairs_trained:
