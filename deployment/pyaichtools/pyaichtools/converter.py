@@ -49,11 +49,11 @@ class Converter:
          self.generate_label_dict(self.var_list, self.const_list) #self.tree_spt_list,)
 
         #if you want to generate new label dictionary, uncomment these lines
-        with open('data/label_dict.json', 'w') as ld:
-            json.dump(self.label_dict, ld)
-
-        with open('data/reverse_label_dict.json', 'w') as rld:
-            json.dump(self.reverse_label_dict, rld)
+        # with open('data/label_dict.json', 'w') as ld:
+        #     json.dump(self.label_dict, ld)
+        #
+        # with open('data/reverse_label_dict.json', 'w') as rld:
+        #     json.dump(self.reverse_label_dict, rld)
 
         self.SPT = cfg.SPT
         self.attach_code = lambda x: self.header.body + self.quality_list.body + x + self.footer.body
