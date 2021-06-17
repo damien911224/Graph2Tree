@@ -861,7 +861,8 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                     sibling_state[i - 1, :] = dec_s[sibling_index][dec_batch[sibling_index].size(1) - 1][2][i - 1, :]
 
         parent_h = dec_s[cur_index][0][2]
-        tree_state = sibling_state * 0.5 + tree_state * 0.5
+        #tree_state = sibling_state * 0.5 + tree_state * 0.5
+        tree_state = sibling_state
         if using_gpu:
             parent_h.cuda()
         for i in range(dec_batch[cur_index].size(1) - 1):

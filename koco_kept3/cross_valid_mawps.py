@@ -385,57 +385,6 @@ for fold in target_folds:
             val_loss_total += val_loss.detach().cpu().numpy()
         val_loss_total = val_loss_total / len(dataloader)
 
-        # if epoch % 2 == 0 or epoch > n_epochs - 5:
-        # value_ac = 0
-        # equation_ac = 0
-        # eval_total = 0
-        # start = time.time()
-        reference_list = list()
-        candidate_list = list()
-        bleu_scores = list()
-        for test_batch in test_pairs[:10]:
-            #print(test_batch)
-            batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
-            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder, reducer,
-                                     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
-            reference = test_batch[2]
-            # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
-            # if val_ac:
-            #     value_ac += 1
-            # if equ_ac:
-            #     equation_ac += 1
-            # eval_total += 1
-            candidate = [int(c) for c in test_res]
-
-            # num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
-            # num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
-            # diff = num_left_paren - num_right_paren
-            #
-            # if diff > 0:
-            #     for i in range(diff):
-            #         candidate.append(output_lang.index2word[")"])
-            # elif diff < 0:
-            #     candidate = candidate[:diff]
-
-            reference = ref_flatten(reference, output_lang)
-
-            ref_str = convert_to_string(reference, output_lang)
-            cand_str = convert_to_string(candidate, output_lang)
-
-            reference_list.append(reference)
-            candidate_list.append(candidate)
-
-            bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
-            bleu_scores.append(bleu_score)
-        candidate = [output_lang.index2word[x] for x in candidate]
-        print(candidate[:30])
-        # print(equation_ac, value_ac, eval_total)
-        # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
-        # print("testing time", time_since(time.time() - start))
-        # print("------------------------------------------------------")
-        accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-        bleu_scores = np.mean(bleu_scores)
-
         encoder_scheduler.step(val_loss_total)
         decoder_scheduler.step(val_loss_total)
         attention_decoder_scheduler.step(val_loss_total)
@@ -445,30 +394,93 @@ for fold in target_folds:
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
         torch.save(decoder.state_dict(), os.path.join(fold_weight_folder, "decoder-{}.pth".format(epoch + 1)))
         torch.save(attention_decoder.state_dict(),
-                   os.path.join(fold_weight_folder, "attention_decoder-{}.pth".format(epoch + 1)))
+                    os.path.join(fold_weight_folder, "attention_decoder-{}.pth".format(epoch + 1)))
         # if epoch == n_epochs - 1:
         #     best_acc_fold.append(accuracy)
-
-        if accuracy >= fold_best_accuracy:
-            fold_best_accuracy = accuracy
-
-        if bleu_scores >= fold_best_bleu:
-            fold_best_bleu = bleu_scores
 
         current_lr = encoder_optimizer.param_groups[0]['lr']
         writer.add_scalars("Loss", {"train": train_loss_total}, epoch + 1)
         writer.add_scalars("Loss", {"val": val_loss_total}, epoch + 1)
-        writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
-        writer.add_scalars("BLEU Score", {"val": bleu_scores}, epoch + 1)
+        #writer.add_scalars("Accuracy", {"val": accuracy}, epoch + 1)
+        #writer.add_scalars("BLEU Score", {"val": bleu_scores}, epoch + 1)
         writer.add_scalar("Learning Rate", current_lr, epoch + 1)
 
         print("train_loss:", train_loss_total)
         print("validation_loss:", val_loss_total)
-        print("validation_accuracy:", accuracy)
-        print("validation_bleu_score:", bleu_scores)
+        #print("validation_accuracy:", accuracy)
+        #print("validation_bleu_score:", bleu_scores)
         print("current_learning_rate:", current_lr)
         print("training time:", time_since(time.time() - start))
         print("--------------------------------")
+
+        # if epoch % 2 == 0 or epoch > n_epochs - 5:
+        # value_ac = 0
+        # equation_ac = 0
+        # eval_total = 0
+        # start = time.time()
+    reference_list = list()
+    candidate_list = list()
+    bleu_scores = list()
+    for test_batch in test_pairs:
+        #print(test_batch)
+        batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
+
+        test_res = evaluate_tree_ensemble_beam_search(
+            test_batch[0], test_batch[1], generate_num_ids,
+            [embedding], [encoder], [decoder], [attention_decoder],
+            input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
+            beam_size=beam_size)
+
+        """
+        test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder, reducer,
+                                    input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
+        """
+
+        reference = test_batch[2]
+        # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
+        # if val_ac:
+        #     value_ac += 1
+        # if equ_ac:
+        #     equation_ac += 1
+        # eval_total += 1
+        candidate = [int(c) for c in test_res]
+
+        # num_left_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == "(")
+        # num_right_paren = sum(1 for c in candidate if output_lang.index2word[int(c)] == ")")
+        # diff = num_left_paren - num_right_paren
+        #
+        # if diff > 0:
+        #     for i in range(diff):
+        #         candidate.append(output_lang.index2word[")"])
+        # elif diff < 0:
+        #     candidate = candidate[:diff]
+
+        reference = ref_flatten(reference, output_lang)
+
+        ref_str = convert_to_string(reference, output_lang)
+        cand_str = convert_to_string(candidate, output_lang)
+
+        reference_list.append(reference)
+        candidate_list.append(candidate)
+
+        bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
+        bleu_scores.append(bleu_score)
+    candidate = [output_lang.index2word[x] for x in candidate]
+    print(candidate[:30])
+    # print(equation_ac, value_ac, eval_total)
+    # print("test_answer_acc", float(equation_ac) / eval_total, float(value_ac) / eval_total)
+    # print("testing time", time_since(time.time() - start))
+    # print("------------------------------------------------------")
+    accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+    bleu_scores = np.mean(bleu_scores)
+
+    fold_best_accuracy = accuracy
+    fold_best_bleu = bleu_scores
+
+    print("-" * 50)
+    print("Fold_{:01d} Accuracy: {:.5f}".format(fold_i + 1, accuracy))
+    print("Fold_{:01d} BLEU Score: {:.5f}".format(fold_i + 1, bleu_scores))
+
     best_accuracies.append(fold_best_accuracy)
     best_bleu_scores.append(fold_best_bleu)
 
