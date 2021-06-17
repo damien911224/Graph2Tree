@@ -783,7 +783,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
 
     teacher_force_ratio = 1.0
 
-    criterion = torch.nn.NLLLoss(size_average=False, ignore_index=0, reduction="None")
+    criterion = torch.nn.NLLLoss(ignore_index=0, reduction="none")
 
     loss = 0
     cur_index = 1
@@ -902,7 +902,9 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             pred = attention_decoder(attention_inputs[0], dec_s[cur_index][i + 1][2], attention_inputs[1], mask)
             if using_gpu:
                 gt = gt.cuda()
-            loss += (criterion(pred, gt) * mute_mask).mean()
+
+            loss += (criterion(pred, gt) * mute_mask).sum()
+
         cur_index = cur_index + 1
 
     return loss
