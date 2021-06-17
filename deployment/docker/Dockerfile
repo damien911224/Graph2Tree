@@ -38,8 +38,7 @@ ARG DISABLE_CACHE=None
 
 ### 사용자 공간
 RUN rm -rf /var/lib/apt/lists/*
-#RUN python3 -m pip install --upgrade pip
-#RUN python3 -m pip install wheel
+RUN python3 -m pip install wheel
 RUN apt-get install openjdk-8-jdk
 
 #RUN python3 -m pip install gensim

@@ -11,7 +11,7 @@ import torch.utils.data
 from src.pre_data import Lang, OutputLang, indexes_from_sentence
 
 import math
-from parsing_dict import *
+from data.parsing_dict import *
 
 
 def decode(korean_num):

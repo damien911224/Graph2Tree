@@ -1,4 +1,4 @@
-from deployment.data.data_util import extract, transfer_num_n_equation, prepare_infer_data
+from data.data_util import extract, transfer_num_n_equation, prepare_infer_data
 from src.train_and_evaluate import evaluate_tree
 from src.contextual_embeddings import *
 from src.models import *
@@ -8,14 +8,17 @@ from pyaichtools.pyaichtools import DefaultCfg
 import libcst as cst
 import os
 import json
+import subprocess
 
 
 DEBUG = False
 GENERATE_DUMMY_WEIGHTS = False
 
 weight_path = "weights/"
-problem_file = "/home/agc2021/dataset/problemsheet.json"
+problem_file = "/home/agc2021/problemsheet.json"
+# problem_file = "../problemsheet.json"
 answer_file = "answersheet.json"
+
 
 
 MAX_OUTPUT_LENGTH = 100
@@ -148,14 +151,18 @@ if __name__ == "__main__":
 
         try:
             dec_seq = converter.decode(test_res)
-            with open("dummy.py".format(idx), "w", encoding="utf-8") as f:
+            with open("dummy.py", "w", encoding="utf-8") as f:
                 f.write(dec_seq)
 
-            result = os.popen('python dummy.py'.format(idx), 'r', 1)
-            answer = copy.deepcopy(result.read())
-            result.close()
+            # ========================== important"
+            # change python3 to python
+            proc = subprocess.Popen('python dummy.py', stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, shell=True)
+            result, err = proc.communicate()
+            answer = result.decode('utf-8')
+            # print(answer)
             if len(answer) == 0 or "Error" in answer:
-                answer = 0
+                answer = "0"
+
             one_answer = {
                 "answer": answer,
                 "equation": dec_seq
@@ -165,7 +172,7 @@ if __name__ == "__main__":
             os.system("rm -rf dummy.py")
         except:
             one_answer = {
-                "answer": "WRONG",
+                "answer": "0",
                 "equation": "WRONG",
             }
             if DEBUG:
