@@ -416,6 +416,10 @@ for fold in target_folds:
     fold_best_accuracy = accuracy
     fold_best_bleu = bleu_scores
 
+    print("-" * 50)
+    print("Fold_{:01d} Accuracy: {:.5f}".format(fold_i + 1, accuracy))
+    print("Fold_{:01d} BLEU Score: {:.5f}".format(fold_i + 1, bleu_scores))
+
     best_accuracies.append(fold_best_accuracy)
     best_bleu_scores.append(fold_best_bleu)
 
