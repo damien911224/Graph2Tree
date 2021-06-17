@@ -651,7 +651,7 @@ class Dec_LSTM(nn.Module):
     def __init__(self, opt):
         super(Dec_LSTM, self).__init__()
         self.opt = opt
-        self.word_embedding_size = 300
+        self.word_embedding_size = opt["rnn_size"]
         self.i2h = nn.Linear(self.word_embedding_size+2*self.opt["rnn_size"], 4*self.opt["rnn_size"])
         self.h2h = nn.Linear(self.opt["rnn_size"], 4*self.opt["rnn_size"])
 
@@ -677,9 +677,9 @@ class DecoderRNN(nn.Module):
         super(DecoderRNN, self).__init__()
         self.opt = opt
         self.hidden_size = opt["rnn_size"]
-        self.word_embedding_size = 300
+        self.word_embedding_size = opt["rnn_size"]
 
-        self.embedding = nn.Embedding(input_size, self.word_embedding_size, padding_idx=0)
+        # self.embedding = nn.Embedding(input_size, self.word_embedding_size, padding_idx=0)
 
         self.lstm = Dec_LSTM(self.opt)
         if self.opt["dropout_de_in"] > 0:
@@ -687,9 +687,10 @@ class DecoderRNN(nn.Module):
 
     def forward(self, input_src, prev_c, prev_h, parent_h, sibling_state):
 
-        src_emb = self.embedding(input_src)
+        # src_emb = self.embedding(input_src)
         if self.opt["dropout_de_in"] > 0:
-            src_emb = self.dropout(src_emb)
+            # src_emb = self.dropout(src_emb)
+            src_emb = self.dropout(input_src)
         prev_cy, prev_hy = self.lstm(src_emb, prev_c, prev_h, parent_h, sibling_state)
         return prev_cy, prev_hy
 
