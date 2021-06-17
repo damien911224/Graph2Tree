@@ -8,20 +8,19 @@ from pyaichtools.pyaichtools import DefaultCfg
 import libcst as cst
 import os
 import json
-import subprocess
 
+from io import StringIO
+from contextlib import redirect_stdout
 
 DEBUG = False
 GENERATE_DUMMY_WEIGHTS = False
 
 weight_path = "weights/"
-problem_file = "/home/agc2021/problemsheet.json"
+problem_file = "/home/agc2021/dataset/problemsheet.json"
 # problem_file = "../problemsheet.json"
 answer_file = "answersheet.json"
 
-
-
-MAX_OUTPUT_LENGTH = 100
+MAX_OUTPUT_LENGTH = 500
 
 batch_size = 64
 # embedding_size = 128
@@ -57,14 +56,11 @@ opt = {
 }
 
 if __name__ == "__main__":
-
     USE_CUDA = True
-
     data = extract(problem_file)
     # data = extract("dummy.json")
     pairs, copy_nums = transfer_num_n_equation(data)
     input_lang, output_lang, test_pairs = prepare_infer_data(pairs, 1)
-
 
     if DEBUG:
         print("testing sample {} has been loaded".format(len(test_pairs)))
@@ -114,15 +110,10 @@ if __name__ == "__main__":
 
     answers = {}
 
-
-
-
     total = len(test_pairs)
     wrong_count = 0
     correct = 0
 
-    inferrence_error = []
-    wrong_answer = []
     for test_batch in test_pairs:
         idx = test_batch[-1]
         one_answer = {}
@@ -132,7 +123,7 @@ if __name__ == "__main__":
             test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder, attention_decoder, reducer,
                                      input_lang, output_lang, test_batch[2], beam_size=beam_size, num_pos=test_batch[3])
         except:
-            inferrence_error.append(idx)
+            test_res = "Fail"
 
         QL = test_batch[2]
         NL = test_batch[4]
@@ -148,44 +139,45 @@ if __name__ == "__main__":
         #     # print(correct)
         # else:
         #     wrong_answer.append(idx)
+        if not test_res == "Fail":
+            try:
+                dec_seq = converter.decode(test_res)
+                # with open("dummy.py", "w", encoding="utf-8") as f:
+                #     f.write(dec_seq)
 
-        try:
-            dec_seq = converter.decode(test_res)
-            with open("dummy.py", "w", encoding="utf-8") as f:
-                f.write(dec_seq)
+                # ========================== important"
+                # change python3 to python
+                f = StringIO()
+                with redirect_stdout(f):
+                    exec(dec_seq)
+                answer = f.getvalue()
 
-            # ========================== important"
-            # change python3 to python
-            proc = subprocess.Popen('python dummy.py', stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, shell=True)
-            result, err = proc.communicate()
-            answer = result.decode('utf-8')
-            # print(answer)
-            if len(answer) == 0 or "Error" in answer:
-                answer = "0"
+                if len(answer) == 0 or "Error" in answer:
+                    answer = "0"
 
-            one_answer = {
-                "answer": answer,
-                "equation": dec_seq
-            }
-            # print(idx)
-            # print("result=" , answer)
-            os.system("rm -rf dummy.py")
-        except:
-            one_answer = {
+                one_answer = {
+                    "answer": answer,
+                    "equation": dec_seq
+                }
+                # one_answer = {
+                #     "answer": "0",
+                #     "equation": "WRONG",
+                # }
+                # print(idx)
+                # print("result=" , answer)
+
+            except:
+                one_answer = {
+                    "answer": "0",
+                    "equation": "WRONG",
+                }
+
+            answers[idx] = one_answer
+        else:
+            answer[idx] = {
                 "answer": "0",
-                "equation": "WRONG",
+                "equation": "fail"
             }
-            if DEBUG:
-                wrong_count += 1
-                # print("wrong input {}/{}".format(idx, wrong_count))
-        answers[idx] = one_answer
 
-    if DEBUG:
-        with open("results/result.txt", "w", encoding="utf-8") as f:
-            f.write(str(inferrence_error))
-            f.write(str(wrong_answer))
-
-    with open("answersheet.json", "w", encoding="utf-8") as f:
+    with open(answer_file, "w", encoding="utf-8") as f:
         f.write(json.dumps(answers, indent=4))
-
-    # with open()
