@@ -42,7 +42,7 @@ class Converter:
 
         self.interest_attr_list = LIBCST_INTERST_ATTR
         self.var_list = [LABEL_PREFIX_INFO["VAR_PREFIX"].format(i) for i in range(cfg.var_range)] + ["result"]
-        self.const_list = [LABEL_PREFIX_INFO["CONST_PREFIX"].format(i) for i in list(range(cfg.const_range)) + [100, 1000]]
+        self.const_list = [LABEL_PREFIX_INFO["CONST_PREFIX"].format(i) for i in list(range(cfg.const_range)) + [1000]]
         #self.tree_spt_list = ['nodest', 'nodeen', 'argst', 'argen']
 
         self.label_dict, self.reverse_label_dict, self.LABEL_LIMIT = \
@@ -69,6 +69,13 @@ class Converter:
         for k in list(self.reverse_label_dict.keys()):
             if hasattr(cst, k) and self.cst_need_child(k):
                 self.has_child_node[k] = len(self.get_child_node(k)) > 0
+
+        if hasattr(typing, '_GenericAlias'):
+            self.sequence_test = lambda x: type(x).__name__ == '_GenericAlias' and x._name == 'Sequence'
+            self.union_test = lambda x :type(x).__name__ == '_GenericAlias' and x._name == None and len(x.__args__) > 1
+        else:
+            self.sequence_test = lambda x : (type(x) == typing.Sequence) or ( 'Sequence' == x.__name__ if hasattr(x, '__name__') else False)
+            self.union_test = lambda x: (type(x) == typing.Union) or ('_Union' == type(x).__name__ if hasattr(type(x), '__name__') else False)
 
     def attach_gen_file(self, generated):
         self.gen_head.body[0].body.body.extend(generated.body)
@@ -97,9 +104,18 @@ class Converter:
         ]
         itertools_class_list.sort()
 
-        whole_label_list = libcst_class_list + math_func_list + itertools_class_list + var_list + const_list
+        list_class_list = [
+            "list.append", "list.clear", "list.copy", "list.count", "list.extend", "list.index", "list.insert", "list.pop", "list.remove",
+            "list.sort", "range", "max", "list", "pow", "len", "round", "sum", "min"
+        ]
+        itertools_class_list.sort()
+
+        whole_label_list = libcst_class_list + math_func_list + itertools_class_list + list_class_list + var_list + const_list
         whole_label_list.extend(LABEL_PREFIX_INFO["ST_EN_PREFIX"])
+        whole_label_list.extend(LABEL_PREFIX_INFO["BOOLEAN_LABEL"])
+
         LABEL_LIMIT = len(whole_label_list)
+
         whole_label_list.extend([LABEL_PREFIX_INFO["QL_PREFIX"].format(i) for i in range(LABEL_PREFIX_INFO["MAX_QUANTITY_LEN"])])
         whole_label_list.extend([LABEL_PREFIX_INFO["NL_PREFIX"].format(i) for i in range(LABEL_PREFIX_INFO["MAX_NOUN_LEN"])])
 
@@ -119,6 +135,7 @@ class Converter:
             curr_node = cst_tree.create_node(str.join(self.SPT, [attr, type(parsed_cst).__name__]), parent=parent_id)
 
         curr_attr_list = dir(parsed_cst)
+        curr_attr_list.reverse()
         for interest_attr in curr_attr_list:
             if interest_attr in self.interest_attr_list:
                 if type(getattr(parsed_cst, interest_attr)) in [list ,tuple]:
@@ -130,15 +147,15 @@ class Converter:
 
     def tree_to_seq(self,ann_tree, seq=[]):
         curr_child = ann_tree.children(ann_tree.root)
-        curr_tag = ann_tree.get_node(ann_tree.root).tag.split(self.SPT)
+        curr_tag = ann_tree.get_node(ann_tree.root).tag.split(self.spt)
         if len(curr_child) == 0:
             curr_seq = ["nodest","nodeen",curr_tag[1],]
         else:
             curr_seq = ["nodest"]
-            prev_attr = curr_child[0].tag.split(self.SPT)[0]
+            prev_attr = curr_child[0].tag.split(self.spt)[0]
             curr_seq.append("argst")
             for child_node in curr_child:
-                curr_attr = child_node.tag.split(self.SPT)[0]
+                curr_attr = child_node.tag.split(self.spt)[0]
                 if prev_attr != curr_attr:
                     curr_seq.extend(["argen", "argst"])
                 curr_seq = self.tree_to_seq(ann_tree.subtree(child_node.identifier), curr_seq)
@@ -148,7 +165,47 @@ class Converter:
         seq.extend(curr_seq)
         return seq
 
-    def tree_to_list(self,ann_tree, seq=[],label_to_id=False):
+    def tree_to_list(self, cst_tree, ann_tree, seq=[],label_to_id=False):
+        lister = lambda x: [x] if type(x) is not list else x
+        tupler = lambda x: list(x) if type(x) is tuple else x
+        curr_child = ann_tree.children(ann_tree.root)
+        curr_tag = ann_tree.get_node(ann_tree.root).tag.split(self.SPT)
+        curr_seq = [self.label_ele(curr_tag[1], ann_tree, label_to_id)]
+        child_seq = []
+        if len(curr_child) != 0 and curr_tag[1] not in self.hard_code_label:
+            prev_attr = curr_child[0].tag.split(self.SPT)[0]
+            per_attr_seq = []
+            child_cst = lister(tupler(getattr(cst_tree, prev_attr)))
+            limit_cid = 0
+            for cid, child_node in enumerate(curr_child):
+                curr_attr = child_node.tag.split(self.SPT)[0]
+                if prev_attr != curr_attr:
+                    if self.sequence_test(getattr(cst, curr_tag[-1]).__dict__["__annotations__"][prev_attr]):
+                        child_seq.extend([self.label_ele("LT"), per_attr_seq])
+                    else:
+                        child_seq.extend(per_attr_seq)
+                    per_attr_seq = []
+                    prev_attr= curr_attr
+                    child_cst = lister(tupler(getattr(cst_tree, prev_attr)))
+                    limit_cid = cid
+
+                per_attr_seq = self.tree_to_list(child_cst[cid - limit_cid], ann_tree.subtree(child_node.identifier), per_attr_seq, label_to_id)
+             
+            if self.sequence_test(getattr(cst, curr_tag[-1]).__dict__["__annotations__"][prev_attr]):
+                child_seq.extend([self.label_ele("LT"), per_attr_seq])
+            else:
+                child_seq.extend(per_attr_seq)
+        
+        """
+        if hasattr(cst_tree, "lpar") and len(getattr(cst_tree, "lpar")):
+            child_seq.append(self.label_ele("PAR"))
+        """
+        
+        if len(child_seq):
+            curr_seq.append(child_seq)
+        seq.extend(curr_seq)
+        return seq
+        """
         curr_child = ann_tree.children(ann_tree.root)
         curr_tag = ann_tree.get_node(ann_tree.root).tag.split(self.SPT)
         curr_seq = [self.label_ele(curr_tag[1], ann_tree, label_to_id)]
@@ -158,19 +215,23 @@ class Converter:
             for child_node in curr_child:
                 curr_attr = child_node.tag.split(self.SPT)[0]
                 if prev_attr != curr_attr:
-                    if len(per_attr_seq) == 1:
-                        curr_seq.extend(per_attr_seq)
-                    else:
+                    if self.sequence_test(getattr(cst, curr_tag[1]).__dict__["__annotations__"][curr_attr]):
                         curr_seq.append(per_attr_seq)
+                    else:
+                        curr_seq.extend(per_attr_seq)
                     per_attr_seq = []
                     prev_attr= curr_attr
                 per_attr_seq = self.tree_to_list(ann_tree.subtree(child_node.identifier), per_attr_seq, label_to_id)
-            if len(per_attr_seq) == 1 or len(per_attr_seq) == 0:
-                curr_seq.extend(per_attr_seq)
-            else:
-                curr_seq.append(per_attr_seq)
+
+            if len(per_attr_seq):
+                if self.sequence_test(getattr(cst, curr_tag[1]).__dict__["__annotations__"][curr_attr]):
+                    curr_seq.append(per_attr_seq)
+                else:
+                    curr_seq.extend(per_attr_seq)
+
         seq.extend(curr_seq)
         return seq
+        """
 
     def list_to_tree(self, ann_seq, root_tree, parent_id=None, attr="root", unlabel_to_token=False):
         temp_ann_seq = []
@@ -203,10 +264,21 @@ class Converter:
         node_list = []
         curr_node_list = []
         for id, ann_ele in enumerate(node_seq):
-            if type(ann_ele) is not list and not hasattr(cst, ann_ele):
+
+            # 1. check if ann_ele is list
+            if type(ann_ele) is list:
                 curr_node_list.append(ann_ele)
+            
+            # 2. check ann_ele is code block class
+
+            elif not hasattr(cst, ann_ele):
+                curr_node_list.append(ann_ele)
+            # 3. check 
+
                 
-            if type(ann_ele) is not list and not curr_node_list or type(ann_ele) is list:
+            # if 
+
+            if not curr_node_list or type(ann_ele) is list:
                 curr_node_list.append(ann_ele)
             else:
                 node_list.append(curr_node_list)
@@ -312,14 +384,14 @@ class Converter:
                 body_file = body_file.read()
         else:
             body_file = source_path
-            body_cst = cst.parse_module(body_file)
+        body_cst = cst.parse_module(body_file)
 
         essential_tree = Tree()
         essential_tree = self.cst_to_tree(body_cst, essential_tree, attr="root")
 
         encoded_seq = []
         if mode=="list":
-            labeled_seq = self.tree_to_list(essential_tree, encoded_seq, label_to_id=(not self.debug))
+            labeled_seq = self.tree_to_list(body_cst ,essential_tree, encoded_seq, label_to_id=(not self.debug))
         elif mode == "seq":
             encoded_seq = self.tree_to_seq(essential_tree, encoded_seq)
             labeled_seq = self.label_seq(encoded_seq, problem_info)
@@ -335,8 +407,9 @@ class Converter:
             recovered_tree = self.seq_to_tree(decoded_seq, Tree())
 
         recovered_cst = self.tree_to_cst(recovered_tree)
-        recovered_cst = self.attach_gen_file(recovered_cst)
-        recovered_module = cst.Module(body=self.attach_code(recovered_cst.body))
+        #recovered_cst = self.attach_gen_file(recovered_cst)
+        #recovered_module = cst.Module(body=self.attach_code(recovered_cst.body))
+        recovered_module = cst.Module(body=recovered_cst.body)
 
         generated_code = cst.Module([]).code_for_node(recovered_module)
 

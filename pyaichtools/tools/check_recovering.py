@@ -15,8 +15,8 @@ output_path = args.output_path
 DefaultCfg.ql_path = args.ql_path
 
 temp_converter = Converter(DefaultCfg, debug=True)
-#label_seq = temp_converter.encode(body_path)
-label_seq = ['Module', ['SimpleStatementLine', ['Assign', ['AssignTarget', ['result']], ['BinaryOperation', ['QL[1]'], ['Multiply'], ['QL[1]']]]]]
+label_seq = temp_converter.encode(body_path)
+#label_seq = ['Module', ['SimpleStatementLine', ['Assign', ['AssignTarget', ['result']], ['BinaryOperation', ['QL[1]'], ['Multiply'], ['QL[1]']]]]]
 generated_code = temp_converter.decode(label_seq)
 
 with open(output_path, "w") as out_file:

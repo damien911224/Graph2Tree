@@ -7,5 +7,5 @@ cfg.gen_head_path = 'test/src/gen_head.py'
 cfg.footer_path = 'test/src/footer.py'
 cfg.ql_path = 'test/src/ql.py'
 cfg.var_range = 20
-cfg.const_range = 20
+cfg.const_range = 100
 cfg.SPT = '/'

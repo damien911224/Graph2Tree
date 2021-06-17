@@ -19,16 +19,19 @@ LIBCST_INTERST_ATTR = [
 	"slice",
 	"lower",
 	"upper",
-	"step"
+	"step",
+	"lpar",
+	"rpar"
 ]
 
 LABEL_PREFIX_INFO = {
 	"VAR_PREFIX" : "var{}",
 	"CONST_PREFIX": "const{}",
+	"BOOLEAN_LABEL": ["True", "False"],
 	"QL_PREFIX": "QL[{}]",
 	"NL_PREFIX": "NL[{}]",
 	"MAX_QUANTITY_LEN": 20,
 	"MAX_NOUN_LEN": 50,
 	"NOUN_ST": 100,
-	"ST_EN_PREFIX": ["<S>", "<E>", "<IS>", "<IE>"]
+	"ST_EN_PREFIX": ["<S>", "<E>", "<IS>", "<IE>", "PAR", "LT"],
 }

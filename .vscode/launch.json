@@ -18,7 +18,10 @@
 			"request": "launch",
 			"program": "cross_valid_mawps.py",
 			"console": "integratedTerminal",
-			"cwd": "${workspaceFolder}/koco"
+			"cwd": "${workspaceFolder}/koco_kept3",
+			"env": {
+				"CUDA_VISIBLE_DEVICES": "0"
+			}
 		},
 		{
 			"name": "Python: Current File /koco",
@@ -26,7 +29,7 @@
 			"request": "launch",
 			"program": "${file}",
 			"console": "integratedTerminal",
-			"cwd": "${workspaceFolder}/koco"
+			"cwd": "${workspaceFolder}/koco_kept3"
 		},
 		{
 			"name": "koco kept 2",

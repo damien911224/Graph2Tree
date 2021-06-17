@@ -1,4 +1,5 @@
 from pyaichtools import Reducer, Converter, DefaultCfg
+import copy
 from tqdm import tqdm
 import json
 
@@ -10,14 +11,30 @@ test_converter = Converter(DefaultCfg, debug=True)
 with open("data/dummy.json", "r", encoding="utf-8") as problem:
 	problem_json = json.load(problem)
 
+import pickle
+
+with open('data/model_output.pkl', 'rb') as f:
+    data = pickle.load(f)
+
+no_id = [1, 2]
+
+for id, output in enumerate(data):
+	if str(output).find("<S>") != -1:
+		continue
+	if id in no_id:
+		continue
+	gen_file = test_converter.decode(output)
+	print(gen_file)
+
 mask_dict = {}
 cnt =0  
 for id, problem in tqdm(problem_json.items()):
 	#label_seq = temp_converter.encode(problem['lequation'])
 	eq = problem["equation"]
 	label_seq = test_converter.encode(eq)
-	gen_file = test_converter.decode(label_seq)
-	problem["lequation"] = label_seq
+	origin_equation = copy.deepcopy(label_seq)
+	#gen_file = test_converter.decode(label_seq)
+	problem["lequation"] = origin_equation
 	problem_json[id] = problem
 
 	queue = [[label_seq, None, None]]
