@@ -865,8 +865,9 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             gt = dec_batch[cur_index][:, i + 1]
             if using_gpu:
                 gt = gt.cuda()
-            loss += criterion(pred, gt)
-            print(torch.max(pred)[1], torch.max(gt)[1], loss)
+            this_loss = criterion(pred, gt)
+            loss += this_loss
+            print(torch.max(pred)[1], torch.max(gt)[1], this_loss)
         cur_index = cur_index + 1
 
     return loss
