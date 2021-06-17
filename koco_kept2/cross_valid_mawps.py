@@ -41,7 +41,7 @@ prefix = '23k_processed.json'
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
     "dropout_de_in": 0.1,
-    "dropout_de_out": 0.3,
+    "dropout_de_out": 0.5,
     "dropout_for_predict": 0.1,
     "dropoutagg": 0,
     "learningRate": learning_rate, # default 1.0e-3
