@@ -380,51 +380,51 @@ for fold in target_folds:
         print("training time:", time_since(time.time() - start))
         print("--------------------------------")
 
-        reference_list = list()
-        candidate_list = list()
-        bleu_scores = list()
-        # if epoch <= n_epochs // 4:
-        #     sample_population = int(round(len(test_pairs) * 0.05))
-        #     these_test_pairs = random.sample(test_pairs, sample_population)
-        # else:
-        #     these_test_pairs = test_pairs
-        for test_batch in test_pairs[:10]:
-            batch_graph = get_single_example_graph(test_batch[0], test_batch[1],
-                                                   test_batch[7], test_batch[4], test_batch[5])
-            test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
-                                     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
-            # test_res = evaluate_tree_ensemble_beam_search(
-            #     test_batch[0], test_batch[1], generate_num_ids,
-            #     [embedding], [encoder], [decoder], [attention_decoder],
-            #     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
-            #     beam_size=beam_size)
+    reference_list = list()
+    candidate_list = list()
+    bleu_scores = list()
+    # if epoch <= n_epochs // 4:
+    #     sample_population = int(round(len(test_pairs) * 0.05))
+    #     these_test_pairs = random.sample(test_pairs, sample_population)
+    # else:
+    #     these_test_pairs = test_pairs
+    for test_batch in test_pairs:
+        batch_graph = get_single_example_graph(test_batch[0], test_batch[1],
+                                               test_batch[7], test_batch[4], test_batch[5])
+        # test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
+        #                          input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
+        test_res = evaluate_tree_ensemble_beam_search(
+            test_batch[0], test_batch[1], generate_num_ids,
+            [embedding], [encoder], [decoder], [attention_decoder],
+            input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
+            beam_size=beam_size)
 
-            reference = test_batch[2]
-            candidate = [int(c) for c in test_res]
+        reference = test_batch[2]
+        candidate = [int(c) for c in test_res]
 
-            reference = ref_flatten(reference, output_lang)
+        reference = ref_flatten(reference, output_lang)
 
-            ref_str = convert_to_string(reference, output_lang)
-            cand_str = convert_to_string(candidate, output_lang)
+        ref_str = convert_to_string(reference, output_lang)
+        cand_str = convert_to_string(candidate, output_lang)
 
-            reference_list.append(reference)
-            candidate_list.append(candidate)
+        reference_list.append(reference)
+        candidate_list.append(candidate)
 
-            bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
-            bleu_scores.append(bleu_score)
-        reference = [output_lang.index2word[x] for x in reference]
-        candidate = [output_lang.index2word[x] for x in candidate]
-        print("=" * 90)
-        print(reference)
-        print(candidate)
-        accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
-        bleu_scores = np.mean(bleu_scores)
-        fold_best_accuracy = accuracy
-        fold_best_bleu = bleu_scores
+        bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
+        bleu_scores.append(bleu_score)
+    reference = [output_lang.index2word[x] for x in reference]
+    candidate = [output_lang.index2word[x] for x in candidate]
+    # print("=" * 90)
+    # print(reference)
+    # print(candidate)
+    accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
+    bleu_scores = np.mean(bleu_scores)
+    fold_best_accuracy = accuracy
+    fold_best_bleu = bleu_scores
 
-        print("-" * 50)
-        print("Fold_{:01d} Accuracy: {:.5f}".format(fold + 1, accuracy))
-        print("Fold_{:01d} BLEU Score: {:.5f}".format(fold + 1, bleu_scores))
+    print("-" * 50)
+    print("Fold_{:01d} Accuracy: {:.5f}".format(fold + 1, accuracy))
+    print("Fold_{:01d} BLEU Score: {:.5f}".format(fold + 1, bleu_scores))
 
     best_accuracies.append(fold_best_accuracy)
     best_bleu_scores.append(fold_best_bleu)
