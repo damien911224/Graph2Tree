@@ -782,7 +782,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
 
     teacher_force_ratio = 1.0
 
-    criterion = torch.nn.NLLLoss(size_average=False, ignore_index=0)
+    criterion = torch.nn.NLLLoss()
 
     loss = 0
     cur_index = 1
