@@ -34,7 +34,7 @@ hidden_size = 512
 n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
-beam_size = 5
+beam_size = 2
 n_layers = 2
 ori_path = './data/'
 prefix = '23k_processed.json'
@@ -348,6 +348,7 @@ for fold_i, fold in enumerate(target_folds):
                 contextual_input, dec_batch, queue_tree, max_index, mask_batch
             )
             train_loss_total += train_loss.detach().cpu().numpy()
+            #break
         train_loss_total = train_loss_total / len(dataloader)
 
         val_loss_total = 0
@@ -383,6 +384,7 @@ for fold_i, fold in enumerate(target_folds):
                 contextual_input, dec_batch, queue_tree, max_index, mask_batch
             )
             val_loss_total += val_loss.detach().cpu().numpy()
+            #break
         val_loss_total = val_loss_total / len(dataloader)
 
         encoder_scheduler.step(val_loss_total)
@@ -418,10 +420,13 @@ for fold_i, fold in enumerate(target_folds):
         # equation_ac = 0
         # eval_total = 0
         # start = time.time()
+        #break
     reference_list = list()
     candidate_list = list()
     bleu_scores = list()
+    whole_test_time = 0
     for test_batch in test_pairs:
+        start = time.perf_counter()
         #print(test_batch)
         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
 
@@ -463,6 +468,11 @@ for fold_i, fold in enumerate(target_folds):
 
         bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
         bleu_scores.append(bleu_score)
+        
+        whole_test_time += time.perf_counter() - start
+        if whole_test_time / 60 > 1:
+            break
+
     candidate = [output_lang.index2word[x] for x in candidate]
     print(candidate[:30])
     # print(equation_ac, value_ac, eval_total)
