@@ -867,9 +867,10 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
         if using_gpu:
             parent_h.cuda()
 
-        global_parent_state = global_parent_state * 0.5 + parent_h * 0.5
-        #global_parent_state = parent_h
-        global_sibling_state = global_sibling_state * 0.5 + sibling_state* 0.5
+        #global_parent_state = global_parent_state * 0.5 + parent_h * 0.5
+        #global_sibling_state = global_sibling_state * 0.5 + sibling_state* 0.5
+        global_parent_state = parent_h
+        global_sibling_state = sibling_state
 
         for i in range(dec_batch[cur_index].size(1) - 1):
             teacher_force = random.random() < teacher_force_ratio
@@ -900,6 +901,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                 mask = torch.zeros(batch_size, output_lang.n_words)
 
             pred = attention_decoder(attention_inputs[0], dec_s[cur_index][i + 1][2], attention_inputs[1], mask)
+            assert (f.one_hot(gt, num_classes=output_lang.n_words) * mask).sum(dim=1).bool().all().item()
             if using_gpu:
                 gt = gt.cuda()
 
@@ -1684,9 +1686,10 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                 predictions = list()
                 for model_i in range(num_models):
                     if i_child == 1:
-                        global_sibling_state[model_i] = 0.5 * sibling_state[model_i] + 0.5 * global_sibling_state[model_i]
-                        global_parent_state[model_i] = 0.5 * parent_h[model_i] + 0.5 * global_parent_state[model_i]
-                        #global_parent_state[model_i] = parent_h[model_i] 
+                        #global_sibling_state[model_i] = 0.5 * sibling_state[model_i] + 0.5 * global_sibling_state[model_i]
+                        #global_parent_state[model_i] = 0.5 * parent_h[model_i] + 0.5 * global_parent_state[model_i]
+                        global_parent_state[model_i] = parent_h[model_i] 
+                        global_sibling_state[model_i] = sibling_state[model_i] 
 
                     curr_c, curr_h = decoders[model_i](prev_word, s[model_i][0], s[model_i][1],
                                                     global_parent_state[model_i], global_sibling_state[model_i])

@@ -253,20 +253,18 @@ class Reducer():
 		
 		mask = self.reduce_out(parent_label_list, child_idx_list, prev_pred_list)
 		
-		for id, node in enumerate(label_seq):
-			if id == 0:
-				continue
+		for id, node in enumerate(label_seq[1:]):
 			node_label = node if type(node) is not list else "<IE>"
-			temp_mask = [self.id_to_block_label(x) for x in mask[id-1]]
+			temp_mask = [self.id_to_block_label(x) for x in mask[id]]
 			#print(self.id_to_block_label(node_label), temp_mask)
-			if self.reverse_label_dict[node_label] not in mask[id-1]:
+			if self.reverse_label_dict[node_label] not in mask[id]:
 				raise Exception("Non predictable node from mask")
 		
 		next_list = []
 
 		latest_label_diff = 0
 		latest_label = None
-		for id, node in enumerate(label_seq):
+		for id, node in enumerate(label_seq[1:-1]):
 			if type(node) == list:
 				next_list.append([node, latest_label, latest_label_diff-1])
 			elif self.has_child_node[node]:

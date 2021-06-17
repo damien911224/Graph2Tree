@@ -1065,22 +1065,24 @@ def get_dec_batch(dec_tree_batch, batch_size, using_gpu, output_lang, mask_batch
                 t = queue_tree[i][cur_index - 1]["tree"]
 
                 for ic in range(t.num_children):
-                    if ic > 0 and ic not in mask_batch_gen[cur_index]:
+                    if ic not in mask_batch_gen[cur_index]:
                         mask_batch_gen[cur_index][ic] = {}
-
+                    mask_batch_gen[cur_index][ic][i-1] = mask_batch[i-1][str(cur_index-1)][ic]
                     if isinstance(t.children[ic], Tree):
                         # 4가 n?
-                        if len(mask_batch[i-1]) and  ic > 0:
-                            mask_batch_gen[cur_index][ic][i-1] = mask_batch[i-1][str(cur_index-1)][ic-1]
+                        assert output_lang.word2index["<IE>"] in  mask_batch[i-1][str(cur_index-1)][ic]
 
                         w_list.append(output_lang.word2index['<IE>'])
                         queue_tree[i].append({"tree": t.children[ic],
                                               "parent": cur_index,
                                               "child_index": ic + 1})
                     else:
-                        if len(mask_batch[i-1]) and ic > 0:
-                            mask_batch_gen[cur_index][ic][i-1] = mask_batch[i-1][str(cur_index-1)][ic-1]
+                        assert t.children[ic] in  mask_batch[i-1][str(cur_index-1)][ic]
                         w_list.append(t.children[ic])
+                if ic+1 < len(mask_batch[i-1][str(cur_index-1)]):
+                    mask_batch_gen[cur_index][ic+1] = {}
+                    mask_batch_gen[cur_index][ic+1][i-1] = mask_batch[i-1][str(cur_index-1)][ic+1]
+
                 if len(queue_tree[i]) > max_index:
                     max_index = len(queue_tree[i])
             if len(w_list) > max_w_len:
