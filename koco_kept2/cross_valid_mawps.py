@@ -30,7 +30,7 @@ batch_size = 64
 embedding_size = 768
 # =======================================
 hidden_size = 512
-n_epochs = 200
+n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
 beam_size = 5
