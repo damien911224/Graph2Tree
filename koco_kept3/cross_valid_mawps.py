@@ -202,7 +202,7 @@ def ref_flatten(ref, output_lang):
     return flattened_ref
 
 #data = load_mawps_data("data/dummy.json")
-data = load_mawps_data("data/mask_processed_dummy.json")
+data = load_mawps_data("data/mask_flatten_dummy.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
@@ -420,7 +420,7 @@ for fold_i, fold in enumerate(target_folds):
         # equation_ac = 0
         # eval_total = 0
         # start = time.time()
-        #break
+
     reference_list = list()
     candidate_list = list()
     bleu_scores = list()
@@ -435,9 +435,6 @@ for fold_i, fold in enumerate(target_folds):
             [embedding], [encoder], [decoder], [attention_decoder], reducer,
             input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
             beam_size=beam_size)
-
-        test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder, reducer,
-                                    input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
 
         reference = test_batch[2]
         # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
@@ -470,8 +467,8 @@ for fold_i, fold in enumerate(target_folds):
         bleu_scores.append(bleu_score)
         
         whole_test_time += time.perf_counter() - start
-        if whole_test_time / 60 > 1:
-            break
+        #if whole_test_time / 60 > 2:
+        #    break
 
     candidate = [output_lang.index2word[x] for x in candidate]
     print(candidate[:30])

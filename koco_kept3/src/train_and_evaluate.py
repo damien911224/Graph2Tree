@@ -1664,7 +1664,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     parent_word_list = queue_decode[queue_decode[head - 1]["parent"]-1]['t'].children
                     child_idx = -1
                     for chnode in parent_word_list[:queue_decode[head-1]["child_index"]][::-1]:
-                        if output_lang.index2word[chnode] == "<IE>":
+                        if output_lang.index2word[chnode] == "<IE>" or not reducer.has_child_node[output_lang.index2word[chnode]]:
                             child_idx+=1
                         else:
                             parent_gt = chnode
