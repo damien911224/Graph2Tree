@@ -507,6 +507,7 @@ def transfer_english_num(data):  # transfer num into "NUM"
         # seg = d["sQuestion"].strip().split(" ")
         seg = d["question"].strip().split(" ")
         equations = d["lequation"]
+        solution = d["answer"]
 
         for s in seg:
             pos = re.search(pattern, s)
@@ -793,7 +794,7 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
         # train_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
         #                     pair[2], pair[3], num_stack, pair[4]))
         test_pairs.append((input_cell, len(input_cell), output_cell, len(output_cell),
-                           pair[2], pair[3], num_stack,pair[4]))
+                           pair[2], pair[3], num_stack, pair[4]))
 
     print('Number of testind data %d' % (len(test_pairs)))
     return input_lang, output_lang, train_pairs, test_pairs
