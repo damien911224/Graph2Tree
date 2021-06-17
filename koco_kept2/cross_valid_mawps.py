@@ -41,7 +41,7 @@ prefix = '23k_processed.json'
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
     "dropout_de_in": 0.1,
-    "dropout_de_out": 0.5,
+    "dropout_de_out": 0.3, # default 0.3
     "dropout_for_predict": 0.1,
     "dropoutagg": 0,
     "learningRate": learning_rate, # default 1.0e-3
@@ -58,7 +58,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_OnlyMax_B64")
+log_path = "logs/{}".format("NoSepAtt_AvgMax_B64")
 num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
