@@ -1,1 +1,1 @@
-print(result)
+print('recovered source output:', result)
