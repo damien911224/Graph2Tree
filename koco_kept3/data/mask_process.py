@@ -1,20 +1,23 @@
-from pyaichtools import Reducer
+from pyaichtools import Reducer, Converter, DefaultCfg
 from tqdm import tqdm
 import json
 
 test_reducer = Reducer("data", debug=False)
+test_converter = Converter(DefaultCfg, debug=True)
 #from pyaichtools import DefaultCfg, Converter
 #temp_converter = Converter(DefaultCfg, debug=False)
 
-with open("data/dummy.json") as problem:
+with open("data/dummy.json", "r", encoding="utf-8") as problem:
 	problem_json = json.load(problem)
 
 mask_dict = {}
 cnt =0  
 for id, problem in tqdm(problem_json.items()):
 	#label_seq = temp_converter.encode(problem['lequation'])
-	label_seq = problem["lequation"]
-
+	eq = problem["equation"]
+	label_seq = test_converter.encode(eq)
+	problem["lequation"] = label_seq
+	problem_json[id] = problem
 
 	queue = [[label_seq, None, None]]
 	curr_id = 0
@@ -48,5 +51,5 @@ for id, problem in tqdm(problem_json.items()):
 	
 
 print(cnt)
-with open("data/mask_processed_dummy.json", "w") as dummy_file:
+with open("data/mask_flatten_dummy.json", "w") as dummy_file:
 	json.dump(problem_json, dummy_file)
