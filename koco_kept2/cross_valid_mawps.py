@@ -354,9 +354,15 @@ for fold in target_folds:
             val_loss_total += val_loss.detach().cpu().numpy()
         val_loss_total = val_loss_total / len(dataloader)
 
-        encoder_scheduler.step(val_loss_total)
-        decoder_scheduler.step(val_loss_total)
-        attention_decoder_scheduler.step(val_loss_total)
+        # embedding_scheduler.step(val_loss_total)
+        # encoder_scheduler.step(val_loss_total)
+        # decoder_scheduler.step(val_loss_total)
+        # attention_decoder_scheduler.step(val_loss_total)
+
+        embedding_scheduler.step()
+        encoder_scheduler.step()
+        decoder_scheduler.step()
+        attention_decoder_scheduler.step()
 
         embedding.bert_layer.save_pretrained(os.path.join(fold_weight_folder, "embedding-{}".format(epoch + 1)))
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
