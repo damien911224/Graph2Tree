@@ -67,8 +67,6 @@ optimizer_patience = 10
 num_workers = 20
 random_seed = 777
 
-criterion = torch.nn.NLLLoss(size_average=False)
-
 random.seed(random_seed)
 np.random.seed(random_seed)
 torch.manual_seed(random_seed)
@@ -248,6 +246,8 @@ for fold in target_folds:
     #                                                                     copy_nums, tree=False)
     input_lang, output_lang, train_pairs, test_pairs = prepare_data(pairs_trained, pairs_tested, 1, generate_nums,
                                                                     copy_nums, tree=False)
+
+    criterion = torch.nn.NLLLoss(size_average=False, ignore_index=output_lang.word2index["<S>"])
 
     #print('train_pairs[0]')
     #print(train_pairs[0])
