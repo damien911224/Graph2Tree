@@ -67,6 +67,8 @@ optimizer_patience = 10
 num_workers = 20
 random_seed = 777
 
+criterion = torch.nn.NLLLoss()
+
 random.seed(random_seed)
 np.random.seed(random_seed)
 torch.manual_seed(random_seed)
@@ -322,7 +324,7 @@ for fold in target_folds:
                 embedding, encoder, decoder, attention_decoder,
                 embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
                 input_lang, output_lang, num_pos_batch, graph_batch,
-                contextual_input, dec_batch, queue_tree, max_index
+                contextual_input, dec_batch, queue_tree, max_index, criterion
             )
             train_loss_total += train_loss.detach().cpu().numpy()
         train_loss_total = train_loss_total / len(dataloader)
@@ -342,7 +344,7 @@ for fold in target_folds:
                 embedding, encoder, decoder, attention_decoder,
                 embedding_optimizer, encoder_optimizer, decoder_optimizer, attention_decoder_optimizer,
                 input_lang, output_lang, num_pos_batch, graph_batch,
-                contextual_input, dec_batch, queue_tree, max_index
+                contextual_input, dec_batch, queue_tree, max_index, criterion
             )
             val_loss_total += val_loss.detach().cpu().numpy()
         val_loss_total = val_loss_total / len(dataloader)
