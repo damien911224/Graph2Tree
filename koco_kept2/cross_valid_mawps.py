@@ -454,9 +454,9 @@ for fold in target_folds:
         bleu_scores.append(bleu_score)
     reference = [output_lang.index2word[x] for x in reference]
     candidate = [output_lang.index2word[x] for x in candidate]
-    # print("=" * 90)
-    # print(reference)
-    # print(candidate)
+    print("=" * 90)
+    print(reference)
+    print(candidate)
     accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
     bleu_scores = np.mean(bleu_scores)
     fold_best_accuracy = accuracy
