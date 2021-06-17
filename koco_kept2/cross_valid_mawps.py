@@ -31,7 +31,7 @@ embedding_size = 768
 # =======================================
 hidden_size = 512
 n_epochs = 80
-learning_rate = 1e-2
+learning_rate = 1e-3
 weight_decay = 1e-5
 beam_size = 5
 n_layers = 2
@@ -58,7 +58,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_LRE2")
+log_path = "logs/{}".format("NoSepAtt_AvgMax_B64")
 num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
