@@ -107,7 +107,7 @@ class OutputLang:
         # self.add_to_vocab("<E>")
         # self.add_to_vocab("<IS>")
         # self.add_to_vocab("<IE>")
-        # self.add_to_vocab("UNK")
+        self.add_to_vocab("UNK")
 
     def add_to_vocab(self, word):
         if word not in self.word2index:
