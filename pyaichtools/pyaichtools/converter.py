@@ -147,11 +147,17 @@ class Converter:
 			for child_node in curr_child:
 				curr_attr = child_node.tag.split(self.SPT)[0]
 				if prev_attr != curr_attr:
-					curr_seq.append(per_attr_seq)
+					if len(per_attr_seq) == 1:
+						curr_seq.extend(per_attr_seq)
+					else:
+						curr_seq.append(per_attr_seq)
 					per_attr_seq = []
 					prev_attr= curr_attr
 				per_attr_seq = self.tree_to_list(ann_tree.subtree(child_node.identifier), per_attr_seq, label_to_id)
-			curr_seq.append(per_attr_seq)
+			if len(per_attr_seq) == 1 or len(per_attr_seq) == 0:
+				curr_seq.extend(per_attr_seq)
+			else:
+				curr_seq.append(per_attr_seq)
 		seq.extend(curr_seq)
 		return seq
 
@@ -187,9 +193,9 @@ class Converter:
 		attr_cnt = 0
 		st = 0
 		for id, ann_ele in enumerate(ann_seq):
-			if ann_ele is "argst":
+			if ann_ele == "argst":
 				attr_cnt += 1
-			elif ann_ele is "argen":
+			elif ann_ele == "argen":
 				attr_cnt -= 1
 			if attr_cnt == 0:
 				attr_list.append(ann_seq[st:id+1])
@@ -201,9 +207,9 @@ class Converter:
 		node_cnt = 0
 		st = 0
 		for id, ann_ele in enumerate(node_seq):
-			if ann_ele is "nodest":
+			if ann_ele == "nodest":
 				node_cnt += 1
-			elif ann_ele is "nodeen":
+			elif ann_ele == "nodeen":
 				node_cnt -= 1
 				if node_cnt == 0:
 					node_list.append(node_seq[st:id+2])
@@ -234,9 +240,9 @@ class Converter:
 
 
 		if hasattr(typing, '_GenericAlias'):
-			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and curr_class.__dict__['__annotations__'][x]._name is 'Sequence'
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and curr_class.__dict__['__annotations__'][x]._name == 'Sequence'
 		else:
-			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and type(curr_class.__dict__['__annotations__'][x]) is typing.Sequence
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and type(curr_class.__dict__['__annotations__'][x]) == typing.Sequence
 
 		arg_dict = {
 			attr: [] if check_sequence(attr) else None
