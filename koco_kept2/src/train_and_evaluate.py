@@ -1593,7 +1593,7 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     attention_inputs = all_encoder_outputs[model_i][2]
                     prediction = attention_decoders[model_i](attention_inputs[0], curr_h, attention_inputs[1])
                     predictions.append(torch.exp(prediction))
-                prediction = torch.mean(torch.stack(predictions, dim=0), dim=0)
+                prediction = torch.mean(torch.stack(predictions, dim=0), dimπ=0)
 
                 s = cur_s
                 b["q"][head - 1]["s"] = s
