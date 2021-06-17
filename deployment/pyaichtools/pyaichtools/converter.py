@@ -1,30 +1,43 @@
+import os
 import libcst as cst
 import sys
 import inspect
 import json
 from treelib import Tree, plugins
-from .utils import *
+from pyaichtools.pyaichtools.utils import *
 import typing
 import re
 
 
 class Converter:
 	def __init__(self, cfg, debug=False):
-		with open(cfg.header_path) as header_file:
-			header_file = header_file.read()
-			self.header = cst.parse_module(header_file)
+		try:
+			with open(cfg.header_path) as header_file:
+				header_file = header_file.read()
+				self.header = cst.parse_module(header_file)
+		except:
+			print("No header")
 
-		with open(cfg.ql_path, encoding="utf-8") as ql_file:
-			ql_file = ql_file.read()
-			self.quality_list = cst.parse_module(ql_file)
+		try:
+			with open(cfg.ql_path, encoding="utf-8") as ql_file:
+				ql_file = ql_file.read()
+				self.quality_list = cst.parse_module(ql_file)
+		except:
+			print("No ql")
 
-		with open(cfg.gen_head_path) as gen_head_file:
-			gen_head_file = gen_head_file.read()
-			self.gen_head = cst.parse_module(gen_head_file)
+		try:
+			with open(cfg.gen_head_path) as gen_head_file:
+				gen_head_file = gen_head_file.read()
+				self.gen_head = cst.parse_module(gen_head_file)
+		except:
+			print("No ql")
 
-		with open(cfg.footer_path) as footer_file:
-			footer_file = footer_file.read()
-			self.footer = cst.parse_module(footer_file)
+		try:
+			with open(cfg.footer_path) as footer_file:
+				footer_file = footer_file.read()
+				self.footer = cst.parse_module(footer_file)
+		except:
+			print("No ql")
 
 		self.interest_attr_list = LIBCST_INTERST_ATTR
 		self.var_list = [LABEL_PREFIX_INFO["VAR_PREFIX"].format(i) for i in range(cfg.var_range)] + ["result"]
@@ -35,10 +48,10 @@ class Converter:
 			self.generate_label_dict(self.var_list, self.const_list) #self.tree_spt_list,)
 		
 		#if you want to generate new label dictionary, uncomment these lines
-		with open('pyaichtools/label/label_dict.json', 'w') as ld:
+		with open('data/label_dict.json', 'w') as ld:
 			json.dump(self.label_dict, ld)
 		
-		with open('pyaichtools/label/reverse_label_dict.json', 'w') as rld:
+		with open('data/reverse_label_dict.json', 'w') as rld:
 			json.dump(self.reverse_label_dict, rld)
 		
 		self.SPT = cfg.SPT
@@ -134,11 +147,17 @@ class Converter:
 			for child_node in curr_child:
 				curr_attr = child_node.tag.split(self.SPT)[0]
 				if prev_attr != curr_attr:
-					curr_seq.append(per_attr_seq)
+					if len(per_attr_seq) == 1:
+						curr_seq.extend(per_attr_seq)
+					else:
+						curr_seq.append(per_attr_seq)
 					per_attr_seq = []
 					prev_attr= curr_attr
 				per_attr_seq = self.tree_to_list(ann_tree.subtree(child_node.identifier), per_attr_seq, label_to_id)
-			curr_seq.append(per_attr_seq)
+			if len(per_attr_seq) == 1 or len(per_attr_seq) == 0:
+				curr_seq.extend(per_attr_seq)
+			else:
+				curr_seq.append(per_attr_seq)
 		seq.extend(curr_seq)
 		return seq
 
@@ -174,9 +193,9 @@ class Converter:
 		attr_cnt = 0
 		st = 0
 		for id, ann_ele in enumerate(ann_seq):
-			if ann_ele is "argst":
+			if ann_ele == "argst":
 				attr_cnt += 1
-			elif ann_ele is "argen":
+			elif ann_ele == "argen":
 				attr_cnt -= 1
 			if attr_cnt == 0:
 				attr_list.append(ann_seq[st:id+1])
@@ -188,9 +207,9 @@ class Converter:
 		node_cnt = 0
 		st = 0
 		for id, ann_ele in enumerate(node_seq):
-			if ann_ele is "nodest":
+			if ann_ele == "nodest":
 				node_cnt += 1
-			elif ann_ele is "nodeen":
+			elif ann_ele == "nodeen":
 				node_cnt -= 1
 				if node_cnt == 0:
 					node_list.append(node_seq[st:id+2])
@@ -219,12 +238,11 @@ class Converter:
 
 		curr_class = getattr(cst, class_name)
 
+
 		if hasattr(typing, '_GenericAlias'):
-			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and \
-									   curr_class.__dict__['__annotations__'][x]._name is 'Sequence'
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and curr_class.__dict__['__annotations__'][x]._name == 'Sequence'
 		else:
-			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '__name__') and \
-				curr_class.__dict__['__annotations__'][x].__name__ is 'Sequence'
+			check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and type(curr_class.__dict__['__annotations__'][x]) == typing.Sequence
 
 		arg_dict = {
 			attr: [] if check_sequence(attr) else None
@@ -238,18 +256,7 @@ class Converter:
 				arg_dict[child_arg_name].append(self.tree_to_cst(ann_tree.subtree(child_node.identifier)))
 			else:
 				arg_dict[child_arg_name] = self.tree_to_cst(ann_tree.subtree(child_node.identifier))
-
-		# try:
-		# 	return curr_class(**arg_dict)
-		#
-		# except:
-		# 	x = child_arg_name
-		# 	print(hasattr(curr_class.__dict__['__annotations__'][x], '_name'))
-		#
-		# 	print(type(curr_class.__dict__['__annotations__'][x]))
-
 		return curr_class(**arg_dict)
-
 
 	def label_ele(self, ann_ele, ann_tree=None, debug=False):
 		if ann_ele in self.hard_code_label:
@@ -274,8 +281,11 @@ class Converter:
 		return [self.unlabel_ele(label_ele, problem_info) for label_ele in labeled_seq]
 
 	def encode(self, source_path, problem_info=None, mode="list"):
-		with open(source_path) as body_file:
-			body_file = body_file.read()
+		if os.path.isfile(source_path):
+			with open(source_path) as body_file:
+				body_file = body_file.read()
+		else:
+			body_file = source_path		
 			body_cst = cst.parse_module(body_file)
 		
 		essential_tree = Tree()
@@ -297,10 +307,10 @@ class Converter:
 		elif mode=="seq":
 			decoded_seq = self.unlabel_seq(labeled_seq, problem_info)
 			recovered_tree = self.seq_to_tree(decoded_seq, Tree())
-
+		
 		recovered_cst = self.tree_to_cst(recovered_tree)
 		recovered_cst = self.attach_gen_file(recovered_cst)
-		recovered_module = cst.Module(body=self.attach_code(recovered_cst.body))
+		recovered_module = cst.Module(body=self.attach_code(recovered_cst.body))		
 
 		generated_code = cst.Module([]).code_for_node(recovered_module)
 

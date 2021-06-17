@@ -174,7 +174,7 @@ if __name__ == "__main__":
 
             answers[idx] = one_answer
         else:
-            answer[idx] = {
+            answers[idx] = {
                 "answer": "0",
                 "equation": "fail"
             }
