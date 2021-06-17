@@ -1199,7 +1199,7 @@ def my_collate(batch):
         num_value_batch.append(num)
         group_batch.append(group)
 
-    graph_batch = get_single_batch_graph(input_batch, input_length,group_batch,num_value_batch,num_pos_batch)
+    graph_batch = get_single_batch_graph(input_batch, input_length, group_batch, num_value_batch, num_pos_batch)
 
     output_batch = [list_to_tree(l) for l in output_batch]
 
