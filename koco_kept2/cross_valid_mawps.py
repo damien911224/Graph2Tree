@@ -195,7 +195,7 @@ def ref_flatten(ref, output_lang):
         if type(x) == type(list()):
             flattened_ref.append(output_lang.word2index["<IS>"])
             flattened_ref += ref_flatten(x, output_lang)
-            flattened_ref.append(output_lang.word2index["<IE>"])
+            flattened_ref.append(output_lang.word2index["<E>"])
         else:
             flattened_ref.append(x)
 
