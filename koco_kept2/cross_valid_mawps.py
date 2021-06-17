@@ -30,7 +30,7 @@ batch_size = 64
 embedding_size = 768
 # =======================================
 hidden_size = 512
-n_epochs = 200
+n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
 beam_size = 5
@@ -58,7 +58,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex_E200")
+log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex_KoCo01")
 num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
@@ -201,7 +201,7 @@ def ref_flatten(ref, output_lang):
 
     return flattened_ref
 
-data = load_mawps_data("data/flatten_dummy_encoded.json")
+data = load_mawps_data("data/koco_01.json")
 group_data = read_json("data/new_MAWPS_processed.json")
 
 pairs, generate_nums, copy_nums = transfer_english_num(data)
