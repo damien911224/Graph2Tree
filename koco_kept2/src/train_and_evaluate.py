@@ -866,6 +866,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             if using_gpu:
                 gt = gt.cuda()
             loss += criterion(pred, gt)
+            print(loss)
         cur_index = cur_index + 1
 
     return loss

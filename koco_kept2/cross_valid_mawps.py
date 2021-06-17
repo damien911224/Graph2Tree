@@ -67,7 +67,7 @@ optimizer_patience = 10
 num_workers = 20
 random_seed = 777
 
-criterion = torch.nn.NLLLoss()
+criterion = torch.nn.NLLLoss(size_average=False)
 
 random.seed(random_seed)
 np.random.seed(random_seed)
