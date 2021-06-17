@@ -651,7 +651,7 @@ class Dec_LSTM(nn.Module):
     def __init__(self, opt):
         super(Dec_LSTM, self).__init__()
         self.opt = opt
-        self.word_embedding_size = 300
+        self.word_embedding_size = opt["rnn_size"]
         self.i2h = nn.Linear(self.word_embedding_size+2*self.opt["rnn_size"], 4*self.opt["rnn_size"])
         self.h2h = nn.Linear(self.opt["rnn_size"], 4*self.opt["rnn_size"])
 
@@ -677,7 +677,7 @@ class DecoderRNN(nn.Module):
         super(DecoderRNN, self).__init__()
         self.opt = opt
         self.hidden_size = opt["rnn_size"]
-        self.word_embedding_size = 300
+        self.word_embedding_size = opt["rnn_size"]
 
         self.embedding = nn.Embedding(input_size, self.word_embedding_size, padding_idx=0)
 
@@ -713,7 +713,7 @@ class AttnUnit(nn.Module):
         self.softmax = nn.Softmax(dim=1)
         self.logsoftmax = nn.LogSoftmax(dim=1)
 
-    def forward(self, enc_s_top, dec_s_top, enc_2, mask=None):
+    def forward(self, enc_s_top, dec_s_top, enc_2):
         # if self.separate_attention:
         #     N, L, C = enc_s_top.shape
         #     encoder_splits = torch.split(enc_s_top, C // 2, dim=-1)
@@ -738,12 +738,7 @@ class AttnUnit(nn.Module):
         h2y_in = hid
         if self.opt["dropout_for_predict"] > 0:
             h2y_in = self.dropout(h2y_in)
-        
         h2y = self.linear_out(h2y_in)
-        if mask is None:
-            pred = self.logsoftmax(h2y)
-        else:
-            assert mask.shape == h2y.shape
-            pred = self.logsoftmax(h2y * mask.cuda())
+        pred = self.logsoftmax(h2y)
 
         return pred

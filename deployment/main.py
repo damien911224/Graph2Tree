@@ -8,16 +8,17 @@ from pyaichtools.pyaichtools import DefaultCfg
 import libcst as cst
 import os
 import json
-
+import sys
 from io import StringIO
 from contextlib import redirect_stdout
+import pickle as pkl
 
 DEBUG = False
 GENERATE_DUMMY_WEIGHTS = False
 
 weight_path = "weights/"
-problem_file = "/home/agc2021/dataset/problemsheet.json"
-# problem_file = "../problemsheet.json"
+# problem_file = "/home/agc2021/dataset/problemsheet.json"
+problem_file = "../problemsheet.json"
 answer_file = "answersheet.json"
 
 MAX_OUTPUT_LENGTH = 500
@@ -114,6 +115,7 @@ if __name__ == "__main__":
     wrong_count = 0
     correct = 0
 
+    model_output = []
     for test_batch in test_pairs:
         idx = test_batch[-1]
         one_answer = {}
@@ -124,6 +126,13 @@ if __name__ == "__main__":
                                      input_lang, output_lang, test_batch[2], beam_size=beam_size, num_pos=test_batch[3])
         except:
             test_res = "Fail"
+
+        # model_output.append(test_res)
+        # if len(model_output) == 10:
+        #     with open("model_output.pkl", "wb") as f:
+        #         pkl.dump(model_output, f)
+        #     break
+
 
         QL = test_batch[2]
         NL = test_batch[4]
@@ -139,12 +148,14 @@ if __name__ == "__main__":
         #     # print(correct)
         # else:
         #     wrong_answer.append(idx)
+
         if not test_res == "Fail":
             try:
+                # print(test_res)
                 dec_seq = converter.decode(test_res)
+                print(dec_seq)
                 # with open("dummy.py", "w", encoding="utf-8") as f:
                 #     f.write(dec_seq)
-
                 # ========================== important"
                 # change python3 to python
                 f = StringIO()
@@ -167,6 +178,7 @@ if __name__ == "__main__":
                 # print("result=" , answer)
 
             except:
+                print(sys.exc_info())
                 one_answer = {
                     "answer": "0",
                     "equation": "WRONG",
