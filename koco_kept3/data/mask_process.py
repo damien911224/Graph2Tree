@@ -16,6 +16,7 @@ for id, problem in tqdm(problem_json.items()):
 	#label_seq = temp_converter.encode(problem['lequation'])
 	eq = problem["equation"]
 	label_seq = test_converter.encode(eq)
+	gen_file = test_converter.decode(label_seq)
 	problem["lequation"] = label_seq
 	problem_json[id] = problem
 
