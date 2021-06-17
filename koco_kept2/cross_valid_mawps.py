@@ -50,7 +50,7 @@ opt = {
     "separate_attention": False,
 
     # for BERT
-    "bert_learningRate": learning_rate * 1e-2,
+    "bert_learningRate": learning_rate * 1e-1,
     # "bert_learningRate": learning_rate * 1.0e-1,
     "embedding_size": 768,
     "dropout_input": 0.5,
@@ -58,7 +58,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex_NoBeam")
+log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex_BertE1")
 num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
@@ -431,13 +431,13 @@ for fold in target_folds:
     for test_batch in test_pairs:
         batch_graph = get_single_example_graph(test_batch[0], test_batch[1],
                                                test_batch[7], test_batch[4], test_batch[5])
-        test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
-                                 input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
-        # test_res = evaluate_tree_ensemble_beam_search(
-        #     test_batch[0], test_batch[1], generate_num_ids,
-        #     [embedding], [encoder], [decoder], [attention_decoder],
-        #     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
-        #     beam_size=beam_size)
+        # test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder,
+        #                          input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
+        test_res = evaluate_tree_ensemble_beam_search(
+            test_batch[0], test_batch[1], generate_num_ids,
+            [embedding], [encoder], [decoder], [attention_decoder],
+            input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
+            beam_size=beam_size)
 
         reference = test_batch[2]
         candidate = [int(c) for c in test_res]
