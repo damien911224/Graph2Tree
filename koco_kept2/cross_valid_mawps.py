@@ -281,19 +281,19 @@ for fold in target_folds:
     attention_decoder_optimizer = torch.optim.AdamW(attention_decoder.parameters(), lr=opt["learningRate"],
                                                     weight_decay=weight_decay)
 
-    # embedding_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(embedding_optimizer, 'min', patience=optimizer_patience)
-    #
-    # encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer,
-    #                                                                'min', patience=optimizer_patience)
-    # decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(decoder_optimizer,
-    #                                                                'min', patience=optimizer_patience)
-    # attention_decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(attention_decoder_optimizer,
-    #                                                                          'min', patience=optimizer_patience)
+    embedding_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(embedding_optimizer, 'min', patience=optimizer_patience)
 
-    embedding_scheduler = torch.optim.lr_scheduler.StepLR(embedding_optimizer, step_size=20, gamma=0.5)
-    encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
-    decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
-    attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
+    encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer,
+                                                                   'min', patience=optimizer_patience)
+    decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(decoder_optimizer,
+                                                                   'min', patience=optimizer_patience)
+    attention_decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(attention_decoder_optimizer,
+                                                                             'min', patience=optimizer_patience)
+
+    # embedding_scheduler = torch.optim.lr_scheduler.StepLR(embedding_optimizer, step_size=20, gamma=0.5)
+    # encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
+    # decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
+    # attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
 
     # Move models to GPU
     if USE_CUDA:
@@ -354,15 +354,15 @@ for fold in target_folds:
             val_loss_total += val_loss.detach().cpu().numpy()
         val_loss_total = val_loss_total / len(dataloader)
 
-        # embedding_scheduler.step(val_loss_total)
-        # encoder_scheduler.step(val_loss_total)
-        # decoder_scheduler.step(val_loss_total)
-        # attention_decoder_scheduler.step(val_loss_total)
+        embedding_scheduler.step(val_loss_total)
+        encoder_scheduler.step(val_loss_total)
+        decoder_scheduler.step(val_loss_total)
+        attention_decoder_scheduler.step(val_loss_total)
 
-        embedding_scheduler.step()
-        encoder_scheduler.step()
-        decoder_scheduler.step()
-        attention_decoder_scheduler.step()
+        # embedding_scheduler.step()
+        # encoder_scheduler.step()
+        # decoder_scheduler.step()
+        # attention_decoder_scheduler.step()
 
         embedding.bert_layer.save_pretrained(os.path.join(fold_weight_folder, "embedding-{}".format(epoch + 1)))
         torch.save(encoder.state_dict(), os.path.join(fold_weight_folder, "encoder-{}.pth".format(epoch + 1)))
