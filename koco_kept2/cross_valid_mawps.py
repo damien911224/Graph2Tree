@@ -29,7 +29,8 @@ batch_size = 64
 # ===============changed=================
 embedding_size = 768
 # =======================================
-hidden_size = 512
+# hidden_size = 512
+hidden_size = 768
 n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
