@@ -63,7 +63,7 @@ num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-optimizer_patience = 10
+optimizer_patience = 20
 num_workers = 20
 random_seed = 777
 
