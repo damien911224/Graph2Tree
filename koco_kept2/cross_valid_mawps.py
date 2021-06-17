@@ -415,11 +415,11 @@ for fold in target_folds:
 
             bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
             bleu_scores.append(bleu_score)
-        # reference = [output_lang.index2word[x] for x in reference]
-        # candidate = [output_lang.index2word[x] for x in candidate]
-        # print("=" * 90)
-        # print(reference)
-        # print(candidate)
+        reference = [output_lang.index2word[x] for x in reference]
+        candidate = [output_lang.index2word[x] for x in candidate]
+        print("=" * 90)
+        print(reference)
+        print(candidate)
         accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
         bleu_scores = np.mean(bleu_scores)
 
@@ -429,7 +429,7 @@ for fold in target_folds:
         print("validation_bleu_score:", bleu_scores)
         print("current_learning_rate:", current_lr)
         print("training time:", time_since(time.time() - start))
-        print("--------------------------------")
+        print("=" * 90)
 
     reference_list = list()
     candidate_list = list()
@@ -473,7 +473,7 @@ for fold in target_folds:
     fold_best_accuracy = accuracy
     fold_best_bleu = bleu_scores
 
-    print("-" * 50)
+    print("=" * 90)
     print("Fold_{:01d} Accuracy: {:.5f}".format(fold + 1, accuracy))
     print("Fold_{:01d} BLEU Score: {:.5f}".format(fold + 1, bleu_scores))
 
@@ -481,10 +481,10 @@ for fold in target_folds:
     best_bleu_scores.append(fold_best_bleu)
 
 for fold_i in range(num_folds):
-    print("-" * 50)
+    print("-" * 90)
     print("Fold_{:01d} Best Accuracy: {:.5f}".format(fold_i + 1, best_accuracies[fold_i]))
     print("Fold_{:01d} Best BLEU Score: {:.5f}".format(fold_i + 1, best_bleu_scores[fold_i]))
-print("-" * 50)
+print("-" * 90)
 print("Average Best Accuracy: {:.5f}".format(np.mean(best_accuracies)))
 print("Average Best BLEU Score: {:.5f}".format(np.mean(best_bleu_scores)))
-print("-" * 50)
+print("-" * 90)
