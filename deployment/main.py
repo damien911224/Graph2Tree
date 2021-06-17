@@ -11,7 +11,6 @@ import json
 import sys
 from io import StringIO
 from contextlib import redirect_stdout
-import pickle as pkl
 
 weight_path = "weights/"
 # problem_file = "/home/agc2021/dataset/problemsheet.json"
@@ -60,6 +59,8 @@ opt = {
 }
 
 if __name__ == "__main__":
+    import time
+    start_time = time.time()
     USE_CUDA = torch.cuda.is_available()
     MAX_PROBLEM_LENGTH = 1000
     MAX_NUM_MODEL = num_folds

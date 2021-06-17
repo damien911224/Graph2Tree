@@ -1687,8 +1687,6 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                                        embeddings, encoders, decoders, attention_decoders,
                                        input_lang, output_lang, num_value, beam_size=5,
                                        max_length=MAX_OUTPUT_LENGTH):
-    input_var = torch.LongTensor(input_batch).unsqueeze(1)
-
     # Set to not-training mode to disable dropout
     num_models = len(attention_decoders)
     for model_i in range(num_models):
@@ -1697,9 +1695,6 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
         decoders[model_i].eval()
         attention_decoders[model_i].eval()
 
-    if USE_CUDA:
-        input_var = input_var.cuda()
-
     all_encoder_outputs = list()
     for model_i in range(num_models):
         contextual_input = index_batch_to_words([input_batch], [input_length], input_lang)
@@ -1707,13 +1702,6 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
         num_pos = index_retrieve.copy()[0]
 
         new_group_batch = allocate_group_num(index_retrieve, input_len1)[0]
-        # print(new_group_batch, token_ids.cpu().tolist()[0],  input_len1[0], num_value, num_pos)
-        # new_group_batch = []
-        # for bat in range(len(group_batch)):
-        # 	try:
-        # 		new_group_batch.append([index_retrieve[bat][index1] for index1 in group_batch[bat] if index1 < len(index_retrieve[bat])])
-        # 	except:
-        # 		pdb.set_trace()
 
         batch_graph = get_single_example_graph(token_ids.cpu().tolist()[0], input_len1[0], new_group_batch, num_value,
                                                num_pos)
@@ -1721,7 +1709,6 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
 
         input_seq1 = input_seq1.transpose(0, 1)
         embedded, input_length, orig_idx = sort_by_len(input_seq1, input_len1, "cuda" if USE_CUDA else "cpu")
-        # input_length = input_length[0]
         input_length = torch.IntTensor(input_length)
 
         if USE_CUDA:
