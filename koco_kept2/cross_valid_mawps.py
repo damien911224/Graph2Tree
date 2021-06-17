@@ -281,14 +281,19 @@ for fold in target_folds:
     attention_decoder_optimizer = torch.optim.AdamW(attention_decoder.parameters(), lr=opt["learningRate"],
                                                     weight_decay=weight_decay)
 
-    embedding_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(embedding_optimizer, 'min', patience=optimizer_patience)
+    # embedding_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(embedding_optimizer, 'min', patience=optimizer_patience)
+    #
+    # encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer,
+    #                                                                'min', patience=optimizer_patience)
+    # decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(decoder_optimizer,
+    #                                                                'min', patience=optimizer_patience)
+    # attention_decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(attention_decoder_optimizer,
+    #                                                                          'min', patience=optimizer_patience)
 
-    encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer,
-                                                                   'min', patience=optimizer_patience)
-    decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(decoder_optimizer,
-                                                                   'min', patience=optimizer_patience)
-    attention_decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(attention_decoder_optimizer,
-                                                                             'min', patience=optimizer_patience)
+    embedding_scheduler = torch.optim.lr_scheduler.StepLR(embedding_optimizer, step_size=20, gamma=0.5)
+    encoder_scheduler = torch.optim.lr_scheduler.StepLR(encoder_optimizer, step_size=20, gamma=0.5)
+    decoder_scheduler = torch.optim.lr_scheduler.StepLR(decoder_optimizer, step_size=20, gamma=0.5)
+    attention_decoder_scheduler = torch.optim.lr_scheduler.StepLR(attention_decoder_optimizer, step_size=20, gamma=0.5)
 
     # Move models to GPU
     if USE_CUDA:
@@ -404,11 +409,11 @@ for fold in target_folds:
 
             bleu_score = sentence_bleu([reference], candidate, weights=(0.5, 0.5))
             bleu_scores.append(bleu_score)
-        reference = [output_lang.index2word[x] for x in reference]
-        candidate = [output_lang.index2word[x] for x in candidate]
-        print("=" * 90)
-        print(reference)
-        print(candidate)
+        # reference = [output_lang.index2word[x] for x in reference]
+        # candidate = [output_lang.index2word[x] for x in candidate]
+        # print("=" * 90)
+        # print(reference)
+        # print(candidate)
         accuracy = compute_tree_accuracy(candidate_list, reference_list, output_lang)
         bleu_scores = np.mean(bleu_scores)
 
