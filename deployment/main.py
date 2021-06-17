@@ -30,11 +30,13 @@ beam_size = 5
 n_layers = 2
 num_workers = 20
 
+target_epoch = 80
+
 pretrained_model_paths = {
-    "embeddings": ['./weights/embedding-80'],
-    "encoders": ['./weights/embedding-80'],
-    "decoders": ['./weights/embedding-80'],
-    "attention_decoders": ['./weights/embedding-80']
+    "embeddings": ['./weights/embedding-{}'.format(target_epoch)],
+    "encoders": ['./weights/encoder-{}.pth'.format(target_epoch)],
+    "decoders": ['./weights/decoder-{}.pth'.format(target_epoch)],
+    "attention_decoders": ['./weights/attention_decoder-{}.pth'.format(target_epoch)]
 }
 
 opt = {
