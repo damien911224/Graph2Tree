@@ -867,7 +867,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
                 gt = gt.cuda()
             this_loss = criterion(pred, gt)
             loss += this_loss
-            print(torch.max(pred)[1], torch.max(gt)[1], this_loss)
+            print(torch.max(pred), torch.max(gt), this_loss)
         cur_index = cur_index + 1
 
     return loss
