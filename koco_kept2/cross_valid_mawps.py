@@ -50,8 +50,8 @@ opt = {
     "separate_attention": False,
 
     # for BERT
-    # "bert_learningRate": learning_rate * 1e-2,
-    "bert_learningRate": learning_rate * 1.0e-1,
+    "bert_learningRate": learning_rate * 1e-2,
+    # "bert_learningRate": learning_rate * 1.0e-1,
     "embedding_size": 768,
     "dropout_input": 0.5,
     "pretrained_bert_path": None
