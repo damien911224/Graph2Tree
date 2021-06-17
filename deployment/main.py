@@ -1,5 +1,5 @@
 from data.data_util import extract, transfer_num_n_equation, prepare_infer_data
-from src.train_and_evaluate import evaluate_tree
+from src.train_and_evaluate import evaluate_tree, evaluate_tree_ensemble_beam_search
 from src.contextual_embeddings import *
 from src.models import *
 from pyaichtools.pyaichtools import Reducer
@@ -13,9 +13,6 @@ from io import StringIO
 from contextlib import redirect_stdout
 import pickle as pkl
 
-DEBUG = False
-GENERATE_DUMMY_WEIGHTS = False
-
 weight_path = "weights/"
 problem_file = "/home/agc2021/dataset/problemsheet.json"
 # problem_file = "dataset/problemsheet.json"
@@ -24,10 +21,7 @@ answer_file = "answersheet.json"
 MAX_OUTPUT_LENGTH = 500
 
 batch_size = 64
-# embedding_size = 128
-# ===============changed=================
 embedding_size = 768
-# =======================================
 hidden_size = 512
 n_epochs = 80
 learning_rate = 1e-3
@@ -35,6 +29,13 @@ weight_decay = 1e-5
 beam_size = 5
 n_layers = 2
 num_workers = 20
+
+pretrained_model_paths = {
+    "embeddings": ['./weights/embedding-80'],
+    "encoders": ['./weights/embedding-80'],
+    "decoders": ['./weights/embedding-80'],
+    "attention_decoders": ['./weights/embedding-80']
+}
 
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
@@ -51,63 +52,46 @@ opt = {
     # for BERT
     "bert_learningRate": learning_rate * 1e-2,
     "embedding_size": 768,
-    "dropout_input": 0.5,
-    # "pretrained_bert_path": None
-    "pretrained_bert_path": './weights/embedding-80'
+    "dropout_input": 0.5
 }
 
 if __name__ == "__main__":
     USE_CUDA = True
+    MAX_PROBLEM_LENGTH = 1000
+    MAX_NUM_MODEL = 10
+    MAX_BEAM_WIDTH = 5
+
     data = extract(problem_file)
-    # data = extract("dummy.json")
     pairs, copy_nums = transfer_num_n_equation(data)
     input_lang, output_lang, test_pairs = prepare_infer_data(pairs, 1)
 
-    if DEBUG:
-        print("testing sample {} has been loaded".format(len(test_pairs)))
+    problem_length = len(pairs)
+    num_models = int(round(MAX_NUM_MODEL * MAX_PROBLEM_LENGTH / problem_length))
+    beam_width = int(round(MAX_BEAM_WIDTH * MAX_PROBLEM_LENGTH / problem_length))
 
-    embedding = BertEncoder(opt["pretrained_bert_path"], "cuda" if USE_CUDA else "cpu", False)
-    encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
-                         n_layers=n_layers)
-    decoder = DecoderRNN(opt, output_lang.n_words)
-    attention_decoder = AttnUnit(opt, output_lang.n_words)
+    embeddings = list()
+    encoders = list()
+    decoders = list()
+    attention_decoders = list()
+    for model_i in range(len(pretrained_model_paths["embeddings"])):
+        embedding = BertEncoder(pretrained_model_paths["embeddings"][model_i],
+                                "cuda" if USE_CUDA else "cpu", False)
+        encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
+                             n_layers=n_layers)
+        decoder = DecoderRNN(opt, output_lang.n_words)
+        attention_decoder = AttnUnit(opt, output_lang.n_words)
 
-    if USE_CUDA:
-        embedding.cuda()
-        encoder.cuda()
-        decoder.cuda()
-        attention_decoder.cuda()
+        if USE_CUDA:
+            embedding.cuda()
+            encoder.cuda()
+            decoder.cuda()
+            attention_decoder.cuda()
+
+        encoder.load_state_dict(torch.load(pretrained_model_paths["encoders"][model_i]))
+        decoder.load_state_dict(torch.load(pretrained_model_paths["decoders"][model_i]))
+        attention_decoder.load_state_dict(torch.load(pretrained_model_paths["attention_decoders"][model_i]))
 
     reducer = Reducer(label_root_path=os.path.join(os.getcwd(), "pyaichtools", "label"))
-    if DEBUG:
-        print("reducer loaded")
-
-    if GENERATE_DUMMY_WEIGHTS:
-        # -------- test code ---------- #
-        if DEBUG:
-            print("generate dummy weights")
-        state_dict = {
-            "encoder": encoder.state_dict(),
-            "decoder": decoder.state_dict(),
-            "attention_decoder": attention_decoder.state_dict()
-        }
-        torch.save(state_dict, "weights/state_dicts.pth")
-
-    state_dicts = {
-        'encoder': torch.load(os.path.join(os.getcwd(), "weights/encoder-80.pth")),
-        'decoder': torch.load(os.path.join(os.getcwd(), "weights/decoder-80.pth")),
-        'attention_decoder': torch.load(os.path.join(os.getcwd(), "weights/attention_decoder-80.pth")),
-    }
-
-    if DEBUG:
-        print("state_dicts are successfully loaded")
-
-    encoder.load_state_dict(state_dicts['encoder'])
-    decoder.load_state_dict(state_dicts['decoder'])
-    attention_decoder.load_state_dict(state_dicts['attention_decoder'])
-
-    if DEBUG:
-        print("loading state_dict to model success")
 
     answers = {}
 
@@ -119,20 +103,12 @@ if __name__ == "__main__":
     for test_batch in test_pairs:
         idx = test_batch[-1]
         one_answer = {}
-        # input_batch, input_length, operate_nums(n), embedding, encoder, decoder, attention_decoder, reducer,
-        # input_lang, output_lang, num_value, num_pos(n), batch_graph(n), beam_size(n), max_length=MAX_OUTPUT_LENGTH
         try:
-            test_res = evaluate_tree(test_batch[0], test_batch[1], embedding, encoder, decoder, attention_decoder, reducer,
-                                     input_lang, output_lang, test_batch[2], beam_size=beam_size, num_pos=test_batch[3])
+            test_res = evaluate_tree_ensemble_beam_search(test_batch[0], test_batch[1], [],
+                                                          embeddings, encoders, decoders, attention_decoders,
+                                                          input_lang, output_lang, test_batch[2], beam_size=beam_size)
         except:
             test_res = "Fail"
-
-        # model_output.append(test_res)
-        # if len(model_output) == 10:
-        #     with open("model_output.pkl", "wb") as f:
-        #         pkl.dump(model_output, f)
-        #     break
-
 
         QL = test_batch[2]
         NL = test_batch[4]
@@ -143,21 +119,10 @@ if __name__ == "__main__":
         str_quality_list = 'QL=' + str(QL) +"\nNL=" + str(NL)
         converter.quality_list = cst.parse_module(str_quality_list)
 
-        # if test_res == data[idx]['answer']:
-        #     correct += 1
-        #     # print(correct)
-        # else:
-        #     wrong_answer.append(idx)
-
         if not test_res == "Fail":
             try:
                 # print(test_res)
                 dec_seq = converter.decode(test_res)
-                print(dec_seq)
-                # with open("dummy.py", "w", encoding="utf-8") as f:
-                #     f.write(dec_seq)
-                # ========================== important"
-                # change python3 to python
                 f = StringIO()
                 with redirect_stdout(f):
                     exec(dec_seq)
@@ -170,12 +135,6 @@ if __name__ == "__main__":
                     "answer": answer,
                     "equation": dec_seq
                 }
-                # one_answer = {
-                #     "answer": "0",
-                #     "equation": "WRONG",
-                # }
-                # print(idx)
-                # print("result=" , answer)
 
             except:
                 print(sys.exc_info())
