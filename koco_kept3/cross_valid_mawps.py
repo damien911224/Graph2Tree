@@ -427,7 +427,7 @@ for fold in target_folds:
 
         test_res = evaluate_tree_ensemble_beam_search(
             test_batch[0], test_batch[1], generate_num_ids,
-            [embedding], [encoder], [decoder], [attention_decoder],
+            [embedding], [encoder], [decoder], [attention_decoder], reducer,
             input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
             beam_size=beam_size)
 
