@@ -40,6 +40,12 @@ class Reducer():
 		self.get_child_node = lambda x: [attr for attr in getattr(cst, x).__dict__['__annotations__'].items() if attr[0] in LIBCST_INTERST_ATTR]
 		self.cst_need_child = lambda x: '__annotations__' in getattr(cst, x).__dict__
 
+		self.has_child_node = defaultdict(bool)
+
+		for k in list(self.reverse_label_dict.keys()):
+			if hasattr(cst, k) and self.cst_need_child(k):
+				self.has_child_node[k] = len(self.get_child_node(k)) > 0
+
 		if debug:
 			self.id_to_block_label = lambda x: self.label_dict[str(x)]
 		else:
@@ -139,7 +145,7 @@ class Reducer():
 		curr_latest_label_child_num = 0
 
 		for prl in prev_pred_label[::-1]:
-			if hasattr(cst, prl):
+			if self.has_child_node[prl]:
 				curr_latest_label = prl
 				break
 			elif self.reverse_range_per_pi[prl] not in ["signal", "None"]:
@@ -160,6 +166,13 @@ class Reducer():
 			elif len(self.get_child_node(curr_latest_label)) > curr_latest_label_child_num:
 				#3. has insufficient child
 				seq_label = [self.reverse_label_dict["<IE>"]]
+				child_direct_label = self.flatten_cst_type(self.get_child_node(curr_latest_label)[curr_latest_label_child_num][1])
+				for cdr in child_direct_label:
+					if cdr in list(self.name_to_pi.keys()):
+						seq_label.append(cdr)
+					elif not self.has_child_node[self.label_dict[str(cdr)]]:
+						seq_label.append(cdr)
+				#print(seq_label)
 			elif self.sequence_test(direct_attr):
 				#4. has sufficient child and parent label require list of child
 				seq_label += direct_label
@@ -201,11 +214,11 @@ class Reducer():
 		for pci, p_label in zip(parent_child_idx, parent_label):
 			cnt = 0
 			curr_attr = None
-			if p_label is "None":
+			if p_label == "None":
 				direct_attr_list.append(cst.Module)
 				continue
 			assert pci is not None
-			if not self.has_child(p_label):
+			if not self.has_child_node[p_label]:
 				direct_attr_list.append(None)
 				continue
 			curr_child_node = self.get_child_node(p_label)
@@ -215,8 +228,6 @@ class Reducer():
 					break
 				cnt += 1
 			direct_attr_list.append(curr_attr)
-
-		start = time.perf_counter()
 
 		candidate = [
 		    self.get_candidate(pl, al, ppl)
@@ -258,7 +269,7 @@ class Reducer():
 		for id, node in enumerate(label_seq):
 			if type(node) == list:
 				next_list.append([node, latest_label, latest_label_diff-1])
-			elif hasattr(cst, node):
+			elif self.has_child_node[node]:
 				latest_label_diff = 0
 				latest_label = node
 			latest_label_diff += 1
