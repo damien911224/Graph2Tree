@@ -30,13 +30,15 @@ beam_size = 5
 n_layers = 2
 num_workers = 20
 
+num_folds = 12
 target_epoch = 80
 
 pretrained_model_paths = {
-    "embeddings": ['./weights/embedding-{}'.format(target_epoch)],
-    "encoders": ['./weights/encoder-{}.pth'.format(target_epoch)],
-    "decoders": ['./weights/decoder-{}.pth'.format(target_epoch)],
-    "attention_decoders": ['./weights/attention_decoder-{}.pth'.format(target_epoch)]
+    "embeddings": ['./weights/Fold_{:02d}/embedding-{}'.format(f_i, target_epoch) for f_i in range(num_folds)],
+    "encoders": ['./weights/Fold_{:02d}/encoder-{}.pth'.format(f_i, target_epoch) for f_i in range(num_folds)],
+    "decoders": ['./weights/Fold_{:02d}/decoder-{}.pth'.format(f_i, target_epoch) for f_i in range(num_folds)],
+    "attention_decoders": ['./weights/Fold_{:02d}/attention_decoder-{}.pth'.format(f_i, target_epoch)
+                           for f_i in range(num_folds)]
 }
 
 opt = {
@@ -60,8 +62,8 @@ opt = {
 if __name__ == "__main__":
     USE_CUDA = True
     MAX_PROBLEM_LENGTH = 1000
-    MAX_NUM_MODEL = 10
-    MAX_BEAM_WIDTH = 5
+    MAX_NUM_MODEL = num_folds
+    MAX_BEAM_WIDTH = beam_size
 
     data = extract(problem_file)
     pairs, copy_nums = transfer_num_n_equation(data)
