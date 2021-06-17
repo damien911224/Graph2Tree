@@ -868,6 +868,7 @@ def recursive_solve(encoder_outputs, graph_embedding, attention_inputs,
             parent_h.cuda()
 
         global_parent_state = global_parent_state * 0.5 + parent_h * 0.5
+        #global_parent_state = parent_h
         global_sibling_state = global_sibling_state * 0.5 + sibling_state* 0.5
 
         for i in range(dec_batch[cur_index].size(1) - 1):
@@ -1547,6 +1548,8 @@ def beam_copy(beam):
     new_beam["parent_h"] = [p_h.clone() for p_h in beam["parent_h"]]
     new_beam["prev_word"] = beam["prev_word"].clone()
     new_beam["sibling_state"] = [s.clone() for s in beam["sibling_state"]]
+    new_beam["global_sibling_state"] = [s.clone() for s in beam["global_sibling_state"]]
+    new_beam["global_parent_state"] = [s.clone() for s in beam["global_parent_state"]]
     new_beam["prev_word_list"] = copy.deepcopy(beam["prev_word_list"])
 
     return new_beam
@@ -1605,7 +1608,9 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
     # depth level
     beams = [{"q": list([{"s": s, "parent": 0, "child_index": 1, "t": Tree()}]),
               "score": 0.0, "score_length": 0.0,
-              "head": 1, "child": 1, "head_done": False, "prev_word_list": []}]
+              "head": 1, "child": 1, "head_done": False, "prev_word_list": [], 
+              "global_sibling_state": [torch.zeros((1, encoders[0].hidden_size), dtype=torch.float, requires_grad=False).cuda() for _ in range(num_models)],
+              "global_parent_state": [torch.zeros((1, encoders[0].hidden_size), dtype=torch.float, requires_grad=False).cuda() for _ in range(num_models)]}]
 
     while False in [b["head_done"] for b in beams]:
     # while head <= len(queue_decode) and head <= max_length:
@@ -1617,13 +1622,15 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                 queue_decode = b["q"]
                 s = queue_decode[head - 1]["s"]
                 prev_word_list = b["prev_word_list"]
+                global_parent_state = b["global_parent_state"]
+                global_sibling_state = b["global_sibling_state"]
 
                 if i_child == 1:
                     sibling_state = [torch.zeros((1, encoders[0].hidden_size), dtype=torch.float, requires_grad=False)
                                     for _ in range(num_models)]
-
                     if USE_CUDA:
                         sibling_state = [s.cuda() for s in sibling_state]
+
                     flag_sibling = False
                     for q_index in range(len(queue_decode)):
                         if (head <= len(queue_decode)) and (q_index < head - 1) and (
@@ -1649,12 +1656,14 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                     if USE_CUDA:
                         prev_word = prev_word.cuda()
                     parent_h = b["parent_h"]
+                
+
 
                 # reducere ready
                 if head != 1:
                     parent_word_list = queue_decode[queue_decode[head - 1]["parent"]-1]['t'].children
                     child_idx = -1
-                    for chnode in parent_word_list[:queue_decode[head-1]["child_index"]+1][::-1]:
+                    for chnode in parent_word_list[:queue_decode[head-1]["child_index"]][::-1]:
                         if output_lang.index2word[chnode] == "<IE>":
                             child_idx+=1
                         else:
@@ -1672,8 +1681,13 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                 cur_s = list()
                 predictions = list()
                 for model_i in range(num_models):
+                    if i_child == 1:
+                        global_sibling_state[model_i] = 0.5 * sibling_state[model_i] + 0.5 * global_sibling_state[model_i]
+                        global_parent_state[model_i] = 0.5 * parent_h[model_i] + 0.5 * global_parent_state[model_i]
+                        #global_parent_state[model_i] = parent_h[model_i] 
+
                     curr_c, curr_h = decoders[model_i](prev_word, s[model_i][0], s[model_i][1],
-                                                    parent_h[model_i], sibling_state[model_i])
+                                                    global_parent_state[model_i], global_sibling_state[model_i])
                     cur_s.append((curr_c, curr_h))
                     attention_inputs = all_encoder_outputs[model_i][2]
                     prediction = attention_decoders[model_i](attention_inputs[0], curr_h, attention_inputs[1], one_hot_mask)
@@ -1686,6 +1700,8 @@ def evaluate_tree_ensemble_beam_search(input_batch, input_length, generate_nums,
                 b["parent_h"] = parent_h
                 b["prev_word"] = prev_word
                 b["prev_word_list"] = prev_word_list
+                b["global_sibling_state"] = global_sibling_state
+                b["global_parent_state"] = global_parent_state
 
                 topk_v, topk_i = torch.topk(prediction[0], beam_size)
                 for value, index in zip(topk_v, topk_i):
