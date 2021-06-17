@@ -29,7 +29,7 @@ batch_size = 64
 # ===============changed=================
 embedding_size = 768
 # =======================================
-hidden_size = 512
+hidden_size = 512 * 2
 n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
@@ -39,7 +39,7 @@ ori_path = './data/'
 prefix = '23k_processed.json'
 
 opt = {
-    "rnn_size": hidden_size * 2, # RNN hidden size (default 300)
+    "rnn_size": hidden_size, # RNN hidden size (default 300)
     "dropout_de_in": 0.1,
     "dropout_de_out": 0.3, # default 0.3
     "dropout_for_predict": 0.1,
