@@ -29,8 +29,7 @@ batch_size = 64
 # ===============changed=================
 embedding_size = 768
 # =======================================
-# hidden_size = 512
-hidden_size = 768
+hidden_size = 512
 n_epochs = 80
 learning_rate = 1e-3
 weight_decay = 1e-5
@@ -59,7 +58,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex_H768")
+log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex")
 num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
