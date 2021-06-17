@@ -137,7 +137,7 @@ class Converter:
 		seq.extend(curr_seq)
 		return seq
 
-	def tree_to_list(self,ann_tree, seq=[],label_to_id=False):
+	def tree_to_list(self, ann_tree, seq=[], label_to_id=False):
 		curr_child = ann_tree.children(ann_tree.root)
 		curr_tag = ann_tree.get_node(ann_tree.root).tag.split(self.SPT)
 		curr_seq = [self.label_ele(curr_tag[1], ann_tree, label_to_id)]
@@ -152,7 +152,7 @@ class Converter:
 					else:
 						curr_seq.append(per_attr_seq)
 					per_attr_seq = []
-					prev_attr= curr_attr
+					prev_attr = curr_attr
 				per_attr_seq = self.tree_to_list(ann_tree.subtree(child_node.identifier), per_attr_seq, label_to_id)
 			if len(per_attr_seq) == 1 or len(per_attr_seq) == 0:
 				curr_seq.extend(per_attr_seq)
@@ -162,28 +162,44 @@ class Converter:
 		return seq
 
 	def list_to_tree(self, ann_seq, root_tree, parent_id=None, attr="root", unlabel_to_token=False):
+		temp_ann_seq = []
+		if len(ann_seq) == 1:
+			curr_tag = self.unlabel_ele(ann_seq[0]) if unlabel_to_token else ann_seq[0]
+			curr_node = root_tree.create_node(str.join(self.SPT, [attr, curr_tag]), parent=parent_id)
+			return root_tree
+
+		for ann in ann_seq:
+			if type(ann) is list or self.has_child_node[ann]:
+				temp_ann_seq.append(ann)
+			else:
+				temp_ann_seq.append([ann])
+		ann_seq = temp_ann_seq
+
 		if len(ann_seq):
 			node_seq_list = self.div_by_node_list(ann_seq)
 			for node_seq in node_seq_list:
 				curr_tag = self.unlabel_ele(node_seq[0]) if unlabel_to_token else node_seq[0]
-				curr_node = root_tree.create_node(str.join(self.SPT, [attr,curr_tag]), parent=parent_id)
+				curr_node = root_tree.create_node(str.join(self.SPT, [attr, curr_tag]), parent=parent_id)
 				if hasattr(cst, curr_tag):
 					curr_node_attr_list = dir(getattr(cst, curr_tag))
 					attr_list = [attr for attr in curr_node_attr_list if attr in self.interest_attr_list]
-					assert(len(attr_list) == len(node_seq[1:]))
+					assert (len(attr_list) == len(node_seq[1:]))
 					for attr_ele, attr_seq in zip(attr_list, node_seq[1:]):
-						root_tree = self.list_to_tree(attr_seq, root_tree, curr_node.identifier, attr_ele, unlabel_to_token)
+						root_tree = self.list_to_tree(attr_seq, root_tree, curr_node.identifier, attr_ele,
+													  unlabel_to_token)
 		return root_tree
 
 	def div_by_node_list(self, node_seq):
 		node_list = []
 		curr_node_list = []
 		for id, ann_ele in enumerate(node_seq):
+			if type(ann_ele) is not list and not hasattr(cst, ann_ele):
+				curr_node_list.append(ann_ele)
+
 			if type(ann_ele) is not list and not curr_node_list or type(ann_ele) is list:
 				curr_node_list.append(ann_ele)
 			else:
 				node_list.append(curr_node_list)
-				curr_node_list = [ann_ele]
 		if len(curr_node_list):
 			node_list.append(curr_node_list)
 		return node_list
