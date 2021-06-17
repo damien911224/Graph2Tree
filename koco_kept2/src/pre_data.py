@@ -507,7 +507,7 @@ def transfer_english_num(data):  # transfer num into "NUM"
         # seg = d["sQuestion"].strip().split(" ")
         seg = d["question"].strip().split(" ")
         equations = d["lequation"]
-        solution = d["answer"]
+        # solution = d["answer"]
 
         for s in seg:
             pos = re.search(pattern, s)
@@ -721,6 +721,15 @@ def indexes_from_sentence(lang, sentence, tree=False):
         res.append(lang.word2index["EOS"])
     return res
 
+def flatten_list(data):
+    result = list()
+    for dd in data:
+        if type(dd) == type(list()):
+            result += flatten_list(dd)
+        else:
+            result.append(dd)
+    return result
+
 def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, copy_nums, tree=False):
     input_lang = Lang()
     output_lang = OutputLang()
@@ -728,13 +737,20 @@ def prepare_data(pairs_trained, pairs_tested, trim_min_count, generate_nums, cop
     test_pairs = []
 
     print("Indexing words...")
+    ood = list()
     for pair in pairs_trained + pairs_tested:
+        output = flatten_list(pair[1])
+        for oo in output:
+            if oo not in output_lang.word2index:
+                ood.append(oo)
         if not tree:
             input_lang.add_sen_to_vocab(pair[0])
             # output_lang.add_sen_to_vocab(pair[1])
         elif pair[-1]:
             input_lang.add_sen_to_vocab(pair[0])
             # output_lang.add_sen_to_vocab(pair[1])
+    ood = list(set(ood))
+    print(ood)
     input_lang.build_input_lang(trim_min_count)
     # if tree:
     #     output_lang.build_output_lang_for_tree(generate_nums, copy_nums)
