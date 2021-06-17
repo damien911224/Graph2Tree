@@ -24,7 +24,7 @@ def read_json(path):
     return file
 
 
-batch_size = 64
+batch_size = 256
 # embedding_size = 128
 # ===============changed=================
 embedding_size = 768
