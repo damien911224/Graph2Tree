@@ -59,9 +59,9 @@ opt = {
 }
 
 log_path = "logs/{}".format("NoSepAtt_Max_B256")
-num_folds = 5
-target_folds = [0, 1, 2, 3, 4]
-# target_folds = list(range(num_folds))
+num_folds = 10
+# target_folds = [0, 1, 2, 3, 4]
+target_folds = list(range(num_folds))
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 10
 num_workers = 20
