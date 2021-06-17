@@ -50,7 +50,7 @@ opt = {
     "separate_attention": False,
 
     # for BERT
-    "bert_learningRate": learning_rate * 1e-2,
+    "bert_learningRate": learning_rate * 1e-0,
     # "bert_learningRate": learning_rate * 1.0e-1,
     "embedding_size": 768,
     "dropout_input": 0.5,
@@ -58,7 +58,7 @@ opt = {
     # "pretrained_bert_path": './electra_model'
 }
 
-log_path = "logs/{}".format("NoSepAtt_AvgMax_B64")
+log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_BertLRE0")
 num_folds = 10
 # target_folds = [0, 1, 2, 3, 4]
 target_folds = list(range(num_folds))
