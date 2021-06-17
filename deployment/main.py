@@ -60,7 +60,7 @@ opt = {
 }
 
 if __name__ == "__main__":
-    USE_CUDA = True
+    USE_CUDA = torch.cuda.is_available()
     MAX_PROBLEM_LENGTH = 1000
     MAX_NUM_MODEL = num_folds
     MAX_BEAM_WIDTH = beam_size
