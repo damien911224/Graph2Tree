@@ -227,7 +227,7 @@ fold_pairs.append(pairs[(fold_size * 4):])
 best_accuracies = list()
 best_bleu_scores = list()
 # for fold in range(num_folds):
-for fold in target_folds:
+for fold_i, fold in enumerate(target_folds):
     fold_log_folder = os.path.join(log_path, "Fold_{:02d}".format(fold + 1))
     fold_weight_folder = os.path.join(fold_log_folder, "weights")
     try:
@@ -418,6 +418,7 @@ for fold in target_folds:
         # equation_ac = 0
         # eval_total = 0
         # start = time.time()
+        break
     reference_list = list()
     candidate_list = list()
     bleu_scores = list()
@@ -425,16 +426,16 @@ for fold in target_folds:
         #print(test_batch)
         batch_graph = get_single_example_graph(test_batch[0], test_batch[1], test_batch[7], test_batch[4], test_batch[5])
 
+        """
         test_res = evaluate_tree_ensemble_beam_search(
             test_batch[0], test_batch[1], generate_num_ids,
             [embedding], [encoder], [decoder], [attention_decoder], reducer,
             input_lang, output_lang, test_batch[4], test_batch[5], batch_graph,
             beam_size=beam_size)
-
         """
+
         test_res = evaluate_tree(test_batch[0], test_batch[1], generate_num_ids, embedding, encoder, decoder, attention_decoder, reducer,
                                     input_lang, output_lang, test_batch[4], test_batch[5], batch_graph, beam_size=beam_size)
-        """
 
         reference = test_batch[2]
         # val_ac, equ_ac, _, _ = compute_prefix_tree_result(test_res, test_batch[2], output_lang, test_batch[4], test_batch[6])
