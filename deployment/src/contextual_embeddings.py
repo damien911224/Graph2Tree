@@ -35,7 +35,7 @@ def combine_num_(all_tokens):
 	return all_tokens, num_index
 
 class BertEncoder(nn.Module):
-	def __init__(self, bert_model = 'kobert',device = 'cuda:0 ', freeze_bert = False):
+	def __init__(self, bert_model='kobert', device='cuda:0 ', freeze_bert=False):
 		super(BertEncoder, self).__init__()
 		if False:
 			self.bert_layer = BertModel.from_pretrained(bert_model)

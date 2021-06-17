@@ -169,7 +169,6 @@ def h2i(hangeul):
 
     return result
 
-
 def QL2Str(QL):
     result = '['
     for i in range(len(QL)):
@@ -314,6 +313,8 @@ def extract(input_name):
             for catch in re.finditer(p, sent):
                 ql.append(catch[0])
 
+        tmp_obj = {}
+        tmp_obj['NL'] = nl
         tmp_obj['QL'] = ql
         tmp_obj['question'] = re.sub(p, "NUM", sent).split()
         try:
@@ -321,6 +322,5 @@ def extract(input_name):
         except:
             pass
         list_obj[str(q_num)] = tmp_obj
-
 
     return list_obj

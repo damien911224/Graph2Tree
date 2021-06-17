@@ -11,6 +11,7 @@ import json
 import sys
 from io import StringIO
 from contextlib import redirect_stdout
+import torch
 
 weight_path = "weights/"
 # problem_file = "/home/agc2021/dataset/problemsheet.json"
@@ -32,13 +33,21 @@ num_workers = 20
 num_folds = 12
 target_epoch = 80
 
+# pretrained_model_paths = {
+#     "embeddings": ['./weights/Fold_{:02d}/embedding-{}'.format(f_i, target_epoch) for f_i in range(num_folds)],
+#     "encoders": ['./weights/Fold_{:02d}/encoder-{}.pth'.format(f_i, target_epoch) for f_i in range(num_folds)],
+#     "decoders": ['./weights/Fold_{:02d}/decoder-{}.pth'.format(f_i, target_epoch) for f_i in range(num_folds)],
+#     "attention_decoders": ['./weights/Fold_{:02d}/attention_decoder-{}.pth'.format(f_i, target_epoch)
+#                            for f_i in range(num_folds)]
+# }
 pretrained_model_paths = {
-    "embeddings": ['./weights/Fold_{:02d}/embedding-{}'.format(f_i, target_epoch) for f_i in range(num_folds)],
-    "encoders": ['./weights/Fold_{:02d}/encoder-{}.pth'.format(f_i, target_epoch) for f_i in range(num_folds)],
-    "decoders": ['./weights/Fold_{:02d}/decoder-{}.pth'.format(f_i, target_epoch) for f_i in range(num_folds)],
-    "attention_decoders": ['./weights/Fold_{:02d}/attention_decoder-{}.pth'.format(f_i, target_epoch)
+    "embeddings": ['./weights/embedding-fold01-{}'.format(target_epoch) for f_i in range(num_folds)],
+    "encoders": ['./weights/encoder-fold01-{}.pth'.format(target_epoch) for f_i in range(num_folds)],
+    "decoders": ['./weights/decoder-fold01-{}.pth'.format(target_epoch) for f_i in range(num_folds)],
+    "attention_decoders": ['./weights/attention_decoder-fold01-{}.pth'.format(target_epoch)
                            for f_i in range(num_folds)]
 }
+
 
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
@@ -60,25 +69,24 @@ opt = {
 
 if __name__ == "__main__":
     import time
+    import tqdm
     start_time = time.time()
     USE_CUDA = torch.cuda.is_available()
-    MAX_PROBLEM_LENGTH = 1000
+    MAX_PROBLEM_LENGTH = 2000
     MAX_NUM_MODEL = num_folds
-    MAX_BEAM_WIDTH = beam_size
 
     data = extract(problem_file)
     pairs, copy_nums = transfer_num_n_equation(data)
     input_lang, output_lang, test_pairs = prepare_infer_data(pairs, 1)
 
     problem_length = len(pairs)
-    num_models = int(round(MAX_NUM_MODEL * MAX_PROBLEM_LENGTH / problem_length))
-    beam_width = int(round(MAX_BEAM_WIDTH * MAX_PROBLEM_LENGTH / problem_length))
+    num_models = max(min(int(round(MAX_NUM_MODEL * MAX_PROBLEM_LENGTH / problem_length)), MAX_NUM_MODEL), 1)
 
     embeddings = list()
     encoders = list()
     decoders = list()
     attention_decoders = list()
-    for model_i in range(len(pretrained_model_paths["embeddings"])):
+    for model_i in range(num_models):
         embedding = BertEncoder(pretrained_model_paths["embeddings"][model_i],
                                 "cuda" if USE_CUDA else "cpu", False)
         encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
@@ -96,6 +104,11 @@ if __name__ == "__main__":
         decoder.load_state_dict(torch.load(pretrained_model_paths["decoders"][model_i]))
         attention_decoder.load_state_dict(torch.load(pretrained_model_paths["attention_decoders"][model_i]))
 
+        embeddings.append(embedding)
+        encoders.append(encoder)
+        decoders.append(decoder)
+        attention_decoders.append(attention_decoder)
+
     reducer = Reducer(label_root_path=os.path.join(os.getcwd(), "pyaichtools", "label"))
 
     answers = {}
@@ -105,7 +118,7 @@ if __name__ == "__main__":
     correct = 0
 
     model_output = []
-    for test_batch in test_pairs:
+    for k, test_batch in tqdm.tqdm(enumerate(test_pairs)):
         idx = test_batch[-1]
         one_answer = {}
         try:
@@ -142,7 +155,7 @@ if __name__ == "__main__":
                 }
 
             except:
-                print(sys.exc_info())
+                # print(sys.exc_info())
                 one_answer = {
                     "answer": "0",
                     "equation": "WRONG",
@@ -154,10 +167,13 @@ if __name__ == "__main__":
                 "answer": "0",
                 "equation": "fail"
             }
+        if k > 0 and k % 100 == 0:
+            with open(answer_file, "w", encoding="utf-8") as f:
+                f.write(json.dumps(answers, indent=4, ensure_ascii=False))
 
     with open(answer_file, "w", encoding="utf-8") as f:
-        f.write(json.dumps(answers, indent=4))
+        f.write(json.dumps(answers, indent=4, ensure_ascii=False))
 
     duration = time.time() - start_time
-    print(duration / problem_length)
+    print(duration, problem_length, duration / problem_length)
 

@@ -3,7 +3,7 @@ import sys
 import inspect
 import json
 from treelib import Tree, plugins
-from pyaichtools.utils import *
+from .utils import *
 import re
 
 
@@ -32,13 +32,6 @@ class Converter:
 
 		self.label_dict, self.reverse_label_dict, self.LABEL_LIMIT = \
 			self.generate_label_dict(self.var_list, self.const_list) #self.tree_spt_list,)
-		
-		#if you want to generate new label dictionary, uncomment these lines
-		with open('label/label_dict.json', 'w') as ld:
-			json.dump(self.label_dict, ld)
-		
-		with open('label/reverse_label_dict.json', 'w') as rld:
-			json.dump(self.reverse_label_dict, rld)
 		
 		self.SPT = cfg.SPT
 		self.attach_code = lambda x: self.header.body + self.quality_list.body + x + self.footer.body

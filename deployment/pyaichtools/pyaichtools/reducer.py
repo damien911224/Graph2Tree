@@ -5,7 +5,7 @@ import typing
 import libcst as cst
 import inspect
 import sys
-from pyaichtools.utils import *
+from .utils import *
 from treelib import Tree, Node				
 import copy
 from operator import itemgetter
