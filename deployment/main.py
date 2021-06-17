@@ -157,3 +157,7 @@ if __name__ == "__main__":
 
     with open(answer_file, "w", encoding="utf-8") as f:
         f.write(json.dumps(answers, indent=4))
+
+    duration = time.time() - start_time
+    print(duration / problem_length)
+
