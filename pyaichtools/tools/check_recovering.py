@@ -19,7 +19,11 @@ label_seq = temp_converter.encode(body_path)
 #label_seq = ['Module', ['SimpleStatementLine', ['Assign', ['AssignTarget', ['result']], ['BinaryOperation', ['QL[1]'], ['Multiply'], ['QL[1]']]]]]
 generated_code = temp_converter.decode(label_seq)
 
+print(generated_code)
+
+"""
 with open(output_path, "w") as out_file:
 	out_file.write(generated_code)
 
 exec(generated_code)
+"""

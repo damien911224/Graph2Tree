@@ -39,11 +39,20 @@
 			"console": "integratedTerminal",
 			"cwd": "${workspaceFolder}/koco_kept2"
 		},
-			{
+		{
 			"name": "check recovering",
 			"type": "python",
 			"request": "launch",
 			"program": "tools/check_recovering.py",
+			"justMyCode": false,
+			"console": "integratedTerminal",
+			"cwd": "${workspaceFolder}/pyaichtools"
+		},
+		{
+			"name": "to dummy",
+			"type": "python",
+			"request": "launch",
+			"program": "tools/json_2_dummy.py",
 			"justMyCode": false,
 			"console": "integratedTerminal",
 			"cwd": "${workspaceFolder}/pyaichtools"

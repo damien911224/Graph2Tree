@@ -5,4 +5,6 @@ result = var0
 list.sort(var0)
 pow(var0)
 for var1 in range(QL[0], QL[1]):
+    if min(var1) == QL[3]:
+        pow(var0)
     min(var1)
