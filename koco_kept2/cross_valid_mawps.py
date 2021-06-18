@@ -62,7 +62,7 @@ opt = {
 log_path = "logs/{}".format("Final")
 num_folds = 12
 # 1, 3, 5, 7, 9, 11
-target_folds = [5]
+target_folds = [7]
 # target_folds = list(range(num_folds))
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 20
