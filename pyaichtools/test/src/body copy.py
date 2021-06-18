@@ -6,3 +6,4 @@ list.sort(var0)
 pow(var0)
 for var1 in range(QL[0], QL[1]):
     min(var1)
+

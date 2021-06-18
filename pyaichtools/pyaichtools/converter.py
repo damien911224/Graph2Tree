@@ -105,8 +105,8 @@ class Converter:
         itertools_class_list.sort()
 
         list_class_list = [
-            "list.append", "list.clear", "list.copy", "list.count", "list.extend", "list.index", "list.insert", "list.pop", "list.remove",
-            "list.sort", "range", "max", "list", "pow", "len", "round", "sum", "min"
+            "append", "clear", "copy", "count", "extend", "index", "insert", "pop", "remove",
+            "sort", "range", "max", "list", "pow", "len", "round", "sum", "min", "abs"
         ]
         itertools_class_list.sort()
 
@@ -141,6 +141,8 @@ class Converter:
                 if type(getattr(parsed_cst, interest_attr)) in [list ,tuple]:
                     for attr_ele in getattr(parsed_cst, interest_attr):
                         self.cst_to_tree(attr_ele, cst_tree, parent_id=curr_node.identifier, attr=interest_attr)
+                elif getattr(parsed_cst, interest_attr) is None:
+                    continue
                 else:
                     self.cst_to_tree(getattr(parsed_cst, interest_attr), cst_tree, parent_id=curr_node.identifier, attr=interest_attr)
         return cst_tree
@@ -171,6 +173,11 @@ class Converter:
         curr_child = ann_tree.children(ann_tree.root)
         curr_tag = ann_tree.get_node(ann_tree.root).tag.split(self.SPT)
         curr_seq = [self.label_ele(curr_tag[1], ann_tree, label_to_id)]
+        
+        if curr_tag[1] == "NotEqual":
+           seq.extend(curr_seq) 
+           return seq
+
         child_seq = []
         if len(curr_child) != 0 and curr_tag[1] not in self.hard_code_label:
             prev_attr = curr_child[0].tag.split(self.SPT)[0]
@@ -190,19 +197,15 @@ class Converter:
                     limit_cid = cid
 
                 per_attr_seq = self.tree_to_list(child_cst[cid - limit_cid], ann_tree.subtree(child_node.identifier), per_attr_seq, label_to_id)
-             
+
             if self.sequence_test(getattr(cst, curr_tag[-1]).__dict__["__annotations__"][prev_attr]):
                 child_seq.extend([self.label_ele("LT"), per_attr_seq])
             else:
                 child_seq.extend(per_attr_seq)
-        
-        """
-        if hasattr(cst_tree, "lpar") and len(getattr(cst_tree, "lpar")):
-            child_seq.append(self.label_ele("PAR"))
-        """
-        
+
         if len(child_seq):
             curr_seq.append(child_seq)
+
         seq.extend(curr_seq)
         return seq
         """
@@ -233,12 +236,67 @@ class Converter:
         return seq
         """
 
-    def list_to_tree(self, ann_seq, root_tree, parent_id=None, attr="root", unlabel_to_token=False):
-        temp_ann_seq = []
-        if len(ann_seq) == 1:
-            curr_tag = self.unlabel_ele(ann_seq[0]) if unlabel_to_token else ann_seq[0]
-            curr_node = root_tree.create_node(str.join(self.SPT, [attr,curr_tag]), parent=parent_id)
-            return root_tree 
+    def list_to_tree(self, ann_seq, attr="root", unlabel_to_token=False):
+        # 1. 현재 주어진 list 가 몇개의 subtree 로 이루어져있는지 판별 후 cluster
+        root_tree = Tree()
+        curr_tag = ann_seq[0]
+        node_seq = self.divide_by_node_list(ann_seq[1:][0], unlabel_to_token)
+
+        # 2. cluster마다 부여될 attribute 찾기, 숫서는 reverse
+
+        # curr_tag 가 LT일 경우 다르게 해야함
+
+        if self.unlabel_ele(curr_tag) == "LT":
+            curr_interest_attr_list = [attr] * len(node_seq)
+        else:
+            curr_attr_list = dir(getattr(cst, curr_tag))
+            curr_attr_list.reverse()
+
+            curr_interest_attr_list = []
+            for curr_attr in curr_attr_list:
+                if curr_attr in self.interest_attr_list:
+                    curr_interest_attr_list.append(curr_attr)
+
+        curr_tag = str.join(self.SPT, [attr, curr_tag])
+
+        root_tree.create_node(curr_tag)
+        root_id = root_tree.get_node(root_tree.root).identifier
+
+        # 2. cluster마다 list_to_tree 돌림
+        t_id = 0
+        for t_id in range(len(node_seq)):
+            curr_seq = node_seq[t_id]
+            curr_attr = curr_interest_attr_list[t_id]
+
+            if type(curr_seq) != list:
+                root_tree.create_node(str.join(self.SPT, [curr_attr, curr_seq]), parent=root_id)
+            else:
+                curr_sub_tree = self.list_to_tree(curr_seq[0], curr_attr, unlabel_to_token)
+                if "LT" in curr_sub_tree.get_node(curr_sub_tree.root).tag:
+                    root_tree.merge(root_id, curr_sub_tree)
+                else:
+                    root_tree.paste(root_id, curr_sub_tree)
+
+
+        if "BinaryOperation" in curr_tag:
+            root_tree.create_node("lpar/LeftParen", parent=root_id)
+            root_tree.create_node("rpar/RightParen", parent=root_id)
+
+        return root_tree
+
+        """
+        t_id = 0
+        prev_token = None
+        while t_id < len(child_seq):
+            token = child_seq[t_id]
+            if token == self.unlabel_ele("LT"):
+
+
+
+        for t_id in range(len(child_seq)):
+            token = child_seq[t_id]
+            if token == self.unlabel_ele("LT"):
+                #list of 
 
         for ann in ann_seq:
             if type(ann) is list or self.has_child_node[ann]:
@@ -259,32 +317,27 @@ class Converter:
                     for attr_ele, attr_seq in zip(attr_list, node_seq[1:]):
                         root_tree = self.list_to_tree(attr_seq, root_tree, curr_node.identifier, attr_ele, unlabel_to_token)
         return root_tree
+        """
 
-    def div_by_node_list(self, node_seq):
-        node_list = []
-        curr_node_list = []
-        for id, ann_ele in enumerate(node_seq):
+    def divide_by_node_list(self, node_seq, debug):
+        node_seq_list = []
 
-            # 1. check if ann_ele is list
-            if type(ann_ele) is list:
-                curr_node_list.append(ann_ele)
-            
-            # 2. check ann_ele is code block class
+        if node_seq[-1] == self.unlabel_ele("PAR", debug):
+            node_seq_list.append([self.unlabel_ele("PAR",  debug)])
+            node_seq = node_seq[:-1]
 
-            elif not hasattr(cst, ann_ele):
-                curr_node_list.append(ann_ele)
-            # 3. check 
-
-                
-            # if 
-
-            if not curr_node_list or type(ann_ele) is list:
-                curr_node_list.append(ann_ele)
+        t_id = 0
+        while t_id < len(node_seq):
+            if len(node_seq) > t_id+1 and type(node_seq[t_id+1]) is list:
+                node_seq_list.append([node_seq[t_id:t_id+2]])
+                t_id += 2
             else:
-                node_list.append(curr_node_list)
-        if len(curr_node_list):
-            node_list.append(curr_node_list)
-        return node_list
+                node_seq_list.append(node_seq[t_id])
+                t_id += 1
+
+        return node_seq_list
+
+
 
     def div_by_attr(self, ann_seq):
         attr_list = []
@@ -343,10 +396,13 @@ class Converter:
             check_sequence = lambda x: hasattr(curr_class.__dict__['__annotations__'][x], '_name') and type(curr_class.__dict__['__annotations__'][x]) == typing.Sequence
 
         arg_dict = {
-         attr: [] if check_sequence(attr) else None
-         for attr in dir(curr_class)
-         if attr in self.interest_attr_list
+            attr: [] if check_sequence(attr) else None
+            for attr in dir(curr_class) if attr in self.interest_attr_list
         }
+
+        if class_name == "BinaryOperation":
+            arg_dict["lpar"] = []
+            arg_dict["rpar"] = []
 
         for child_node in ann_tree.children(ann_tree.root):
             child_arg_name, child_class_name = child_node.tag.split(self.SPT)
@@ -359,18 +415,26 @@ class Converter:
     def label_ele(self, ann_ele, ann_tree=None, debug=False):
         if ann_ele in self.hard_code_label:
             if ann_ele == "Attribute":
-                ann_ele = str.join('.',[n.tag.split(self.SPT)[-1] for n in ann_tree.leaves()[::-1]])
+                new_ann_ele = str.join('.',[n.tag.split(self.SPT)[-1] for n in ann_tree.leaves()[::-1]])
             elif ann_ele == "Subscript":
-                ann_ele = "{}[{}]".format(*[n.tag.split(self.SPT)[-1] for n in ann_tree.leaves()[::-1]])
+                new_ann_ele = "{}[{}]".format(*[n.tag.split(self.SPT)[-1] for n in ann_tree.leaves()[::-1]])
             elif ann_ele == "Name":
-                ann_ele = "{}".format(*[n.tag.split(self.SPT)[-1] for n in ann_tree.leaves()])
+                new_ann_ele = "{}".format(*[n.tag.split(self.SPT)[-1] for n in ann_tree.leaves()])
+        else:
+            new_ann_ele = ann_ele
         try:
-            return self.reverse_label_dict[ann_ele] if debug else ann_ele
+            return self.reverse_label_dict[new_ann_ele] if debug else new_ann_ele 
         except Exception:
-            raise Exception("Unknow type labeling. Call Junho park")
+            #raise Exception("Unknow type labeling. Call Junho park")
+            if ann_ele in self.hard_code_label:
+                return self.reverse_label_dict[ann_ele] if debug else ann_ele
+            else:
+                print(new_ann_ele, ann_ele)
+                ann_tree.show()
+                raise Exception("Unknow type labeling. Call Junho park")
 
-    def unlabel_ele(self, label_ele, problem_info=None):
-        return self.label_dict[label_ele]
+    def unlabel_ele(self, label_ele, debug=False):
+        return self.label_dict[label_ele] if debug else label_ele
 
     def label_seq(self, encoded_seq, problem_info=None):
         return [self.label_ele(ann_ele, problem_info) for id, ann_ele in enumerate(encoded_seq)]
@@ -401,7 +465,7 @@ class Converter:
     def decode(self, labeled_seq, problem_info=None, mode="list"):
 
         if mode=="list":
-            recovered_tree = self.list_to_tree(labeled_seq, Tree(), unlabel_to_token=(not self.debug))
+            recovered_tree = self.list_to_tree(labeled_seq, unlabel_to_token=(not self.debug))
         elif mode=="seq":
             decoded_seq = self.unlabel_seq(labeled_seq, problem_info)
             recovered_tree = self.seq_to_tree(decoded_seq, Tree())

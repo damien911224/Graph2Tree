@@ -20,8 +20,6 @@ LIBCST_INTERST_ATTR = [
 	"lower",
 	"upper",
 	"step",
-	"lpar",
-	"rpar"
 ]
 
 LABEL_PREFIX_INFO = {
