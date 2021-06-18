@@ -179,7 +179,7 @@ class Converter:
            return seq
 
         child_seq = []
-        if len(curr_child) != 0 and curr_tag[1] not in self.hard_code_label:
+        if len(curr_child) != 0 and curr_tag[1] == curr_seq[0]:
             prev_attr = curr_child[0].tag.split(self.SPT)[0]
             per_attr_seq = []
             child_cst = lister(tupler(getattr(cst_tree, prev_attr)))
@@ -423,11 +423,12 @@ class Converter:
         else:
             new_ann_ele = ann_ele
         try:
+            assert new_ann_ele in list(self.reverse_label_dict.keys())
             return self.reverse_label_dict[new_ann_ele] if debug else new_ann_ele 
         except Exception:
             #raise Exception("Unknow type labeling. Call Junho park")
             if ann_ele in self.hard_code_label:
-                return self.reverse_label_dict[ann_ele] if debug else ann_ele
+                return ann_ele
             else:
                 print(new_ann_ele, ann_ele)
                 ann_tree.show()
