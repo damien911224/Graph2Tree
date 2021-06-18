@@ -39,15 +39,12 @@ CONST = "const{} = {}"
 const_list = [CONST.format(i, i) for i in range(0, 2000)]
 exec(str.join('\n',const_list))
 
-target_list = ['1986', '1997', '2000', '2004', '2005', '2051', '2264', '2351', '2353', '2354', '2357', '2361', '2362', '2363', '2364', '2367', '2368', '2370', '2378', '2380', '2381', '2382', '2383', '2385', '2386', '2387', '2388', '2390', '2402', '2403', '2404', '2406', '2421', '2497', '2505', '2507', '2512', '2514']
+#target_list = ['1986', '1997', '2000', '2004', '2005', '2051', '2264', '2351', '2353', '2354', '2357', '2361', '2362', '2363', '2364', '2367', '2368', '2370', '2378', '2380', '2381', '2382', '2383', '2385', '2386', '2387', '2388', '2390', '2402', '2403', '2404', '2406', '2421', '2497', '2505', '2507', '2512', '2514']
 
 for k, v in tqdm.tqdm(problem_json.items()):
 
-	if k in target_list:
-		continue
-
 	try:
-		test_converter.encode(v["equation"])
+		#test_converter.encode(v["equation"])
 		v["lequation"] = debug_converter.encode(v["equation"])
 		QL = v["QL"]
 		generated = debug_converter.decode(v["lequation"])
