@@ -264,6 +264,11 @@ class Converter:
 
         # 2. cluster마다 list_to_tree 돌림
         t_id = 0
+
+        if "For" in curr_tag or "If" in curr_tag:
+            if len(curr_interest_attr_list) > len(node_seq):
+                curr_interest_attr_list.remove("orelse")
+
         for t_id in range(len(node_seq)):
             curr_seq = node_seq[t_id]
             curr_attr = curr_interest_attr_list[t_id]
