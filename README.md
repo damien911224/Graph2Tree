@@ -8,7 +8,10 @@ PyTorch implementation of Graph based Math Word Problem solver described in our 
 * ``Python 3.6 ``
 * ``>= PyTorch 1.0.0``
 
-For more details, please refer to requiremnt file.
+For more details, please refer to requirement file.
+```
+pip install -r requirement.txt
+```
 
 ### Training
 #### [MATH23K]
