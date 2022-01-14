@@ -30,7 +30,7 @@ cross-validation setting :
 * ``python cross_valid_mawps.py``
 
 ### Contact
-* ``As I have graduated from my master school, my school email address will be invalid soon. If you have further questions about our work, you can refer to my new email address zhangjipeng20@outlook.com.``
+* ``As I have graduated from my master school, my school email address will be invalid soon. If you have further questions about our work, you can refer to my new email address pjh3974@gmail.com.``
 
 ### Reference
 ```
