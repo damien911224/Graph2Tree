@@ -60,11 +60,11 @@ opt = {
 
 # log_path = "logs/{}".format("NoSepAtt_AvgMax_B64_IgnoreIndex_KoCo01_ReduceLR")
 log_path = "logs/{}".format("Final")
-num_folds = 12
+num_folds = 10
 # 1, 3, 5, 7, 9, 11
-target_folds = [11]
-# target_folds = list(range(num_folds))
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# target_folds = [11]
+target_folds = list(range(num_folds))
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 optimizer_patience = 20
 num_workers = 20
 random_seed = 777
