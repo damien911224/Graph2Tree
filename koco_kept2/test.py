@@ -218,7 +218,7 @@ pretrained_model_paths = {
 
 best_accuracies = list()
 best_bleu_scores = list()
-for fold in target_folds:
+for model_i, fold in enumerate(target_folds):
     pairs_tested = []
     pairs_trained = []
     for fold_t in range(num_folds):
