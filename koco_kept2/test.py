@@ -210,10 +210,10 @@ for split_fold in range(num_folds):
 fold_pairs.append(pairs[(fold_size * (num_folds)):])
 
 pretrained_model_paths = {
-    "embeddings": ['../weights/FINAL/Fold_{:02d}/embedding-{}'.format(f_i, target_epoch) for f_i in range(num_folds)],
-    "encoders": ['../weights/FINAL/Fold_{:02d}/encoder-{}.pth'.format(f_i, target_epoch) for f_i in range(num_folds)],
-    "decoders": ['../weights/FINAL/Fold_{:02d}/decoder-{}.pth'.format(f_i, target_epoch) for f_i in range(num_folds)],
-    "attention_decoders": ['../weights/FINAL/Fold_{:02d}/attention_decoder-{}.pth'.format(f_i, target_epoch)
+    "embeddings": ['../weights/FINAL/Fold_{:02d}/embedding-{}'.format(f_i + 1, target_epoch) for f_i in range(num_folds)],
+    "encoders": ['../weights/FINAL/Fold_{:02d}/encoder-{}.pth'.format(f_i + 1, target_epoch) for f_i in range(num_folds)],
+    "decoders": ['../weights/FINAL/Fold_{:02d}/decoder-{}.pth'.format(f_i + 1, target_epoch) for f_i in range(num_folds)],
+    "attention_decoders": ['../weights/FINAL/Fold_{:02d}/attention_decoder-{}.pth'.format(f_i + 1, target_epoch)
                            for f_i in range(num_folds)]}
 
 best_accuracies = list()
