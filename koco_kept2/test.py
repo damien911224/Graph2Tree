@@ -264,6 +264,11 @@ for model_i, fold in enumerate(target_folds):
         decoder.cuda()
         attention_decoder.cuda()
 
+    embedding.eval()
+    encoder.eval()
+    decoder.eval()
+    attention_decoder.eval()
+
     generate_num_ids = []
 
     fold_best_accuracy = -1
