@@ -273,8 +273,8 @@ for model_i, fold in enumerate(target_folds):
         ref_str = convert_to_string(reference, output_lang)
         cand_str = convert_to_string(candidate, output_lang)
 
-        print(ref_str)
-        print(cand_str)
+        # print(ref_str)
+        # print(cand_str)
 
         reference_list.append(reference)
         candidate_list.append(candidate)
