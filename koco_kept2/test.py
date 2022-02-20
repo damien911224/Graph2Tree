@@ -40,8 +40,9 @@ prefix = '23k_processed.json'
 
 opt = {
     "rnn_size": hidden_size, # RNN hidden size (default 300)
+    # "num_layers": 2, # RNN # of layer (default 1)
     "dropout_de_in": 0.1,
-    "dropout_de_out": 0.3, # default 0.3
+    "dropout_de_out": 0.3,
     "dropout_for_predict": 0.1,
     "dropoutagg": 0,
     "learningRate": learning_rate, # default 1.0e-3
@@ -51,11 +52,8 @@ opt = {
 
     # for BERT
     "bert_learningRate": learning_rate * 1e-2,
-    # "bert_learningRate": learning_rate * 1.0e-1,
     "embedding_size": 768,
-    "dropout_input": 0.5,
-    "pretrained_bert_path": None
-    # "pretrained_bert_path": './electra_model'
+    "dropout_input": 0.5
 }
 
 num_folds = 12
@@ -231,32 +229,12 @@ for model_i, fold in enumerate(target_folds):
                                                                     copy_nums, tree=False)
 
     # Initialize models
-    embedding = BertEncoder(opt["pretrained_bert_path"], "cuda" if USE_CUDA else "cpu", False)
-    embedding.to("cpu")
+    embedding = BertEncoder(pretrained_model_paths["embeddings"][model_i],
+                            "cuda" if USE_CUDA else "cpu", False)
     encoder = EncoderSeq('gru', embedding_size=opt['embedding_size'], hidden_size=hidden_size,
                          n_layers=n_layers)
-
     decoder = DecoderRNN(opt, output_lang.n_words)
     attention_decoder = AttnUnit(opt, output_lang.n_words)
-
-    encoder.load_state_dict(torch.load(pretrained_model_paths["encoders"][model_i]))
-    decoder.load_state_dict(torch.load(pretrained_model_paths["decoders"][model_i]))
-    attention_decoder.load_state_dict(torch.load(pretrained_model_paths["attention_decoders"][model_i]))
-
-    embedding_optimizer = torch.optim.Adam(embedding.parameters(), lr=opt['bert_learningRate'], weight_decay=weight_decay)
-    encoder_optimizer = torch.optim.AdamW(encoder.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    decoder_optimizer = torch.optim.AdamW(decoder.parameters(), lr=opt["learningRate"], weight_decay=weight_decay)
-    attention_decoder_optimizer = torch.optim.AdamW(attention_decoder.parameters(), lr=opt["learningRate"],
-                                                    weight_decay=weight_decay)
-
-    embedding_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(embedding_optimizer, 'min', patience=optimizer_patience)
-
-    encoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(encoder_optimizer,
-                                                                   'min', patience=optimizer_patience)
-    decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(decoder_optimizer,
-                                                                   'min', patience=optimizer_patience)
-    attention_decoder_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(attention_decoder_optimizer,
-                                                                             'min', patience=optimizer_patience)
 
     if USE_CUDA:
         embedding.cuda()
@@ -264,10 +242,9 @@ for model_i, fold in enumerate(target_folds):
         decoder.cuda()
         attention_decoder.cuda()
 
-    embedding.eval()
-    encoder.eval()
-    decoder.eval()
-    attention_decoder.eval()
+    encoder.load_state_dict(torch.load(pretrained_model_paths["encoders"][model_i]))
+    decoder.load_state_dict(torch.load(pretrained_model_paths["decoders"][model_i]))
+    attention_decoder.load_state_dict(torch.load(pretrained_model_paths["attention_decoders"][model_i]))
 
     generate_num_ids = []
 
@@ -295,6 +272,9 @@ for model_i, fold in enumerate(target_folds):
 
         ref_str = convert_to_string(reference, output_lang)
         cand_str = convert_to_string(candidate, output_lang)
+
+        print(reference)
+        print(candidate)
 
         reference_list.append(reference)
         candidate_list.append(candidate)
