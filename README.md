@@ -30,19 +30,4 @@ cross-validation setting :
 * ``python cross_valid_mawps.py``
 
 ### Contact
-* ``As I have graduated from my master school, my school email address will be invalid soon. If you have further questions about our work, you can refer to my new email address pjh3974@gmail.com.``
-
-### Reference
-```
-@article{zhang2020graph2tree,
-  title={Graph-to-Tree Learning for Solving Math Word Problems},
-  author={Zhang, Jipeng and Wang, Lei and Lee, Roy Ka-Wei and Bin, Yi and Shao, Jie and Lim, Ee-Peng},
-  journal={ACL 2020},
-  year={2020}
-}
-```
-# updated by subeen
-
-# updated by hoonchcho
-
-# updated by JHLew
+* ``As I have graduated from my school, my school email address will be invalid soon. If you have further questions about our work, you can refer to my new email address pjh3974@gmail.com.``
